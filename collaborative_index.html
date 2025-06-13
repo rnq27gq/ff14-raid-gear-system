@@ -645,6 +645,170 @@
             font-size: 0.7rem;
         }
         
+        /* タブ設定画面 */
+        .setup-tabs {
+            display: flex;
+            background-color: #f8f9fa;
+            border-radius: 8px 8px 0 0;
+            border: 1px solid #dee2e6;
+            border-bottom: none;
+            overflow: hidden;
+        }
+        .tab-button {
+            flex: 1;
+            padding: 12px 16px;
+            background-color: transparent;
+            border: none;
+            border-right: 1px solid #dee2e6;
+            cursor: pointer;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.2s ease;
+        }
+        .tab-button:last-child {
+            border-right: none;
+        }
+        .tab-button:hover {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        .tab-button.active {
+            background-color: white;
+            color: #3498db;
+            font-weight: 600;
+            border-bottom: 2px solid #3498db;
+        }
+        .tab-content {
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            padding: 20px;
+            min-height: 400px;
+        }
+        
+        /* 武器希望設定 */
+        .weapon-wishes-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        .weapon-wish-card {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .weapon-wishes {
+            margin-top: 10px;
+        }
+        .weapon-wishes label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #495057;
+        }
+        .weapon-wishes select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            background-color: white;
+        }
+        
+        /* 分配結果表示 */
+        .predicted-winner {
+            background-color: #e8f4f8;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border: 1px solid #bee5eb;
+        }
+        .predicted-winner h5 {
+            margin: 0 0 5px 0;
+            color: #0c5460;
+            font-size: 0.9rem;
+        }
+        .predicted-player {
+            font-weight: 600;
+            color: #155724;
+            font-size: 0.9rem;
+        }
+        
+        .actual-winner {
+            background-color: #fff3cd;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border: 1px solid #ffeaa7;
+        }
+        .actual-winner h5 {
+            margin: 0 0 8px 0;
+            color: #856404;
+            font-size: 0.9rem;
+        }
+        .actual-winner-select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ffc107;
+            border-radius: 4px;
+            background-color: white;
+            font-size: 0.85rem;
+        }
+        
+        .allocation-details {
+            margin-top: 10px;
+        }
+        .allocation-details summary {
+            cursor: pointer;
+            font-weight: 500;
+            color: #6c757d;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        .allocation-details summary:hover {
+            background-color: #e9ecef;
+        }
+        .allocation-details h6 {
+            margin: 8px 0 4px 0;
+            font-size: 0.8rem;
+            color: #495057;
+        }
+        
+        /* 武器ドロップ設定 */
+        .weapon-drop-settings {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .weapon-category {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .weapon-category h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+            font-size: 1rem;
+        }
+        .weapon-category label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #6c757d;
+        }
+        .weapon-category input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #3498db;
+        }
+        
         /* レスポンシブデザイン */
         @media (max-width: 768px) {
             .github-header {
@@ -1154,11 +1318,48 @@
             }
         }
 
-        // プレイヤー設定画面
+        // タブ形式の初期設定画面
         function showPlayerSetup() {
+            showTabbedSetup('players');
+        }
+        
+        // タブ形式の設定画面
+        function showTabbedSetup(activeTab = 'players') {
             const data = getData();
             const players = (data.players && data.players[currentRaidTier.id]) || {};
             
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <h1>初期設定</h1>
+                <h2>${currentRaidTier.name}</h2>
+                
+                <div class="section">
+                    <div class="setup-tabs">
+                        <button class="tab-button ${activeTab === 'players' ? 'active' : ''}" onclick="showTabbedSetup('players')">
+                            メンバー情報
+                        </button>
+                        <button class="tab-button ${activeTab === 'policy' ? 'active' : ''}" onclick="showTabbedSetup('policy')">
+                            装備方針
+                        </button>
+                        <button class="tab-button ${activeTab === 'weapons' ? 'active' : ''}" onclick="showTabbedSetup('weapons')">
+                            直ドロップ希望
+                        </button>
+                    </div>
+                    
+                    <div class="tab-content">
+                        ${getTabContent(activeTab, data, players)}
+                    </div>
+                    
+                    <div class="navigation">
+                        <button class="nav-button secondary" onclick="showRaidTierSelection()">レイドティア選択に戻る</button>
+                        <button class="nav-button" onclick="saveCurrentTabAndContinue('${activeTab}')">設定完了</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // タブコンテンツを取得
+        function getTabContent(activeTab, data, players) {
             const positions = ['MT', 'ST', 'H1', 'H2', 'D1', 'D2', 'D3', 'D4'];
             const jobsByRole = {
                 'MT': ['ナイト', '戦士', '暗黒騎士', 'ガンブレイカー'],
@@ -1167,16 +1368,12 @@
                 'H2': ['白魔道士', '占星術士', '学者', '賢者'],
                 'D1': ['モンク', '竜騎士', '忍者', '侍', 'リーパー', 'ヴァイパー'],
                 'D2': ['モンク', '竜騎士', '忍者', '侍', 'リーパー', 'ヴァイパー'],
-                'D3': ['黒魔道士', '召喚士', '赤魔道士', 'ピクトマンサー', '吟遊詩人', '機工士', '踊り子'],
-                'D4': ['黒魔道士', '召喚士', '赤魔道士', 'ピクトマンサー', '吟遊詩人', '機工士', '踊り子']
+                'D3': ['吟遊詩人', '機工士', '踊り子'],
+                'D4': ['黒魔道士', '召喚士', '赤魔道士', 'ピクトマンサー']
             };
             
-            const content = document.getElementById('content');
-            content.innerHTML = `
-                <h1>プレイヤー・ジョブ設定</h1>
-                <h2>${currentRaidTier.name}</h2>
-                
-                <div class="section">
+            if (activeTab === 'players') {
+                return `
                     <h3>8人のメンバー情報を入力してください</h3>
                     <div class="player-grid">
                         ${positions.map(position => {
@@ -1193,7 +1390,7 @@
                                                placeholder="プレイヤー名" style="width: 100%;">
                                     </div>
                                     <div>
-                                        <label>キャラクター名:</label>
+                                        <label>キャラクター名 (任意):</label>
                                         <input type="text" id="${position}-character" value="${player.characterName || ''}" 
                                                placeholder="キャラクター名" style="width: 100%;">
                                     </div>
@@ -1210,60 +1407,10 @@
                             `;
                         }).join('')}
                     </div>
-                    
-                    <div class="navigation">
-                        <button class="nav-button secondary" onclick="showRaidTierSelection()">レイドティア選択に戻る</button>
-                        <button class="nav-button" onclick="savePlayersAndContinue()">設定完了</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        // プレイヤー情報保存
-        function savePlayersAndContinue() {
-            const positions = ['MT', 'ST', 'H1', 'H2', 'D1', 'D2', 'D3', 'D4'];
-            const data = getData();
-            
-            if (!data.players) data.players = {};
-            if (!data.players[currentRaidTier.id]) data.players[currentRaidTier.id] = {};
-            
-            for (const position of positions) {
-                const name = document.getElementById(`${position}-name`).value.trim();
-                const characterName = document.getElementById(`${position}-character`).value.trim();
-                const job = document.getElementById(`${position}-job`).value;
-                
-                if (!name || !characterName || !job) {
-                    alert(`${position}のプレイヤー情報を全て入力してください。`);
-                    return;
-                }
-                
-                data.players[currentRaidTier.id][position] = {
-                    name: name,
-                    characterName: characterName,
-                    job: job,
-                    position: position,
-                    equipmentPolicy: {},
-                    weaponWishes: [],
-                    currentEquipment: {}
-                };
-            }
-            
-            saveData(data);
-            showEquipmentPolicySetup();
-        }
-
-        // 装備方針設定画面
-        function showEquipmentPolicySetup() {
-            const data = getData();
-            const players = data.players[currentRaidTier.id];
-            const slots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
-            
-            const content = document.getElementById('content');
-            content.innerHTML = `
-                <h1>装備方針設定</h1>
-                <h2>${currentRaidTier.name}</h2>
-                
-                <div class="section">
+                `;
+            } else if (activeTab === 'policy') {
+                const slots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+                return `
                     <h3>各部位の装備方針を設定してください</h3>
                     <p>零式装備: レイドでドロップする装備を狙う | トームストーン装備: トームストーンで交換可能な装備を使用</p>
                     
@@ -1271,7 +1418,7 @@
                         ${Object.entries(players).map(([position, player]) => `
                             <div class="player-card">
                                 <div class="player-header">
-                                    <span class="player-name">${player.name} (${player.characterName})</span>
+                                    <span class="player-name">${player.name} (${player.characterName || 'キャラ名未設定'})</span>
                                     <span class="position-badge">${position} - ${player.job}</span>
                                 </div>
                                 <div class="equipment-policy">
@@ -1290,29 +1437,142 @@
                             </div>
                         `).join('')}
                     </div>
+                `;
+            } else if (activeTab === 'weapons') {
+                return `
+                    <h3>直ドロップ武器希望設定</h3>
+                    <p>4層で直接ドロップする武器の希望を設定してください</p>
                     
-                    <div class="navigation">
-                        <button class="nav-button secondary" onclick="showPlayerSetup()">プレイヤー設定に戻る</button>
-                        <button class="nav-button" onclick="saveEquipmentPolicyAndContinue()">設定完了</button>
+                    <div class="weapon-wishes-section">
+                        ${Object.entries(players).map(([position, player]) => {
+                            const weaponWishes = player.weaponWishes || [];
+                            return `
+                                <div class="weapon-wish-card">
+                                    <div class="player-header">
+                                        <span class="player-name">${player.name} (${player.characterName || 'キャラ名未設定'})</span>
+                                        <span class="position-badge">${position} - ${player.job}</span>
+                                    </div>
+                                    <div class="weapon-wishes">
+                                        <label>希望武器:</label>
+                                        <select id="${position}-weapon-wish" multiple>
+                                            <option value="メイン武器" ${weaponWishes.includes('メイン武器') ? 'selected' : ''}>メイン武器</option>
+                                            <option value="オフハンド" ${weaponWishes.includes('オフハンド') ? 'selected' : ''}>オフハンド</option>
+                                        </select>
+                                        <p style="font-size: 0.8rem; color: #666;">複数選択可能です（Ctrl+クリック）</p>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
                     </div>
-                </div>
-            `;
+                `;
+            }
         }
 
+        // 現在のタブを保存して次へ進む
+        function saveCurrentTabAndContinue(currentTab) {
+            if (currentTab === 'players') {
+                savePlayersData();
+            } else if (currentTab === 'policy') {
+                saveEquipmentPolicyData();
+            } else if (currentTab === 'weapons') {
+                saveWeaponWishesData();
+            }
+            
+            // 全て設定済みかチェックしてダッシュボードへ
+            const data = getData();
+            const players = data.players[currentRaidTier.id] || {};
+            
+            if (Object.keys(players).length > 0) {
+                showMainDashboard();
+            } else {
+                alert('メンバー情報が設定されていません。');
+            }
+        }
+        
+        // プレイヤー情報保存
+        function savePlayersData() {
+            const positions = ['MT', 'ST', 'H1', 'H2', 'D1', 'D2', 'D3', 'D4'];
+            const data = getData();
+            
+            if (!data.players) data.players = {};
+            if (!data.players[currentRaidTier.id]) data.players[currentRaidTier.id] = {};
+            
+            for (const position of positions) {
+                const name = document.getElementById(`${position}-name`).value.trim();
+                const characterName = document.getElementById(`${position}-character`).value.trim();
+                const job = document.getElementById(`${position}-job`).value;
+                
+                if (!name || !job) {
+                    alert(`${position}のプレイヤー名とジョブを入力してください。`);
+                    return;
+                }
+                
+                // 既存データがある場合は保持
+                const existingPlayer = data.players[currentRaidTier.id][position] || {};
+                
+                data.players[currentRaidTier.id][position] = {
+                    name: name,
+                    characterName: characterName,
+                    job: job,
+                    position: position,
+                    equipmentPolicy: existingPlayer.equipmentPolicy || {},
+                    weaponWishes: existingPlayer.weaponWishes || [],
+                    currentEquipment: existingPlayer.currentEquipment || {}
+                };
+            }
+            
+            saveData(data);
+        }
+        
         // 装備方針保存
-        function saveEquipmentPolicyAndContinue() {
+        function saveEquipmentPolicyData() {
             const data = getData();
             const players = data.players[currentRaidTier.id];
             const slots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
             
             for (const [position, player] of Object.entries(players)) {
                 for (const slot of slots) {
-                    const policy = document.getElementById(`${position}-${slot}-policy`).value;
-                    player.equipmentPolicy[slot] = policy;
+                    const policyElement = document.getElementById(`${position}-${slot}-policy`);
+                    if (policyElement) {
+                        const policy = policyElement.value;
+                        player.equipmentPolicy[slot] = policy;
+                    }
                 }
             }
             
             saveData(data);
+        }
+        
+        // 武器希望保存
+        function saveWeaponWishesData() {
+            const data = getData();
+            const players = data.players[currentRaidTier.id];
+            
+            for (const [position, player] of Object.entries(players)) {
+                const wishElement = document.getElementById(`${position}-weapon-wish`);
+                if (wishElement) {
+                    const selectedOptions = Array.from(wishElement.selectedOptions).map(option => option.value);
+                    player.weaponWishes = selectedOptions;
+                }
+            }
+            
+            saveData(data);
+        }
+        
+        // プレイヤー情報保存（旧関数 - 互換性維持）
+        function savePlayersAndContinue() {
+            savePlayersData();
+            showTabbedSetup('policy');
+        }
+
+        // 装備方針設定画面（タブ形式へのリダイレクト）
+        function showEquipmentPolicySetup() {
+            showTabbedSetup('policy');
+        }
+
+        // 装備方針保存（タブ形式へのリダイレクト）
+        function saveEquipmentPolicyAndContinue() {
+            saveEquipmentPolicyData();
             showMainDashboard();
         }
 
@@ -1339,51 +1599,17 @@
                             <div class="layer-card">
                                 <div class="layer-header">${layer}層クリア</div>
                                 <div class="layer-content">
+                                    ${layer === 4 ? `
+                                        <button onclick="showWeaponDropSettings()" style="width: 100%; margin-bottom: 8px;" class="nav-button secondary">
+                                            直ドロップ武器設定
+                                        </button>
+                                    ` : ''}
                                     <button onclick="processLayerAllocation(${layer})" style="width: 100%; margin-top: 10px;">
                                         ${layer}層 装備分配開始
                                     </button>
                                 </div>
                             </div>
                         `).join('')}
-                    </div>
-                </div>
-                
-                <div class="section">
-                    <h3>プレイヤー状況</h3>
-                    <div class="player-grid">
-                        ${Object.entries(players).map(([position, player]) => {
-                            const equipmentPolicy = player.equipmentPolicy || {};
-                            const slots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
-                            
-                            return `
-                                <div class="player-card">
-                                    <div class="player-header">
-                                        <span class="player-name">${player.name}</span>
-                                        <span class="position-badge">${position}</span>
-                                    </div>
-                                    <p><strong>キャラクター:</strong> ${player.characterName}</p>
-                                    <p><strong>ジョブ:</strong> ${player.job}</p>
-                                    <p><strong>装備取得数:</strong> ${allocations.filter(a => a.winner && a.winner.position === position).length}個</p>
-                                    
-                                    <div class="equipment-policy-summary">
-                                        <h5>装備方針</h5>
-                                        <div class="policy-summary-grid">
-                                            ${slots.map(slot => {
-                                                const policy = equipmentPolicy[slot] || '未設定';
-                                                const bgColor = policy === '零式' ? '#e8f5e8' : 
-                                                               policy === 'トームストーン' ? '#fff3e0' : '#f8f9fa';
-                                                return `
-                                                    <div class="policy-summary-item" style="background-color: ${bgColor};">
-                                                        <span class="slot-name">${slot}</span>
-                                                        <span class="policy-name">${policy === 'トームストーン' ? 'トーム' : policy}</span>
-                                                    </div>
-                                                `;
-                                            }).join('')}
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        }).join('')}
                     </div>
                 </div>
                 
@@ -1397,6 +1623,76 @@
                     </div>
                 </div>
             `;
+        }
+
+        // 直ドロップ武器設定画面
+        function showWeaponDropSettings() {
+            const data = getData();
+            const currentSettings = data.weaponDropSettings || {};
+            const currentTierSettings = currentSettings[currentRaidTier.id] || {};
+            
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <h1>4層 直ドロップ武器設定</h1>
+                <h2>${currentRaidTier.name}</h2>
+                
+                <div class="section">
+                    <h3>今回ドロップした武器を設定してください</h3>
+                    <p>4層でドロップした武器を選択してください。選択した武器のみが分配対象になります。</p>
+                    
+                    <div class="weapon-drop-settings">
+                        <div class="weapon-category">
+                            <h4>タンク武器</h4>
+                            <label><input type="checkbox" id="tank-weapon" ${currentTierSettings.tankWeapon ? 'checked' : ''}> タンク武器</label>
+                        </div>
+                        
+                        <div class="weapon-category">
+                            <h4>ヒーラー武器</h4>
+                            <label><input type="checkbox" id="healer-weapon" ${currentTierSettings.healerWeapon ? 'checked' : ''}> ヒーラー武器</label>
+                        </div>
+                        
+                        <div class="weapon-category">
+                            <h4>近接DPS武器</h4>
+                            <label><input type="checkbox" id="melee-weapon" ${currentTierSettings.meleeWeapon ? 'checked' : ''}> 近接DPS武器</label>
+                        </div>
+                        
+                        <div class="weapon-category">
+                            <h4>レンジ武器</h4>
+                            <label><input type="checkbox" id="ranged-weapon" ${currentTierSettings.rangedWeapon ? 'checked' : ''}> レンジ武器</label>
+                        </div>
+                        
+                        <div class="weapon-category">
+                            <h4>キャスター武器</h4>
+                            <label><input type="checkbox" id="caster-weapon" ${currentTierSettings.casterWeapon ? 'checked' : ''}> キャスター武器</label>
+                        </div>
+                    </div>
+                    
+                    <div class="navigation">
+                        <button class="nav-button secondary" onclick="showMainDashboard()">ダッシュボードに戻る</button>
+                        <button class="nav-button" onclick="saveWeaponDropSettings()">設定保存</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 直ドロップ武器設定保存
+        function saveWeaponDropSettings() {
+            const data = getData();
+            
+            if (!data.weaponDropSettings) data.weaponDropSettings = {};
+            if (!data.weaponDropSettings[currentRaidTier.id]) data.weaponDropSettings[currentRaidTier.id] = {};
+            
+            data.weaponDropSettings[currentRaidTier.id] = {
+                tankWeapon: document.getElementById('tank-weapon').checked,
+                healerWeapon: document.getElementById('healer-weapon').checked,
+                meleeWeapon: document.getElementById('melee-weapon').checked,
+                rangedWeapon: document.getElementById('ranged-weapon').checked,
+                casterWeapon: document.getElementById('caster-weapon').checked
+            };
+            
+            saveData(data);
+            alert('武器ドロップ設定を保存しました。');
+            showMainDashboard();
         }
 
         // 層別装備分配処理
@@ -1429,12 +1725,35 @@
                     ],
                     4: [
                         { slot: '胴', name: '胴 - ボディギアチェスト', itemLevel: 730, type: 'armor' },
-                        { slot: '武器', name: '武器 - ウェポンチェスト', itemLevel: 735, type: 'weapon_box' },
                         { slot: 'マウント', name: 'マウント', itemLevel: 1, type: 'mount' }
                     ]
                 };
                 
                 currentDropItems = layerDrops[layer] || [];
+                
+                // 4層の場合は設定された武器ドロップを追加
+                if (layer === 4) {
+                    const data = getData();
+                    const weaponSettings = data.weaponDropSettings && data.weaponDropSettings[currentRaidTier.id];
+                    
+                    if (weaponSettings) {
+                        if (weaponSettings.tankWeapon) {
+                            currentDropItems.push({ slot: '武器', name: 'タンク武器 - ウェポンチェスト', itemLevel: 735, type: 'weapon', weaponType: 'tank' });
+                        }
+                        if (weaponSettings.healerWeapon) {
+                            currentDropItems.push({ slot: '武器', name: 'ヒーラー武器 - ウェポンチェスト', itemLevel: 735, type: 'weapon', weaponType: 'healer' });
+                        }
+                        if (weaponSettings.meleeWeapon) {
+                            currentDropItems.push({ slot: '武器', name: '近接DPS武器 - ウェポンチェスト', itemLevel: 735, type: 'weapon', weaponType: 'melee' });
+                        }
+                        if (weaponSettings.rangedWeapon) {
+                            currentDropItems.push({ slot: '武器', name: 'レンジ武器 - ウェポンチェスト', itemLevel: 735, type: 'weapon', weaponType: 'ranged' });
+                        }
+                        if (weaponSettings.casterWeapon) {
+                            currentDropItems.push({ slot: '武器', name: 'キャスター武器 - ウェポンチェスト', itemLevel: 735, type: 'weapon', weaponType: 'caster' });
+                        }
+                    }
+                }
                 displayAllocationResults(layer);
                 
             } catch (error) {
@@ -1501,44 +1820,80 @@
                 
                 <div class="allocation-section">
                     <div class="allocation-grid">
-                        ${allocationResults.map((result, index) => `
-                            <div class="allocation-card">
-                                <div class="allocation-header">
-                                    ${result.equipment.name}
-                                </div>
-                                <div class="allocation-body">
-                                    <div class="need-list">
-                                        <h5>Need (${result.need.length}人)</h5>
-                                        <ul class="player-list">
-                                            ${result.need.map((player, i) => `
-                                                <li style="${i === 0 ? 'background-color: #ffe6e6; font-weight: bold;' : ''}">
+                        ${allocationResults.map((result, index) => {
+                            const allPlayers = Object.entries(players).map(([position, player]) => ({
+                                position: position,
+                                name: player.name,
+                                job: player.job
+                            }));
+                            
+                            return `
+                                <div class="allocation-card">
+                                    <div class="allocation-header">
+                                        ${result.equipment.name}
+                                    </div>
+                                    
+                                    <div class="predicted-winner">
+                                        <h5>取得予定者 (判定ロジック)</h5>
+                                        <div class="predicted-player">
+                                            ${result.winner ? 
+                                                `${result.winner.name} (${result.winner.position} - ${result.winner.job}) 🏆` : 
+                                                '該当者なし'
+                                            }
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="actual-winner">
+                                        <h5>実際の取得者</h5>
+                                        <select id="actual-winner-${index}" class="actual-winner-select">
+                                            <option value="">取得者を選択してください</option>
+                                            ${allPlayers.map(player => `
+                                                <option value="${player.position}" ${result.winner && result.winner.position === player.position ? 'selected' : ''}>
                                                     ${player.name} (${player.position} - ${player.job})
-                                                    ${i === 0 ? ' 🏆' : ''}
-                                                </li>
+                                                </option>
                                             `).join('')}
-                                        </ul>
+                                        </select>
                                     </div>
                                     
-                                    <div class="greed-list">
-                                        <h5>Greed (${result.greed.length}人)</h5>
-                                        <ul class="player-list">
-                                            ${result.greed.map(player => `
-                                                <li>${player.name} (${player.position} - ${player.job})</li>
-                                            `).join('')}
-                                        </ul>
-                                    </div>
-                                    
-                                    <div class="pass-list">
-                                        <h5>Pass (${result.pass.length}人)</h5>
-                                        <ul class="player-list">
-                                            ${result.pass.map(player => `
-                                                <li>${player.name} (${player.position} - ${player.job})</li>
-                                            `).join('')}
-                                        </ul>
+                                    <div class="allocation-details">
+                                        <details>
+                                            <summary>判定詳細を表示</summary>
+                                            <div class="allocation-body">
+                                                <div class="need-list">
+                                                    <h6>Need (${result.need.length}人)</h6>
+                                                    <ul class="player-list">
+                                                        ${result.need.map((player, i) => `
+                                                            <li style="${i === 0 ? 'background-color: #ffe6e6; font-weight: bold;' : ''}">
+                                                                ${player.name} (${player.position} - ${player.job})
+                                                                ${i === 0 ? ' 🏆' : ''}
+                                                            </li>
+                                                        `).join('')}
+                                                    </ul>
+                                                </div>
+                                                
+                                                <div class="greed-list">
+                                                    <h6>Greed (${result.greed.length}人)</h6>
+                                                    <ul class="player-list">
+                                                        ${result.greed.map(player => `
+                                                            <li>${player.name} (${player.position} - ${player.job})</li>
+                                                        `).join('')}
+                                                    </ul>
+                                                </div>
+                                                
+                                                <div class="pass-list">
+                                                    <h6>Pass (${result.pass.length}人)</h6>
+                                                    <ul class="player-list">
+                                                        ${result.pass.map(player => `
+                                                            <li>${player.name} (${player.position} - ${player.job})</li>
+                                                        `).join('')}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </details>
                                     </div>
                                 </div>
-                            </div>
-                        `).join('')}
+                            `;
+                        }).join('')}
                     </div>
                     
                     <div class="confirm-section">
@@ -1558,24 +1913,37 @@
         // 分配確定
         function confirmAllocation(layer) {
             const data = getData();
+            const players = data.players[currentRaidTier.id] || {};
             
             if (!data.allocations) data.allocations = {};
             if (!data.allocations[currentRaidTier.id]) data.allocations[currentRaidTier.id] = [];
             
             const currentWeek = getCurrentWeekString();
             
-            allocationResults.forEach(result => {
-                if (result.winner) {
-                    data.allocations[currentRaidTier.id].push({
-                        id: 'alloc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-                        layer: layer,
-                        equipment: result.equipment,
-                        winner: result.winner,
-                        timestamp: new Date().toISOString(),
-                        week: currentWeek,
-                        allNeedPlayers: result.need,
-                        allGreedPlayers: result.greed
-                    });
+            allocationResults.forEach((result, index) => {
+                // 実際の取得者を確認
+                const actualWinnerSelect = document.getElementById(`actual-winner-${index}`);
+                const actualWinnerPosition = actualWinnerSelect ? actualWinnerSelect.value : '';
+                
+                if (actualWinnerPosition) {
+                    const actualWinner = players[actualWinnerPosition];
+                    if (actualWinner) {
+                        data.allocations[currentRaidTier.id].push({
+                            id: 'alloc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                            layer: layer,
+                            equipment: result.equipment,
+                            winner: {
+                                position: actualWinnerPosition,
+                                name: actualWinner.name,
+                                job: actualWinner.job
+                            },
+                            predictedWinner: result.winner,
+                            timestamp: new Date().toISOString(),
+                            week: currentWeek,
+                            allNeedPlayers: result.need,
+                            allGreedPlayers: result.greed
+                        });
+                    }
                 }
             });
             

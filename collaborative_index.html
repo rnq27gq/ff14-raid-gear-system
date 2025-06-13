@@ -2038,9 +2038,11 @@
                 
                 if (item.type === 'direct_weapon') {
                     // 直ドロ武器の場合は希望リストで判定
+                    console.log(`直ドロップ武器判定: ${item.weaponName}`);
                     Object.entries(players).forEach(([position, player]) => {
                         const weaponWishes = player.weaponWishes || [];
                         const wishIndex = weaponWishes.indexOf(item.weaponName);
+                        console.log(`${position} (${player.name}): 希望リスト=${JSON.stringify(weaponWishes)}, 武器=${item.weaponName}, 順位=${wishIndex}`);
                         
                         if (wishIndex !== -1) {
                             needPlayers.push({
@@ -2146,40 +2148,6 @@
                 <h1>${layer}層 装備分配結果</h1>
                 <h2>${currentRaidTier.name}</h2>
                 
-                ${layer === 4 ? `
-                    <div class="section" style="background-color: #f8f9fa; padding: 20px; margin-bottom: 20px; border-radius: 8px;">
-                        <h3>4層 直ドロップ武器設定</h3>
-                        <p>今回ドロップした直ドロップ武器を選択してください。選択すると分配判定が自動更新されます。</p>
-                        
-                        <div class="direct-weapon-selection" style="margin-bottom: 15px;">
-                            <label for="direct-weapon-select-live" style="display: block; margin-bottom: 5px; font-weight: bold;">直ドロップ武器:</label>
-                            <select id="direct-weapon-select-live" onchange="updateDirectWeaponAllocation()" style="width: 300px; padding: 10px; font-size: 16px;">
-                                <option value="">武器を選択してください</option>
-                                <option value="ナイト">ナイト</option>
-                                <option value="戦士">戦士</option>
-                                <option value="暗黒騎士">暗黒騎士</option>
-                                <option value="ガンブレイカー">ガンブレイカー</option>
-                                <option value="白魔道士">白魔道士</option>
-                                <option value="占星術士">占星術士</option>
-                                <option value="学者">学者</option>
-                                <option value="賢者">賢者</option>
-                                <option value="モンク">モンク</option>
-                                <option value="竜騎士">竜騎士</option>
-                                <option value="忍者">忍者</option>
-                                <option value="侍">侍</option>
-                                <option value="リーパー">リーパー</option>
-                                <option value="ヴァイパー">ヴァイパー</option>
-                                <option value="黒魔道士">黒魔道士</option>
-                                <option value="召喚士">召喚士</option>
-                                <option value="赤魔道士">赤魔道士</option>
-                                <option value="ピクトマンサー">ピクトマンサー</option>
-                                <option value="吟遊詩人">吟遊詩人</option>
-                                <option value="機工士">機工士</option>
-                                <option value="踊り子">踊り子</option>
-                            </select>
-                        </div>
-                    </div>
-                ` : ''}
                 
                 <div class="allocation-section">
                     <div class="allocation-grid">
@@ -2195,6 +2163,38 @@
                                     <div class="allocation-header">
                                         ${result.equipment.name}
                                     </div>
+                                    
+                                    ${(result.equipment.type === 'direct_weapon' || result.equipment.type === 'direct_weapon_placeholder') ? `
+                                        <div class="direct-weapon-selection" style="background-color: #fff3cd; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ffeaa7;">
+                                            <label for="direct-weapon-select-live" style="font-weight: bold; color: #856404; display: block; margin-bottom: 5px;">
+                                                📦 ドロップした直ドロップ武器を選択:
+                                            </label>
+                                            <select id="direct-weapon-select-live" onchange="updateDirectWeaponAllocation()" style="width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ffeaa7; border-radius: 3px;">
+                                                <option value="">武器を選択してください</option>
+                                                <option value="ナイト" ${result.equipment.weaponName === 'ナイト' ? 'selected' : ''}>ナイト</option>
+                                                <option value="戦士" ${result.equipment.weaponName === '戦士' ? 'selected' : ''}>戦士</option>
+                                                <option value="暗黒騎士" ${result.equipment.weaponName === '暗黒騎士' ? 'selected' : ''}>暗黒騎士</option>
+                                                <option value="ガンブレイカー" ${result.equipment.weaponName === 'ガンブレイカー' ? 'selected' : ''}>ガンブレイカー</option>
+                                                <option value="白魔道士" ${result.equipment.weaponName === '白魔道士' ? 'selected' : ''}>白魔道士</option>
+                                                <option value="占星術士" ${result.equipment.weaponName === '占星術士' ? 'selected' : ''}>占星術士</option>
+                                                <option value="学者" ${result.equipment.weaponName === '学者' ? 'selected' : ''}>学者</option>
+                                                <option value="賢者" ${result.equipment.weaponName === '賢者' ? 'selected' : ''}>賢者</option>
+                                                <option value="モンク" ${result.equipment.weaponName === 'モンク' ? 'selected' : ''}>モンク</option>
+                                                <option value="竜騎士" ${result.equipment.weaponName === '竜騎士' ? 'selected' : ''}>竜騎士</option>
+                                                <option value="忍者" ${result.equipment.weaponName === '忍者' ? 'selected' : ''}>忍者</option>
+                                                <option value="侍" ${result.equipment.weaponName === '侍' ? 'selected' : ''}>侍</option>
+                                                <option value="リーパー" ${result.equipment.weaponName === 'リーパー' ? 'selected' : ''}>リーパー</option>
+                                                <option value="ヴァイパー" ${result.equipment.weaponName === 'ヴァイパー' ? 'selected' : ''}>ヴァイパー</option>
+                                                <option value="黒魔道士" ${result.equipment.weaponName === '黒魔道士' ? 'selected' : ''}>黒魔道士</option>
+                                                <option value="召喚士" ${result.equipment.weaponName === '召喚士' ? 'selected' : ''}>召喚士</option>
+                                                <option value="赤魔道士" ${result.equipment.weaponName === '赤魔道士' ? 'selected' : ''}>赤魔道士</option>
+                                                <option value="ピクトマンサー" ${result.equipment.weaponName === 'ピクトマンサー' ? 'selected' : ''}>ピクトマンサー</option>
+                                                <option value="吟遊詩人" ${result.equipment.weaponName === '吟遊詩人' ? 'selected' : ''}>吟遊詩人</option>
+                                                <option value="機工士" ${result.equipment.weaponName === '機工士' ? 'selected' : ''}>機工士</option>
+                                                <option value="踊り子" ${result.equipment.weaponName === '踊り子' ? 'selected' : ''}>踊り子</option>
+                                            </select>
+                                        </div>
+                                    ` : ''}
                                     
                                     <div class="predicted-winner">
                                         <h5>取得予定者 (判定ロジック)</h5>
@@ -2367,9 +2367,11 @@
                     
                     if (item.type === 'direct_weapon') {
                         // 直ドロ武器の場合は希望リストで判定
+                        console.log(`更新: 直ドロップ武器判定: ${item.weaponName}`);
                         Object.entries(players).forEach(([position, player]) => {
                             const weaponWishes = player.weaponWishes || [];
                             const wishIndex = weaponWishes.indexOf(item.weaponName);
+                            console.log(`更新: ${position} (${player.name}): 希望リスト=${JSON.stringify(weaponWishes)}, 武器=${item.weaponName}, 順位=${wishIndex}`);
                             
                             if (wishIndex !== -1) {
                                 needPlayers.push({

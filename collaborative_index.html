@@ -532,6 +532,119 @@
             display: none;
         }
         
+        /* 装備方針表示 */
+        .equipment-policy-summary {
+            margin-top: 15px;
+            border-top: 1px solid #e9ecef;
+            padding-top: 10px;
+        }
+        .equipment-policy-summary h5 {
+            margin: 0 0 8px 0;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+        .policy-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 3px;
+            font-size: 0.7rem;
+        }
+        .policy-summary-item {
+            padding: 3px 4px;
+            border-radius: 3px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+        .slot-name {
+            display: block;
+            font-weight: 600;
+            color: #495057;
+        }
+        .policy-name {
+            display: block;
+            font-size: 0.65rem;
+            color: #6c757d;
+        }
+        
+        /* 週別統計表示 */
+        .weekly-stats-section {
+            margin: 25px 0;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .weekly-stats-section h3 {
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            color: #495057;
+        }
+        .weekly-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background-color: #dee2e6;
+            padding: 1px;
+        }
+        .weekly-stat-card {
+            background-color: white;
+            padding: 12px;
+            font-size: 0.8rem;
+        }
+        .player-header-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+        .position-name {
+            font-weight: bold;
+            color: #3498db;
+            font-size: 0.9rem;
+        }
+        .player-name-stats {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .job-name {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+        .equipment-stats h5 {
+            margin: 8px 0 4px 0;
+            font-size: 0.75rem;
+            color: #495057;
+        }
+        .acquired-section {
+            margin-bottom: 10px;
+        }
+        .slot-items {
+            font-size: 0.7rem;
+            margin: 2px 0;
+            line-height: 1.3;
+        }
+        .slot-items.acquired {
+            color: #28a745;
+        }
+        .slot-items.not-acquired {
+            color: #dc3545;
+        }
+        .slot-label {
+            font-weight: 600;
+            margin-right: 4px;
+        }
+        .item-name {
+            font-weight: normal;
+        }
+        .no-items {
+            font-style: italic;
+            color: #6c757d;
+            font-size: 0.7rem;
+        }
+        
         /* レスポンシブデザイン */
         @media (max-width: 768px) {
             .github-header {
@@ -584,6 +697,14 @@
             .nav-button {
                 width: 100%;
                 max-width: 300px;
+            }
+            
+            .weekly-stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .policy-summary-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -1092,7 +1213,7 @@
                     
                     <div class="navigation">
                         <button class="nav-button secondary" onclick="showRaidTierSelection()">レイドティア選択に戻る</button>
-                        <button class="nav-button" onclick="savePlayersAndContinue()">保存して次へ</button>
+                        <button class="nav-button" onclick="savePlayersAndContinue()">設定完了</button>
                     </div>
                 </div>
             `;
@@ -1172,7 +1293,7 @@
                     
                     <div class="navigation">
                         <button class="nav-button secondary" onclick="showPlayerSetup()">プレイヤー設定に戻る</button>
-                        <button class="nav-button" onclick="saveEquipmentPolicyAndContinue()">保存して完了</button>
+                        <button class="nav-button" onclick="saveEquipmentPolicyAndContinue()">設定完了</button>
                     </div>
                 </div>
             `;
@@ -1218,7 +1339,6 @@
                             <div class="layer-card">
                                 <div class="layer-header">${layer}層クリア</div>
                                 <div class="layer-content">
-                                    <div class="drop-item">固定ドロップ装備の分配処理</div>
                                     <button onclick="processLayerAllocation(${layer})" style="width: 100%; margin-top: 10px;">
                                         ${layer}層 装備分配開始
                                     </button>
@@ -1231,17 +1351,39 @@
                 <div class="section">
                     <h3>プレイヤー状況</h3>
                     <div class="player-grid">
-                        ${Object.entries(players).map(([position, player]) => `
-                            <div class="player-card">
-                                <div class="player-header">
-                                    <span class="player-name">${player.name}</span>
-                                    <span class="position-badge">${position}</span>
+                        ${Object.entries(players).map(([position, player]) => {
+                            const equipmentPolicy = player.equipmentPolicy || {};
+                            const slots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+                            
+                            return `
+                                <div class="player-card">
+                                    <div class="player-header">
+                                        <span class="player-name">${player.name}</span>
+                                        <span class="position-badge">${position}</span>
+                                    </div>
+                                    <p><strong>キャラクター:</strong> ${player.characterName}</p>
+                                    <p><strong>ジョブ:</strong> ${player.job}</p>
+                                    <p><strong>装備取得数:</strong> ${allocations.filter(a => a.winner && a.winner.position === position).length}個</p>
+                                    
+                                    <div class="equipment-policy-summary">
+                                        <h5>装備方針</h5>
+                                        <div class="policy-summary-grid">
+                                            ${slots.map(slot => {
+                                                const policy = equipmentPolicy[slot] || '未設定';
+                                                const bgColor = policy === '零式' ? '#e8f5e8' : 
+                                                               policy === 'トームストーン' ? '#fff3e0' : '#f8f9fa';
+                                                return `
+                                                    <div class="policy-summary-item" style="background-color: ${bgColor};">
+                                                        <span class="slot-name">${slot}</span>
+                                                        <span class="policy-name">${policy === 'トームストーン' ? 'トーム' : policy}</span>
+                                                    </div>
+                                                `;
+                                            }).join('')}
+                                        </div>
+                                    </div>
                                 </div>
-                                <p><strong>キャラクター:</strong> ${player.characterName}</p>
-                                <p><strong>ジョブ:</strong> ${player.job}</p>
-                                <p><strong>装備取得数:</strong> ${allocations.filter(a => a.winner && a.winner.position === position).length}個</p>
-                            </div>
-                        `).join('')}
+                            `;
+                        }).join('')}
                     </div>
                 </div>
                 
@@ -1517,34 +1659,45 @@
             const players = data.players[currentRaidTier.id] || {};
             const allocations = data.allocations[currentRaidTier.id] || [];
             
-            // プレイヤー別統計
-            const playerStats = {};
-            Object.keys(players).forEach(position => {
-                playerStats[position] = {
-                    player: players[position],
-                    totalItems: 0,
-                    itemsByLayer: { 1: 0, 2: 0, 3: 0, 4: 0 },
-                    itemsByType: {}
-                };
-            });
+            // 固定順序: MT→ST→H1→H2→D1→D2→D3→D4
+            const fixedOrder = ['MT', 'ST', 'H1', 'H2', 'D1', 'D2', 'D3', 'D4'];
+            const equipmentSlots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
             
+            // 週別統計の計算
+            const weeklyStats = {};
             allocations.forEach(allocation => {
+                const week = allocation.week || '不明';
+                if (!weeklyStats[week]) {
+                    weeklyStats[week] = {};
+                    fixedOrder.forEach(pos => {
+                        weeklyStats[week][pos] = {
+                            player: players[pos],
+                            acquired: [],
+                            bySlot: {}
+                        };
+                        equipmentSlots.forEach(slot => {
+                            weeklyStats[week][pos].bySlot[slot] = [];
+                        });
+                    });
+                }
+                
                 if (allocation.winner) {
                     const position = allocation.winner.position;
-                    if (playerStats[position]) {
-                        playerStats[position].totalItems++;
-                        playerStats[position].itemsByLayer[allocation.layer]++;
-                        
-                        const type = allocation.equipment.type || 'other';
-                        playerStats[position].itemsByType[type] = 
-                            (playerStats[position].itemsByType[type] || 0) + 1;
+                    if (weeklyStats[week][position]) {
+                        weeklyStats[week][position].acquired.push(allocation.equipment);
+                        const slot = allocation.equipment.slot;
+                        if (weeklyStats[week][position].bySlot[slot]) {
+                            weeklyStats[week][position].bySlot[slot].push(allocation.equipment);
+                        }
                     }
                 }
             });
             
+            const weeks = Object.keys(weeklyStats).sort();
+            
             const content = document.getElementById('content');
             content.innerHTML = `
-                <h1>統計情報</h1>
+                <h1>週別統計</h1>
                 <h2>${currentRaidTier.name}</h2>
                 
                 <div class="section">
@@ -1553,53 +1706,65 @@
                         <button class="nav-button" onclick="showAllocationHistory()">配布履歴</button>
                     </div>
                     
-                    <h3>プレイヤー別装備取得統計</h3>
-                    <div class="statistics-grid">
-                        ${Object.entries(playerStats).map(([position, stats]) => `
-                            <div class="stat-card">
-                                <h4>${stats.player.name} (${position})</h4>
-                                <p><strong>ジョブ:</strong> ${stats.player.job}</p>
-                                <div class="stat-value">${stats.totalItems}個</div>
-                                <p>総装備取得数</p>
-                                <div style="font-size: 0.8rem; margin-top: 10px;">
-                                    <div>1層: ${stats.itemsByLayer[1]}個</div>
-                                    <div>2層: ${stats.itemsByLayer[2]}個</div>
-                                    <div>3層: ${stats.itemsByLayer[3]}個</div>
-                                    <div>4層: ${stats.itemsByLayer[4]}個</div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                    
-                    <h3>全体統計</h3>
-                    <div class="statistics-grid">
-                        <div class="stat-card">
-                            <h4>総分配数</h4>
-                            <div class="stat-value">${allocations.length}</div>
-                            <p>アイテム</p>
-                        </div>
-                        <div class="stat-card">
-                            <h4>最多取得者</h4>
-                            <div class="stat-value">
-                                ${Object.values(playerStats).reduce((max, stats) => 
-                                    stats.totalItems > max.totalItems ? stats : max, 
-                                    { totalItems: 0, player: { name: '-' } }
-                                ).player.name}
-                            </div>
-                            <p>
-                                ${Math.max(...Object.values(playerStats).map(s => s.totalItems))}個
-                            </p>
-                        </div>
-                        <div class="stat-card">
-                            <h4>層別分配数</h4>
-                            <div style="font-size: 0.9rem;">
-                                ${[1,2,3,4].map(layer => {
-                                    const count = allocations.filter(a => a.layer === layer).length;
-                                    return `<div>${layer}層: ${count}個</div>`;
+                    ${weeks.length === 0 ? `
+                        <p>まだ週別統計データがありません。レイドをクリアして装備を分配すると、ここに統計が表示されます。</p>
+                    ` : weeks.map(week => `
+                        <div class="weekly-stats-section">
+                            <h3>${week === '不明' ? '不明な週' : week + '週'}</h3>
+                            <div class="weekly-stats-grid">
+                                ${fixedOrder.map(position => {
+                                    const stats = weeklyStats[week][position];
+                                    const player = stats.player;
+                                    
+                                    if (!player) {
+                                        return `
+                                            <div class="weekly-stat-card">
+                                                <div class="player-header-stats">
+                                                    <span class="position-name">${position}</span>
+                                                    <span class="player-name-stats">未設定</span>
+                                                </div>
+                                                <div class="equipment-stats">未設定のプレイヤー</div>
+                                            </div>
+                                        `;
+                                    }
+                                    
+                                    return `
+                                        <div class="weekly-stat-card">
+                                            <div class="player-header-stats">
+                                                <span class="position-name">${position}</span>
+                                                <span class="player-name-stats">${player.name}</span>
+                                                <span class="job-name">${player.job}</span>
+                                            </div>
+                                            <div class="equipment-stats">
+                                                <div class="acquired-section">
+                                                    <h5>取得済み (${stats.acquired.length}個)</h5>
+                                                    ${equipmentSlots.map(slot => {
+                                                        const items = stats.bySlot[slot] || [];
+                                                        return items.length > 0 ? `
+                                                            <div class="slot-items acquired">
+                                                                <span class="slot-label">${slot}:</span>
+                                                                ${items.map(item => `<span class="item-name">${item.name}</span>`).join(', ')}
+                                                            </div>
+                                                        ` : '';
+                                                    }).join('')}
+                                                    ${stats.acquired.length === 0 ? '<div class="no-items">なし</div>' : ''}
+                                                </div>
+                                                <div class="not-acquired-section">
+                                                    <h5>未取得部位</h5>
+                                                    <div class="slot-items not-acquired">
+                                                        ${equipmentSlots.filter(slot => (stats.bySlot[slot] || []).length === 0)
+                                                            .map(slot => `<span class="slot-label">${slot}</span>`).join(', ')}
+                                                    </div>
+                                                    ${equipmentSlots.filter(slot => (stats.bySlot[slot] || []).length === 0).length === 0 ? 
+                                                        '<div class="no-items">全て取得済み</div>' : ''}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
                                 }).join('')}
                             </div>
                         </div>
-                    </div>
+                    `).join('')}
                 </div>
             `;
         }

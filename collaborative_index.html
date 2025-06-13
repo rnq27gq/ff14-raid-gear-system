@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FF14 零式装備分配システム (GitHub連携版)</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #ffffff;
+            color: #333333;
+            line-height: 1.4;
+            height: 100vh;
+            overflow-x: auto;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            height: calc(100vh - 20px);
+            overflow-y: auto;
+        }
+        
+        /* GitHub連携用のヘッダー */
+        .github-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 10px 20px;
+            margin: -10px -10px 15px -10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .github-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 14px;
+        }
+        
+        .connection-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            background-color: rgba(255,255,255,0.1);
+            font-size: 12px;
+        }
+        
+        .connection-indicator.online {
+            background-color: rgba(39, 174, 96, 0.2);
+            color: #2ecc71;
+        }
+        
+        .connection-indicator.offline {
+            background-color: rgba(149, 165, 166, 0.2);
+            color: #95a5a6;
+        }
+        
+        .auth-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .auth-input {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            width: 200px;
+        }
+        
+        .auth-btn {
+            padding: 5px 12px;
+            border: none;
+            border-radius: 4px;
+            background-color: #27ae60;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+        
+        .auth-btn:hover {
+            background-color: #219a52;
+        }
+        
+        .auth-btn.logout {
+            background-color: #e74c3c;
+        }
+        
+        .auth-btn.logout:hover {
+            background-color: #c0392b;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 1.8rem;
+        }
+        h2 {
+            color: #2c3e50;
+            font-weight: 500;
+            margin-bottom: 12px;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+        h3 {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        .section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 4px;
+            font-weight: 500;
+            font-size: 13px;
+        }
+        button:hover {
+            background-color: #2980b9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        input, select {
+            padding: 12px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #ffffff;
+            color: #333;
+            width: 200px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        .tier-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin: 12px 0;
+        }
+        .tier-item {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .tier-item:hover {
+            border-color: #3498db;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+            transform: translateY(-2px);
+        }
+        .tier-item.active {
+            border-color: #27ae60;
+            background-color: #d5f4e6;
+        }
+        .tier-item h3 {
+            margin: 0 0 8px 0;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+        .tier-item p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .player-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .player-card {
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .player-name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+        .position-badge {
+            background-color: #3498db;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .job-select {
+            width: 100%;
+            margin: 5px 0;
+        }
+        .equipment-policy {
+            margin: 10px 0;
+        }
+        .policy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+            margin: 8px 0;
+        }
+        .policy-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .policy-item label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .policy-item select {
+            width: 100%;
+            padding: 6px;
+            font-size: 0.8rem;
+            margin: 0;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .nav-button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            min-width: 120px;
+        }
+        .nav-button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+        .nav-button.active {
+            background-color: #27ae60;
+        }
+        .nav-button.secondary {
+            background-color: #95a5a6;
+        }
+        .nav-button.secondary:hover {
+            background-color: #7f8c8d;
+        }
+        .layer-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .layer-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+        .layer-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .layer-header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 15px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        .layer-content {
+            padding: 15px;
+        }
+        .drop-item {
+            background-color: #f8f9fa;
+            margin: 8px 0;
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 4px solid #3498db;
+            font-size: 0.9rem;
+        }
+        .allocation-section {
+            margin: 20px 0;
+        }
+        .allocation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .allocation-card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .allocation-header {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 15px;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .allocation-body {
+            padding: 15px;
+        }
+        .need-list, .greed-list, .pass-list {
+            margin: 8px 0;
+        }
+        .need-list h5 {
+            color: #e74c3c;
+            margin: 5px 0;
+            font-size: 0.85rem;
+        }
+        .greed-list h5 {
+            color: #f39c12;
+            margin: 5px 0;
+            font-size: 0.85rem;
+        }
+        .pass-list h5 {
+            color: #95a5a6;
+            margin: 5px 0;
+            font-size: 0.85rem;
+        }
+        .player-list {
+            list-style: none;
+            padding: 0;
+            margin: 5px 0;
+        }
+        .player-list li {
+            background-color: #f8f9fa;
+            margin: 2px 0;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .confirm-section {
+            background-color: #d5f4e6;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #27ae60;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .confirm-button {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+        .confirm-button:hover {
+            background-color: #219a52;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+        }
+        .history-section {
+            margin: 20px 0;
+        }
+        .filter-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .filter-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .filter-controls label {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        .filter-controls select {
+            width: 150px;
+            padding: 8px;
+            margin: 0;
+        }
+        .allocation-history-header {
+            display: grid;
+            grid-template-columns: 1fr 0.8fr 2fr 1fr 1.5fr 1fr;
+            gap: 10px;
+            padding: 12px 15px;
+            background-color: #3498db;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-radius: 6px 6px 0 0;
+        }
+        .allocation-history-row {
+            display: grid;
+            grid-template-columns: 1fr 0.8fr 2fr 1fr 1.5fr 1fr;
+            gap: 10px;
+            padding: 10px 15px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+        }
+        .allocation-history-row:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .statistics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .stat-card {
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-card h4 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #3498db;
+            margin: 5px 0;
+        }
+        .export-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .export-button {
+            background-color: #9b59b6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            margin: 5px;
+            transition: all 0.2s ease;
+        }
+        .export-button:hover {
+            background-color: #8e44ad;
+            transform: translateY(-1px);
+        }
+        .hidden {
+            display: none;
+        }
+        
+        /* レスポンシブデザイン */
+        @media (max-width: 768px) {
+            .github-header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .auth-controls {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .auth-input {
+                width: 100%;
+            }
+            
+            .player-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .layer-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .allocation-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .allocation-history-header,
+            .allocation-history-row {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+            
+            .filter-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-controls select {
+                width: 100%;
+            }
+            
+            .navigation {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .nav-button {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- GitHub連携ヘッダー -->
+    <div class="github-header">
+        <div class="github-status">
+            <h2 style="margin: 0; font-size: 1.2rem;">FF14 零式装備分配システム</h2>
+            <div class="connection-indicator" id="connection-status">
+                <span>🔄</span> 接続確認中...
+            </div>
+        </div>
+        <div class="auth-controls" id="auth-controls">
+            <input type="password" class="auth-input" id="github-token" placeholder="GitHub Personal Access Token" style="display: none;">
+            <button class="auth-btn" id="auth-button" onclick="toggleAuth()">ログイン</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="content">
+            <!-- コンテンツエリア -->
+        </div>
+    </div>
+
+    <script>
+        // グローバル変数
+        let currentRaidTier = null;
+        let allocationResults = [];
+        let currentDropItems = [];
+        let isOnlineMode = false;
+        let githubToken = null;
+        let userInfo = null;
+
+        // GitHub API設定
+        const GITHUB_OWNER = 'rnq27gq';
+        const GITHUB_REPO = 'ff14-raid-gear-system';
+        const GITHUB_API_BASE = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents`;
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', async function() {
+            await initializeApp();
+        });
+
+        // アプリケーション初期化
+        async function initializeApp() {
+            updateConnectionStatus('connecting');
+            
+            // 保存されたトークンを確認
+            const savedToken = localStorage.getItem('github_token');
+            if (savedToken) {
+                githubToken = savedToken;
+                const isValid = await validateGitHubToken();
+                if (isValid) {
+                    isOnlineMode = true;
+                    await getUserInfo();
+                    updateAuthUI(true);
+                    updateConnectionStatus('online');
+                } else {
+                    localStorage.removeItem('github_token');
+                    githubToken = null;
+                    updateConnectionStatus('offline');
+                }
+            } else {
+                updateConnectionStatus('offline');
+            }
+            
+            // メイン画面表示
+            showRaidTierSelection();
+        }
+
+        // GitHub認証トグル
+        async function toggleAuth() {
+            if (githubToken) {
+                // ログアウト
+                await logout();
+            } else {
+                // ログイン
+                await login();
+            }
+        }
+
+        // ログイン処理
+        async function login() {
+            const tokenInput = document.getElementById('github-token');
+            const token = tokenInput.value.trim();
+            
+            if (!token) {
+                tokenInput.style.display = 'inline-block';
+                tokenInput.focus();
+                return;
+            }
+            
+            githubToken = token;
+            const isValid = await validateGitHubToken();
+            
+            if (isValid) {
+                localStorage.setItem('github_token', token);
+                isOnlineMode = true;
+                await getUserInfo();
+                updateAuthUI(true);
+                updateConnectionStatus('online');
+                tokenInput.style.display = 'none';
+                tokenInput.value = '';
+                
+                // データ同期を試行
+                await syncData();
+            } else {
+                alert('無効なトークンです。正しいGitHub Personal Access Tokenを入力してください。');
+                githubToken = null;
+                tokenInput.value = '';
+                tokenInput.focus();
+            }
+        }
+
+        // ログアウト処理
+        async function logout() {
+            githubToken = null;
+            userInfo = null;
+            isOnlineMode = false;
+            localStorage.removeItem('github_token');
+            updateAuthUI(false);
+            updateConnectionStatus('offline');
+        }
+
+        // GitHub トークン検証
+        async function validateGitHubToken() {
+            if (!githubToken) return false;
+            
+            try {
+                const response = await fetch('https://api.github.com/user', {
+                    headers: {
+                        'Authorization': `token ${githubToken}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                return response.ok;
+            } catch (error) {
+                console.warn('GitHub API接続エラー:', error);
+                return false;
+            }
+        }
+
+        // ユーザー情報取得
+        async function getUserInfo() {
+            if (!githubToken) return null;
+            
+            try {
+                const response = await fetch('https://api.github.com/user', {
+                    headers: {
+                        'Authorization': `token ${githubToken}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (response.ok) {
+                    userInfo = await response.json();
+                    return userInfo;
+                }
+            } catch (error) {
+                console.error('ユーザー情報取得エラー:', error);
+            }
+            return null;
+        }
+
+        // データ同期
+        async function syncData() {
+            if (!isOnlineMode || !githubToken) return false;
+            
+            try {
+                // GitHub からデータを取得
+                const remoteData = await getDataFromGitHub();
+                const localData = getData();
+                
+                // データをマージ（簡単な実装）
+                if (remoteData) {
+                    const mergedData = mergeData(localData, remoteData);
+                    saveData(mergedData);
+                    return true;
+                }
+            } catch (error) {
+                console.error('データ同期エラー:', error);
+            }
+            return false;
+        }
+
+        // GitHub からデータ取得
+        async function getDataFromGitHub() {
+            if (!githubToken) return null;
+            
+            try {
+                const response = await fetch(`${GITHUB_API_BASE}/data/ff14_raid_data.json`, {
+                    headers: {
+                        'Authorization': `token ${githubToken}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    return JSON.parse(atob(data.content));
+                } else if (response.status === 404) {
+                    // ファイルが存在しない場合は空データを返す
+                    return null;
+                }
+            } catch (error) {
+                console.error('GitHub データ取得エラー:', error);
+            }
+            return null;
+        }
+
+        // GitHub にデータ保存
+        async function saveDataToGitHub(data) {
+            if (!githubToken) return false;
+            
+            try {
+                // 既存ファイルのSHAを取得
+                let sha = null;
+                try {
+                    const existingResponse = await fetch(`${GITHUB_API_BASE}/data/ff14_raid_data.json`, {
+                        headers: {
+                            'Authorization': `token ${githubToken}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    });
+                    if (existingResponse.ok) {
+                        const existing = await existingResponse.json();
+                        sha = existing.sha;
+                    }
+                } catch (e) {
+                    // ファイルが存在しない場合は無視
+                }
+                
+                // データを保存
+                const content = btoa(JSON.stringify(data, null, 2));
+                const body = {
+                    message: `装備分配データ更新 - ${new Date().toISOString()}`,
+                    content: content
+                };
+                
+                if (sha) {
+                    body.sha = sha;
+                }
+                
+                const response = await fetch(`${GITHUB_API_BASE}/data/ff14_raid_data.json`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${githubToken}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+                
+                return response.ok;
+            } catch (error) {
+                console.error('GitHub データ保存エラー:', error);
+                return false;
+            }
+        }
+
+        // データマージ（簡単な実装）
+        function mergeData(localData, remoteData) {
+            // リモートデータを優先し、ローカルの新しい変更があれば追加
+            const merged = { ...remoteData };
+            
+            // レイドティアのマージ
+            if (localData.raidTiers) {
+                merged.raidTiers = merged.raidTiers || [];
+                localData.raidTiers.forEach(localTier => {
+                    if (!merged.raidTiers.find(tier => tier.id === localTier.id)) {
+                        merged.raidTiers.push(localTier);
+                    }
+                });
+            }
+            
+            return merged;
+        }
+
+        // UI更新関数
+        function updateConnectionStatus(status) {
+            const indicator = document.getElementById('connection-status');
+            
+            switch (status) {
+                case 'connecting':
+                    indicator.className = 'connection-indicator';
+                    indicator.innerHTML = '<span>🔄</span> 接続確認中...';
+                    break;
+                case 'online':
+                    indicator.className = 'connection-indicator online';
+                    indicator.innerHTML = '<span>🟢</span> オンライン (GitHub連携)';
+                    break;
+                case 'offline':
+                    indicator.className = 'connection-indicator offline';
+                    indicator.innerHTML = '<span>🔴</span> オフライン (ローカルのみ)';
+                    break;
+            }
+        }
+
+        function updateAuthUI(isLoggedIn) {
+            const authButton = document.getElementById('auth-button');
+            const tokenInput = document.getElementById('github-token');
+            
+            if (isLoggedIn) {
+                authButton.textContent = userInfo ? `${userInfo.login} (ログアウト)` : 'ログアウト';
+                authButton.className = 'auth-btn logout';
+                tokenInput.style.display = 'none';
+            } else {
+                authButton.textContent = 'ログイン';
+                authButton.className = 'auth-btn';
+                tokenInput.style.display = 'none';
+            }
+        }
+
+        // ===== 以下、working_index.htmlの機能をそのまま移植 =====
+        
+        // ローカルストレージ関数
+        function getData() {
+            const data = localStorage.getItem('ff14RaidData');
+            return data ? JSON.parse(data) : {
+                raidTiers: [],
+                activeRaidTierId: null,
+                players: {},
+                allocations: {}
+            };
+        }
+
+        function saveData(data) {
+            localStorage.setItem('ff14RaidData', JSON.stringify(data));
+            
+            // オンラインモードの場合はGitHubにも保存
+            if (isOnlineMode) {
+                saveDataToGitHub(data).catch(error => {
+                    console.warn('GitHub同期に失敗しました:', error);
+                });
+            }
+        }
+
+        // レイドティア選択画面
+        function showRaidTierSelection() {
+            const data = getData();
+            const content = document.getElementById('content');
+            
+            content.innerHTML = `
+                <h1>FF14 零式装備分配システム</h1>
+                
+                <div class="section">
+                    <h2>レイドティア選択・登録</h2>
+                    <p>既存のレイドティアを選択するか、新しいレイドティアを登録してください。</p>
+                    
+                    ${data.raidTiers.length > 0 ? `
+                        <h3>既存のレイドティア</h3>
+                        <div class="tier-list">
+                            ${data.raidTiers.map(tier => `
+                                <div class="tier-item ${tier.id === data.activeRaidTierId ? 'active' : ''}" 
+                                     onclick="selectRaidTier('${tier.id}')">
+                                    <h3>${tier.name}</h3>
+                                    <p>${tier.description || ''}</p>
+                                    <p style="font-size: 0.8rem; color: #666;">
+                                        作成日: ${new Date(tier.createdAt).toLocaleDateString('ja-JP')}
+                                    </p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : '<p>まだレイドティアが登録されていません。</p>'}
+                    
+                    <h3>新規レイドティア登録</h3>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <input type="text" id="tier-name" placeholder="レイドティア名 (例: 7.2零式)" 
+                               style="width: 250px;">
+                        <input type="text" id="tier-description" placeholder="説明 (任意)" 
+                               style="width: 300px;">
+                        <button onclick="createRaidTier()">登録</button>
+                    </div>
+                </div>
+                
+                ${data.raidTiers.length > 0 ? `
+                    <div class="section">
+                        <h2>テスト・ユーティリティ</h2>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button onclick="generateTestData()" class="export-button">
+                                テストデータ生成
+                            </button>
+                            <button onclick="exportData()" class="export-button">
+                                データエクスポート
+                            </button>
+                            <input type="file" id="import-file" accept=".json" style="display: none;" 
+                                   onchange="importData(event)">
+                            <button onclick="document.getElementById('import-file').click()" class="export-button">
+                                データインポート
+                            </button>
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        // レイドティア作成
+        function createRaidTier() {
+            const nameInput = document.getElementById('tier-name');
+            const descInput = document.getElementById('tier-description');
+            
+            const name = nameInput.value.trim();
+            const description = descInput.value.trim();
+            
+            if (!name) {
+                alert('レイドティア名を入力してください。');
+                nameInput.focus();
+                return;
+            }
+            
+            const newTier = {
+                id: 'tier_' + Date.now(),
+                name: name,
+                description: description,
+                createdAt: new Date().toISOString()
+            };
+            
+            const data = getData();
+            if (!data.raidTiers) data.raidTiers = [];
+            data.raidTiers.push(newTier);
+            data.activeRaidTierId = newTier.id;
+            
+            saveData(data);
+            currentRaidTier = newTier;
+            
+            showPlayerSetup();
+        }
+
+        // レイドティア選択
+        function selectRaidTier(tierId) {
+            const data = getData();
+            const tier = data.raidTiers.find(t => t.id === tierId);
+            
+            if (tier) {
+                data.activeRaidTierId = tierId;
+                saveData(data);
+                currentRaidTier = tier;
+                
+                // プレイヤーデータがあるかチェック
+                if (data.players && data.players[tierId] && Object.keys(data.players[tierId]).length > 0) {
+                    showMainDashboard();
+                } else {
+                    showPlayerSetup();
+                }
+            }
+        }
+
+        // プレイヤー設定画面
+        function showPlayerSetup() {
+            const data = getData();
+            const players = (data.players && data.players[currentRaidTier.id]) || {};
+            
+            const positions = ['MT', 'ST', 'H1', 'H2', 'D1', 'D2', 'D3', 'D4'];
+            const jobsByRole = {
+                'MT': ['ナイト', '戦士', '暗黒騎士', 'ガンブレイカー'],
+                'ST': ['ナイト', '戦士', '暗黒騎士', 'ガンブレイカー'],
+                'H1': ['白魔道士', '占星術士', '学者', '賢者'],
+                'H2': ['白魔道士', '占星術士', '学者', '賢者'],
+                'D1': ['モンク', '竜騎士', '忍者', '侍', 'リーパー', 'ヴァイパー'],
+                'D2': ['モンク', '竜騎士', '忍者', '侍', 'リーパー', 'ヴァイパー'],
+                'D3': ['黒魔道士', '召喚士', '赤魔道士', 'ピクトマンサー', '吟遊詩人', '機工士', '踊り子'],
+                'D4': ['黒魔道士', '召喚士', '赤魔道士', 'ピクトマンサー', '吟遊詩人', '機工士', '踊り子']
+            };
+            
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <h1>プレイヤー・ジョブ設定</h1>
+                <h2>${currentRaidTier.name}</h2>
+                
+                <div class="section">
+                    <h3>8人のメンバー情報を入力してください</h3>
+                    <div class="player-grid">
+                        ${positions.map(position => {
+                            const player = players[position] || {};
+                            return `
+                                <div class="player-card">
+                                    <div class="player-header">
+                                        <span class="player-name">${position}</span>
+                                        <span class="position-badge">${position}</span>
+                                    </div>
+                                    <div>
+                                        <label>プレイヤー名:</label>
+                                        <input type="text" id="${position}-name" value="${player.name || ''}" 
+                                               placeholder="プレイヤー名" style="width: 100%;">
+                                    </div>
+                                    <div>
+                                        <label>キャラクター名:</label>
+                                        <input type="text" id="${position}-character" value="${player.characterName || ''}" 
+                                               placeholder="キャラクター名" style="width: 100%;">
+                                    </div>
+                                    <div>
+                                        <label>担当ジョブ:</label>
+                                        <select id="${position}-job" class="job-select">
+                                            <option value="">ジョブを選択</option>
+                                            ${jobsByRole[position].map(job => 
+                                                `<option value="${job}" ${player.job === job ? 'selected' : ''}>${job}</option>`
+                                            ).join('')}
+                                        </select>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    
+                    <div class="navigation">
+                        <button class="nav-button secondary" onclick="showRaidTierSelection()">レイドティア選択に戻る</button>
+                        <button class="nav-button" onclick="savePlayersAndContinue()">保存して次へ</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // プレイヤー情報保存
+        function savePlayersAndContinue() {
+            const positions = ['MT', 'ST', 'H1', 'H2', 'D1', 'D2', 'D3', 'D4'];
+            const data = getData();
+            
+            if (!data.players) data.players = {};
+            if (!data.players[currentRaidTier.id]) data.players[currentRaidTier.id] = {};
+            
+            for (const position of positions) {
+                const name = document.getElementById(`${position}-name`).value.trim();
+                const characterName = document.getElementById(`${position}-character`).value.trim();
+                const job = document.getElementById(`${position}-job`).value;
+                
+                if (!name || !characterName || !job) {
+                    alert(`${position}のプレイヤー情報を全て入力してください。`);
+                    return;
+                }
+                
+                data.players[currentRaidTier.id][position] = {
+                    name: name,
+                    characterName: characterName,
+                    job: job,
+                    position: position,
+                    equipmentPolicy: {},
+                    weaponWishes: [],
+                    currentEquipment: {}
+                };
+            }
+            
+            saveData(data);
+            showEquipmentPolicySetup();
+        }
+
+        // 装備方針設定画面
+        function showEquipmentPolicySetup() {
+            const data = getData();
+            const players = data.players[currentRaidTier.id];
+            const slots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+            
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <h1>装備方針設定</h1>
+                <h2>${currentRaidTier.name}</h2>
+                
+                <div class="section">
+                    <h3>各部位の装備方針を設定してください</h3>
+                    <p>零式装備: レイドでドロップする装備を狙う | トームストーン装備: トームストーンで交換可能な装備を使用</p>
+                    
+                    <div class="player-grid">
+                        ${Object.entries(players).map(([position, player]) => `
+                            <div class="player-card">
+                                <div class="player-header">
+                                    <span class="player-name">${player.name} (${player.characterName})</span>
+                                    <span class="position-badge">${position} - ${player.job}</span>
+                                </div>
+                                <div class="equipment-policy">
+                                    <div class="policy-grid">
+                                        ${slots.map(slot => `
+                                            <div class="policy-item">
+                                                <label>${slot}</label>
+                                                <select id="${position}-${slot}-policy">
+                                                    <option value="零式" ${(player.equipmentPolicy[slot] === '零式') ? 'selected' : ''}>零式</option>
+                                                    <option value="トームストーン" ${(player.equipmentPolicy[slot] === 'トームストーン') ? 'selected' : ''}>トーム</option>
+                                                </select>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="navigation">
+                        <button class="nav-button secondary" onclick="showPlayerSetup()">プレイヤー設定に戻る</button>
+                        <button class="nav-button" onclick="saveEquipmentPolicyAndContinue()">保存して完了</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 装備方針保存
+        function saveEquipmentPolicyAndContinue() {
+            const data = getData();
+            const players = data.players[currentRaidTier.id];
+            const slots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+            
+            for (const [position, player] of Object.entries(players)) {
+                for (const slot of slots) {
+                    const policy = document.getElementById(`${position}-${slot}-policy`).value;
+                    player.equipmentPolicy[slot] = policy;
+                }
+            }
+            
+            saveData(data);
+            showMainDashboard();
+        }
+
+        // メインダッシュボード
+        function showMainDashboard() {
+            const data = getData();
+            const players = data.players[currentRaidTier.id] || {};
+            const allocations = data.allocations[currentRaidTier.id] || [];
+            
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <h1>FF14 零式装備分配システム</h1>
+                <h2>${currentRaidTier.name} - メインダッシュボード</h2>
+                
+                <div class="navigation">
+                    <button class="nav-button" onclick="showPlayerSetup()">メンバー・装備設定</button>
+                    <button class="nav-button secondary" onclick="showRaidTierSelection()">レイドティア選択</button>
+                </div>
+                
+                <div class="section">
+                    <h3>レイドクリア - 層選択</h3>
+                    <div class="layer-section">
+                        ${[1, 2, 3, 4].map(layer => `
+                            <div class="layer-card">
+                                <div class="layer-header">${layer}層クリア</div>
+                                <div class="layer-content">
+                                    <div class="drop-item">固定ドロップ装備の分配処理</div>
+                                    <button onclick="processLayerAllocation(${layer})" style="width: 100%; margin-top: 10px;">
+                                        ${layer}層 装備分配開始
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>プレイヤー状況</h3>
+                    <div class="player-grid">
+                        ${Object.entries(players).map(([position, player]) => `
+                            <div class="player-card">
+                                <div class="player-header">
+                                    <span class="player-name">${player.name}</span>
+                                    <span class="position-badge">${position}</span>
+                                </div>
+                                <p><strong>キャラクター:</strong> ${player.characterName}</p>
+                                <p><strong>ジョブ:</strong> ${player.job}</p>
+                                <p><strong>装備取得数:</strong> ${allocations.filter(a => a.winner && a.winner.position === position).length}個</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>クイックアクション</h3>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button onclick="showAllocationHistory()" class="nav-button">配布履歴確認</button>
+                        <button onclick="showStatistics()" class="nav-button">統計情報</button>
+                        <button onclick="generateTestData()" class="export-button">テストデータ生成</button>
+                        <button onclick="exportData()" class="export-button">データエクスポート</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 層別装備分配処理
+        function processLayerAllocation(layer) {
+            generateLayerDropsAndProcess(layer);
+        }
+
+        // 層別ドロップ生成と分配処理
+        function generateLayerDropsAndProcess(layer) {
+            try {
+                const layerDrops = {
+                    1: [
+                        { slot: '耳', name: '耳 - イヤリングチェスト', itemLevel: 730, type: 'accessory' },
+                        { slot: '首', name: '首 - ネックレスチェスト', itemLevel: 730, type: 'accessory' },
+                        { slot: '腕', name: '腕 - ブレスレットチェスト', itemLevel: 730, type: 'accessory' },
+                        { slot: '指', name: '指 - リングチェスト', itemLevel: 730, type: 'accessory' }
+                    ],
+                    2: [
+                        { slot: '頭', name: '頭 - ヘッドギアチェスト', itemLevel: 730, type: 'armor' },
+                        { slot: '手', name: '手 - ハンドギアチェスト', itemLevel: 730, type: 'armor' },
+                        { slot: '足', name: '足 - フットギアチェスト', itemLevel: 730, type: 'armor' },
+                        { slot: '武器石', name: '武器石', itemLevel: 1, type: 'material' },
+                        { slot: '硬化薬', name: '硬化薬', itemLevel: 1, type: 'material' }
+                    ],
+                    3: [
+                        { slot: '胴', name: '胴 - ボディギアチェスト', itemLevel: 730, type: 'armor' },
+                        { slot: '脚', name: '脚 - レッグギアチェスト', itemLevel: 730, type: 'armor' },
+                        { slot: '強化薬', name: '強化薬', itemLevel: 1, type: 'material' },
+                        { slot: '強化繊維', name: '強化繊維', itemLevel: 1, type: 'material' }
+                    ],
+                    4: [
+                        { slot: '胴', name: '胴 - ボディギアチェスト', itemLevel: 730, type: 'armor' },
+                        { slot: '武器', name: '武器 - ウェポンチェスト', itemLevel: 735, type: 'weapon_box' },
+                        { slot: 'マウント', name: 'マウント', itemLevel: 1, type: 'mount' }
+                    ]
+                };
+                
+                currentDropItems = layerDrops[layer] || [];
+                displayAllocationResults(layer);
+                
+            } catch (error) {
+                console.error('ドロップ生成エラー:', error);
+                alert('エラーが発生しました: ' + error.message);
+            }
+        }
+
+        // 分配結果表示
+        function displayAllocationResults(layer) {
+            const data = getData();
+            const players = data.players[currentRaidTier.id] || {};
+            
+            // Need/Greed/Pass 判定
+            allocationResults = currentDropItems.map(item => {
+                const needPlayers = [];
+                const greedPlayers = [];
+                const passPlayers = [];
+                
+                Object.entries(players).forEach(([position, player]) => {
+                    const policy = player.equipmentPolicy[item.slot];
+                    
+                    if (policy === '零式') {
+                        needPlayers.push({
+                            position: position,
+                            name: player.name,
+                            job: player.job,
+                            priority: getPriority(player.job)
+                        });
+                    } else if (policy === 'トームストーン' && item.type !== 'material' && item.type !== 'mount') {
+                        greedPlayers.push({
+                            position: position,
+                            name: player.name,
+                            job: player.job,
+                            priority: getPriority(player.job)
+                        });
+                    } else {
+                        passPlayers.push({
+                            position: position,
+                            name: player.name,
+                            job: player.job
+                        });
+                    }
+                });
+                
+                // 優先順位でソート
+                needPlayers.sort((a, b) => a.priority - b.priority);
+                greedPlayers.sort((a, b) => a.priority - b.priority);
+                
+                return {
+                    equipment: item,
+                    need: needPlayers,
+                    greed: greedPlayers,
+                    pass: passPlayers,
+                    winner: needPlayers.length > 0 ? needPlayers[0] : 
+                            (greedPlayers.length > 0 ? greedPlayers[0] : null)
+                };
+            });
+            
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <h1>${layer}層 装備分配結果</h1>
+                <h2>${currentRaidTier.name}</h2>
+                
+                <div class="allocation-section">
+                    <div class="allocation-grid">
+                        ${allocationResults.map((result, index) => `
+                            <div class="allocation-card">
+                                <div class="allocation-header">
+                                    ${result.equipment.name}
+                                </div>
+                                <div class="allocation-body">
+                                    <div class="need-list">
+                                        <h5>Need (${result.need.length}人)</h5>
+                                        <ul class="player-list">
+                                            ${result.need.map((player, i) => `
+                                                <li style="${i === 0 ? 'background-color: #ffe6e6; font-weight: bold;' : ''}">
+                                                    ${player.name} (${player.position} - ${player.job})
+                                                    ${i === 0 ? ' 🏆' : ''}
+                                                </li>
+                                            `).join('')}
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="greed-list">
+                                        <h5>Greed (${result.greed.length}人)</h5>
+                                        <ul class="player-list">
+                                            ${result.greed.map(player => `
+                                                <li>${player.name} (${player.position} - ${player.job})</li>
+                                            `).join('')}
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="pass-list">
+                                        <h5>Pass (${result.pass.length}人)</h5>
+                                        <ul class="player-list">
+                                            ${result.pass.map(player => `
+                                                <li>${player.name} (${player.position} - ${player.job})</li>
+                                            `).join('')}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="confirm-section">
+                        <h3>分配を確定しますか？</h3>
+                        <p>上記の分配結果でよろしければ確定ボタンを押してください。</p>
+                        <button class="confirm-button" onclick="confirmAllocation(${layer})">
+                            分配確定
+                        </button>
+                        <button class="nav-button secondary" onclick="showMainDashboard()" style="margin-left: 15px;">
+                            キャンセル
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 分配確定
+        function confirmAllocation(layer) {
+            const data = getData();
+            
+            if (!data.allocations) data.allocations = {};
+            if (!data.allocations[currentRaidTier.id]) data.allocations[currentRaidTier.id] = [];
+            
+            const currentWeek = getCurrentWeekString();
+            
+            allocationResults.forEach(result => {
+                if (result.winner) {
+                    data.allocations[currentRaidTier.id].push({
+                        id: 'alloc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                        layer: layer,
+                        equipment: result.equipment,
+                        winner: result.winner,
+                        timestamp: new Date().toISOString(),
+                        week: currentWeek,
+                        allNeedPlayers: result.need,
+                        allGreedPlayers: result.greed
+                    });
+                }
+            });
+            
+            saveData(data);
+            
+            alert(`${layer}層の装備分配を記録しました。`);
+            showMainDashboard();
+        }
+
+        // 配布履歴表示
+        function showAllocationHistory() {
+            const data = getData();
+            const allocations = data.allocations[currentRaidTier.id] || [];
+            
+            const content = document.getElementById('content');
+            
+            if (allocations.length === 0) {
+                content.innerHTML = `
+                    <h1>配布履歴</h1>
+                    <h2>${currentRaidTier.name}</h2>
+                    
+                    <div class="section">
+                        <h3>配布履歴</h3>
+                        <p>まだ装備の配布履歴がありません。</p>
+                        <p>レイドをクリアして装備を分配すると、ここに履歴が表示されます。</p>
+                        
+                        <div class="navigation">
+                            <button class="nav-button" onclick="showMainDashboard()">ダッシュボードに戻る</button>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 履歴を新しい順にソート
+            const sortedAllocations = allocations.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            content.innerHTML = `
+                <h1>配布履歴</h1>
+                <h2>${currentRaidTier.name}</h2>
+                
+                <div class="section">
+                    <div class="navigation">
+                        <button class="nav-button" onclick="showMainDashboard()">ダッシュボードに戻る</button>
+                        <button class="export-button" onclick="exportData()">データエクスポート</button>
+                    </div>
+                    
+                    <div class="allocation-history-header">
+                        <span>日付</span>
+                        <span>層</span>
+                        <span>アイテム</span>
+                        <span>部位</span>
+                        <span>取得者</span>
+                        <span>週</span>
+                    </div>
+                    ${sortedAllocations.map(allocation => {
+                        const timestamp = new Date(allocation.timestamp);
+                        const formattedDate = timestamp.toLocaleDateString('ja-JP');
+                        const winnerText = allocation.winner ? 
+                            `${allocation.winner.name} (${allocation.winner.position})` : 
+                            'なし';
+                        
+                        return `
+                            <div class="allocation-history-row">
+                                <span>${formattedDate}</span>
+                                <span>${allocation.layer}層</span>
+                                <span>${allocation.equipment.name}</span>
+                                <span>${allocation.equipment.slot}</span>
+                                <span>${winnerText}</span>
+                                <span>${allocation.week || '不明'}</span>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        // 統計情報表示
+        function showStatistics() {
+            const data = getData();
+            const players = data.players[currentRaidTier.id] || {};
+            const allocations = data.allocations[currentRaidTier.id] || [];
+            
+            // プレイヤー別統計
+            const playerStats = {};
+            Object.keys(players).forEach(position => {
+                playerStats[position] = {
+                    player: players[position],
+                    totalItems: 0,
+                    itemsByLayer: { 1: 0, 2: 0, 3: 0, 4: 0 },
+                    itemsByType: {}
+                };
+            });
+            
+            allocations.forEach(allocation => {
+                if (allocation.winner) {
+                    const position = allocation.winner.position;
+                    if (playerStats[position]) {
+                        playerStats[position].totalItems++;
+                        playerStats[position].itemsByLayer[allocation.layer]++;
+                        
+                        const type = allocation.equipment.type || 'other';
+                        playerStats[position].itemsByType[type] = 
+                            (playerStats[position].itemsByType[type] || 0) + 1;
+                    }
+                }
+            });
+            
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <h1>統計情報</h1>
+                <h2>${currentRaidTier.name}</h2>
+                
+                <div class="section">
+                    <div class="navigation">
+                        <button class="nav-button" onclick="showMainDashboard()">ダッシュボードに戻る</button>
+                        <button class="nav-button" onclick="showAllocationHistory()">配布履歴</button>
+                    </div>
+                    
+                    <h3>プレイヤー別装備取得統計</h3>
+                    <div class="statistics-grid">
+                        ${Object.entries(playerStats).map(([position, stats]) => `
+                            <div class="stat-card">
+                                <h4>${stats.player.name} (${position})</h4>
+                                <p><strong>ジョブ:</strong> ${stats.player.job}</p>
+                                <div class="stat-value">${stats.totalItems}個</div>
+                                <p>総装備取得数</p>
+                                <div style="font-size: 0.8rem; margin-top: 10px;">
+                                    <div>1層: ${stats.itemsByLayer[1]}個</div>
+                                    <div>2層: ${stats.itemsByLayer[2]}個</div>
+                                    <div>3層: ${stats.itemsByLayer[3]}個</div>
+                                    <div>4層: ${stats.itemsByLayer[4]}個</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <h3>全体統計</h3>
+                    <div class="statistics-grid">
+                        <div class="stat-card">
+                            <h4>総分配数</h4>
+                            <div class="stat-value">${allocations.length}</div>
+                            <p>アイテム</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>最多取得者</h4>
+                            <div class="stat-value">
+                                ${Object.values(playerStats).reduce((max, stats) => 
+                                    stats.totalItems > max.totalItems ? stats : max, 
+                                    { totalItems: 0, player: { name: '-' } }
+                                ).player.name}
+                            </div>
+                            <p>
+                                ${Math.max(...Object.values(playerStats).map(s => s.totalItems))}個
+                            </p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>層別分配数</h4>
+                            <div style="font-size: 0.9rem;">
+                                ${[1,2,3,4].map(layer => {
+                                    const count = allocations.filter(a => a.layer === layer).length;
+                                    return `<div>${layer}層: ${count}個</div>`;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ユーティリティ関数
+        function getPriority(job) {
+            const priorities = {
+                'モンク': 1, '竜騎士': 1, '忍者': 1, '侍': 1, 'リーパー': 1, 'ヴァイパー': 1,
+                '黒魔道士': 2, '召喚士': 2, '赤魔道士': 2, 'ピクトマンサー': 2,
+                '吟遊詩人': 2, '機工士': 2, '踊り子': 2,
+                'ナイト': 3, '戦士': 3, '暗黒騎士': 3, 'ガンブレイカー': 3,
+                '白魔道士': 4, '占星術士': 4, '学者': 4, '賢者': 4
+            };
+            return priorities[job] || 5;
+        }
+
+        function getCurrentWeekString() {
+            const now = new Date();
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() - now.getDay() + 2); // 火曜日を週の始まりとする
+            return startOfWeek.toISOString().split('T')[0];
+        }
+
+        // データ操作関数
+        function exportData() {
+            try {
+                const data = getData();
+                const jsonData = JSON.stringify(data, null, 2);
+                const blob = new Blob([jsonData], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ff14_gear_data_${currentRaidTier ? currentRaidTier.name : 'backup'}_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                alert('データをエクスポートしました。');
+            } catch (error) {
+                alert('エクスポートに失敗しました: ' + error.message);
+            }
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (confirm('データをインポートしますか？\n既存のデータは上書きされます。')) {
+                        saveData(importedData);
+                        alert('データをインポートしました。');
+                        location.reload();
+                    }
+                } catch (error) {
+                    alert('インポートに失敗しました: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function generateTestData() {
+            if (confirm('テスト用のサンプルデータを生成しますか？\n既存のデータは上書きされます。')) {
+                const testTier = {
+                    id: 'test_' + Date.now(),
+                    name: 'テスト用7.2零式',
+                    description: 'サンプルデータ付きテスト環境',
+                    createdAt: new Date().toISOString()
+                };
+                
+                const data = getData();
+                if (!data.raidTiers) data.raidTiers = [];
+                data.raidTiers.push(testTier);
+                data.activeRaidTierId = testTier.id;
+                
+                // テスト用メンバーデータ
+                if (!data.players) data.players = {};
+                data.players[testTier.id] = {
+                    MT: { name: 'テストMT', characterName: 'サンプルタンク', job: 'ナイト', position: 'MT', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {} },
+                    ST: { name: 'テストST', characterName: 'サンプル戦士', job: '戦士', position: 'ST', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {} },
+                    H1: { name: 'テストH1', characterName: 'サンプル白', job: '白魔道士', position: 'H1', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {} },
+                    H2: { name: 'テストH2', characterName: 'サンプル学者', job: '学者', position: 'H2', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {} },
+                    D1: { name: 'テストD1', characterName: 'サンプル竜騎士', job: '竜騎士', position: 'D1', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {} },
+                    D2: { name: 'テストD2', characterName: 'サンプル忍者', job: '忍者', position: 'D2', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {} },
+                    D3: { name: 'テストD3', characterName: 'サンプル黒魔', job: '黒魔道士', position: 'D3', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {} },
+                    D4: { name: 'テストD4', characterName: 'サンプル詩人', job: '吟遊詩人', position: 'D4', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {} }
+                };
+                
+                saveData(data);
+                currentRaidTier = testTier;
+                
+                alert('テストデータを生成しました。');
+                showMainDashboard();
+            }
+        }
+    </script>
+</body>
+</html>

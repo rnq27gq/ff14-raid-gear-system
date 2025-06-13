@@ -1557,7 +1557,7 @@
                     '吟遊詩人': '吟遊詩人武器', '機工士': '機工士武器', '踊り子': '踊り子武器'
                 };
                 
-                const allWeapons = Object.values(weaponsByJob);
+                const allWeapons = Object.keys(weaponsByJob); // ジョブ名のみ表示
                 
                 return `
                     <h3>直ドロップ武器希望設定</h3>
@@ -1567,7 +1567,7 @@
                         ${Object.entries(players).map(([position, player]) => {
                             const weaponWishes = player.weaponWishes || [];
                             const mainJob = player.job;
-                            const mainWeapon = weaponsByJob[mainJob] || '';
+                            const mainWeapon = mainJob; // ジョブ名のみ表示
                             
                             return `
                                 <div class="weapon-wish-card">
@@ -1584,8 +1584,8 @@
                                             <label>第二希望:</label>
                                             <select id="${position}-weapon-wish-2">
                                                 <option value="">選択してください</option>
-                                                ${allWeapons.filter(w => w !== mainWeapon).map(weapon => `
-                                                    <option value="${weapon}" ${weaponWishes[1] === weapon ? 'selected' : ''}>${weapon}</option>
+                                                ${allWeapons.filter(w => w !== mainWeapon).map(job => `
+                                                    <option value="${job}" ${weaponWishes[1] === job ? 'selected' : ''}>${job}</option>
                                                 `).join('')}
                                             </select>
                                         </div>
@@ -1593,8 +1593,8 @@
                                             <label>第三希望:</label>
                                             <select id="${position}-weapon-wish-3">
                                                 <option value="">選択してください</option>
-                                                ${allWeapons.filter(w => w !== mainWeapon).map(weapon => `
-                                                    <option value="${weapon}" ${weaponWishes[2] === weapon ? 'selected' : ''}>${weapon}</option>
+                                                ${allWeapons.filter(w => w !== mainWeapon).map(job => `
+                                                    <option value="${job}" ${weaponWishes[2] === job ? 'selected' : ''}>${job}</option>
                                                 `).join('')}
                                             </select>
                                         </div>
@@ -1602,8 +1602,8 @@
                                             <label>第四希望:</label>
                                             <select id="${position}-weapon-wish-4">
                                                 <option value="">選択してください</option>
-                                                ${allWeapons.filter(w => w !== mainWeapon).map(weapon => `
-                                                    <option value="${weapon}" ${weaponWishes[3] === weapon ? 'selected' : ''}>${weapon}</option>
+                                                ${allWeapons.filter(w => w !== mainWeapon).map(job => `
+                                                    <option value="${job}" ${weaponWishes[3] === job ? 'selected' : ''}>${job}</option>
                                                 `).join('')}
                                             </select>
                                         </div>
@@ -1706,14 +1706,14 @@
             };
             
             for (const [position, player] of Object.entries(players)) {
-                const mainWeapon = weaponsByJob[player.job] || '';
+                const mainJob = player.job; // ジョブ名のみ保存
                 const wish2Element = document.getElementById(`${position}-weapon-wish-2`);
                 const wish3Element = document.getElementById(`${position}-weapon-wish-3`);
                 const wish4Element = document.getElementById(`${position}-weapon-wish-4`);
                 
-                // 第一希望はメインジョブ、第二〜第四希望は選択された値
+                // 第一希望はメインジョブ、第二〜第四希望は選択された値（すべてジョブ名）
                 player.weaponWishes = [
-                    mainWeapon,
+                    mainJob,
                     wish2Element ? wish2Element.value : '',
                     wish3Element ? wish3Element.value : '',
                     wish4Element ? wish4Element.value : ''
@@ -2009,9 +2009,12 @@
                     // 武器箱（好きな武器に変換可能）
                     currentDropItems.push({ slot: '武器', name: '武器 - ウェポンチェスト', itemLevel: 735, type: 'weapon_box' });
                     
-                    // 直ドロ武器（指定された武器）
+                    // 直ドロ武器（指定された武器、または未選択の場合はプレースホルダー）
                     if (directWeapon) {
                         currentDropItems.push({ slot: '武器', name: `${directWeapon} - 直ドロップ`, itemLevel: 735, type: 'direct_weapon', weaponName: directWeapon });
+                    } else {
+                        // 未選択時のプレースホルダー
+                        currentDropItems.push({ slot: '武器', name: '直ドロップ武器 - 未選択', itemLevel: 735, type: 'direct_weapon_placeholder', weaponName: null });
                     }
                 }
                 displayAllocationResults(layer);
@@ -2058,6 +2061,15 @@
                     
                     // 希望順位でソート（第一希望が最優先）
                     needPlayers.sort((a, b) => a.priority - b.priority);
+                } else if (item.type === 'direct_weapon_placeholder') {
+                    // 直ドロ武器未選択の場合は全員Pass
+                    Object.entries(players).forEach(([position, player]) => {
+                        passPlayers.push({
+                            position: position,
+                            name: player.name,
+                            job: player.job
+                        });
+                    });
                 } else if (item.type === 'material') {
                     // 強化薬・武器石の場合は優先度設定で判定
                     const allocationPriority = data.allocationPriority && data.allocationPriority[currentRaidTier.id] 
@@ -2143,27 +2155,27 @@
                             <label for="direct-weapon-select-live" style="display: block; margin-bottom: 5px; font-weight: bold;">直ドロップ武器:</label>
                             <select id="direct-weapon-select-live" onchange="updateDirectWeaponAllocation()" style="width: 300px; padding: 10px; font-size: 16px;">
                                 <option value="">武器を選択してください</option>
-                                <option value="ナイト武器">ナイト武器</option>
-                                <option value="戦士武器">戦士武器</option>
-                                <option value="暗黒騎士武器">暗黒騎士武器</option>
-                                <option value="ガンブレイカー武器">ガンブレイカー武器</option>
-                                <option value="白魔道士武器">白魔道士武器</option>
-                                <option value="占星術士武器">占星術士武器</option>
-                                <option value="学者武器">学者武器</option>
-                                <option value="賢者武器">賢者武器</option>
-                                <option value="モンク武器">モンク武器</option>
-                                <option value="竜騎士武器">竜騎士武器</option>
-                                <option value="忍者武器">忍者武器</option>
-                                <option value="侍武器">侍武器</option>
-                                <option value="リーパー武器">リーパー武器</option>
-                                <option value="ヴァイパー武器">ヴァイパー武器</option>
-                                <option value="黒魔道士武器">黒魔道士武器</option>
-                                <option value="召喚士武器">召喚士武器</option>
-                                <option value="赤魔道士武器">赤魔道士武器</option>
-                                <option value="ピクトマンサー武器">ピクトマンサー武器</option>
-                                <option value="吟遊詩人武器">吟遊詩人武器</option>
-                                <option value="機工士武器">機工士武器</option>
-                                <option value="踊り子武器">踊り子武器</option>
+                                <option value="ナイト">ナイト</option>
+                                <option value="戦士">戦士</option>
+                                <option value="暗黒騎士">暗黒騎士</option>
+                                <option value="ガンブレイカー">ガンブレイカー</option>
+                                <option value="白魔道士">白魔道士</option>
+                                <option value="占星術士">占星術士</option>
+                                <option value="学者">学者</option>
+                                <option value="賢者">賢者</option>
+                                <option value="モンク">モンク</option>
+                                <option value="竜騎士">竜騎士</option>
+                                <option value="忍者">忍者</option>
+                                <option value="侍">侍</option>
+                                <option value="リーパー">リーパー</option>
+                                <option value="ヴァイパー">ヴァイパー</option>
+                                <option value="黒魔道士">黒魔道士</option>
+                                <option value="召喚士">召喚士</option>
+                                <option value="赤魔道士">赤魔道士</option>
+                                <option value="ピクトマンサー">ピクトマンサー</option>
+                                <option value="吟遊詩人">吟遊詩人</option>
+                                <option value="機工士">機工士</option>
+                                <option value="踊り子">踊り子</option>
                             </select>
                         </div>
                     </div>
@@ -2527,7 +2539,7 @@
             
             // 固定順序: MT→ST→H1→H2→D1→D2→D3→D4
             const fixedOrder = ['MT', 'ST', 'H1', 'H2', 'D1', 'D2', 'D3', 'D4'];
-            const equipmentSlots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+            const equipmentSlots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指', '武器石', '硬化薬', '強化薬', '強化繊維', 'マウント'];
             
             // 週別統計の計算
             const weeklyStats = {};

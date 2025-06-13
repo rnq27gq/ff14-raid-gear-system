@@ -1,0 +1,18 @@
+{
+  "name": "ff14-gear-allocation-system",
+  "version": "1.0.0",
+  "description": "FF14零式装備分配システム",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "live-server --port=3000",
+    "test": "jest"
+  },
+  "keywords": ["ff14", "gear", "allocation", "savage"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "live-server": "^1.2.2"
+  }
+}

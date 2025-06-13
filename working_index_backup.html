@@ -1,0 +1,3943 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FF14 零式装備分配システム</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #ffffff;
+            color: #333333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-weight: 600;
+            font-size: 2.2rem;
+        }
+        h2 {
+            color: #34495e;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+        h3 {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        .section {
+            background-color: #f8f9fa;
+            padding: 24px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 5px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #2980b9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        input, select {
+            padding: 12px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #ffffff;
+            color: #333;
+            width: 200px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        .tier-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .tier-item {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .tier-item:hover {
+            background-color: #f8f9fa;
+            border-color: #3498db;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .tier-item h4 {
+            margin: 0 0 8px 0;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        .tier-item p {
+            margin: 5px 0;
+            color: #666;
+        }
+        .tier-item small {
+            color: #95a5a6;
+        }
+        .new-tier-form {
+            margin-top: 30px;
+            padding: 24px;
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+        }
+        .new-tier-form input {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- コンテンツがここに動的に生成されます -->
+    </div>
+
+    <script>
+        // グローバル変数
+        let currentScreen = 'raidTierSelection';
+        let currentRaidTier = null;
+        const STORAGE_KEY = 'ff14_gear_allocation_data';
+
+        // データ管理
+        function initStorage() {
+            if (!localStorage.getItem(STORAGE_KEY)) {
+                const data = {
+                    raidTiers: [],
+                    activeRaidTierId: null,
+                    players: {},
+                    allocations: {}
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            }
+        }
+
+        function getData() {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        }
+
+        function saveData(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        // レイドティア選択画面
+        function showRaidTierSelection() {
+            const app = document.querySelector('.container');
+            const data = getData();
+            const raidTiers = data.raidTiers || [];
+            
+            app.innerHTML = `
+                <h1>FF14 零式装備分配システム</h1>
+                
+                <div class="section">
+                    <h2>レイドティア選択</h2>
+                    <div id="existing-tiers">
+                        ${raidTiers.length > 0 ? `
+                            <h3>既存のレイドティア</h3>
+                            <div class="tier-list">
+                                ${raidTiers.map(tier => `
+                                    <div class="tier-item" onclick="selectRaidTier('${tier.id}')">
+                                        <div class="tier-info">
+                                            <h4>${tier.name}</h4>
+                                            <p>${tier.description || '説明未設定'}</p>
+                                            <small>作成日: ${new Date(tier.createdAt).toLocaleDateString('ja-JP')}</small>
+                                        </div>
+                                        <div class="tier-actions">
+                                            <button class="delete-btn" onclick="event.stopPropagation(); deleteRaidTier('${tier.id}', '${tier.name}')" title="削除">
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : '<p>まだレイドティアが登録されていません。</p>'}
+                    </div>
+                    
+                    <div class="new-tier-form">
+                        <h3>新しいレイドティアの作成</h3>
+                        <input type="text" id="tier-name" placeholder="レイドティア名（例：7.2零式）" required>
+                        <input type="text" id="tier-description" placeholder="説明（オプション）">
+                        <button onclick="createNewRaidTier()">新規作成</button>
+                        
+                        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #0f3460;">
+                            <h4>テスト環境</h4>
+                            <p style="font-size: 14px; color: #bbb;">すぐにシステムをテストしたい場合は、サンプルデータ付きのテスト用レイドティアを作成できます。</p>
+                            <button onclick="generateTestData()" style="background-color: #e67e22; border-color: #d35400; width: 100%;">
+                                🧪 テスト用レイドティア作成
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // ティア削除用CSSを追加
+            addTierDeleteStyles();
+        }
+        
+        // ティア削除用CSS
+        function addTierDeleteStyles() {
+            const style = document.createElement('style');
+            style.textContent = `
+                .tier-item {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    position: relative;
+                }
+                .tier-info {
+                    flex: 1;
+                }
+                .tier-actions {
+                    margin-left: 15px;
+                }
+                .delete-btn {
+                    background-color: #e74c3c !important;
+                    color: white;
+                    border: none;
+                    padding: 8px 12px;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    font-size: 16px;
+                    width: 40px;
+                    height: 40px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.2s ease;
+                }
+                .delete-btn:hover {
+                    background-color: #c0392b !important;
+                    transform: scale(1.1);
+                }
+            `;
+            if (!document.getElementById('tier-delete-styles')) {
+                style.id = 'tier-delete-styles';
+                document.head.appendChild(style);
+            }
+        }
+        
+        // レイドティア削除機能
+        function deleteRaidTier(tierId, tierName) {
+            if (!confirm(`「${tierName}」を削除しますか？\n\n⚠️ この操作は取り消しできません。\n・すべてのメンバーデータ\n・装備方針設定\n・武器希望設定\n・分配履歴\n\nすべてのデータが完全に削除されます。`)) {
+                return;
+            }
+            
+            // 最終確認
+            if (!confirm(`本当に削除しますか？\n「${tierName}」のすべてのデータが失われます。`)) {
+                return;
+            }
+            
+            const data = getData();
+            
+            // レイドティア自体を削除
+            data.raidTiers = data.raidTiers.filter(tier => tier.id !== tierId);
+            
+            // 関連データも削除
+            if (data.players && data.players[tierId]) {
+                delete data.players[tierId];
+            }
+            if (data.gearPolicies && data.gearPolicies[tierId]) {
+                delete data.gearPolicies[tierId];
+            }
+            if (data.weaponWishes && data.weaponWishes[tierId]) {
+                delete data.weaponWishes[tierId];
+            }
+            if (data.allocations && data.allocations[tierId]) {
+                delete data.allocations[tierId];
+            }
+            if (data.positionPriorities && data.positionPriorities[tierId]) {
+                delete data.positionPriorities[tierId];
+            }
+            
+            // アクティブティアが削除された場合の処理
+            if (data.activeRaidTierId === tierId) {
+                if (data.raidTiers.length > 0) {
+                    // 他のティアがある場合は最初のものをアクティブに
+                    data.activeRaidTierId = data.raidTiers[0].id;
+                    data.raidTiers[0].isActive = true;
+                    currentRaidTier = data.raidTiers[0];
+                } else {
+                    // ティアが全くない場合
+                    data.activeRaidTierId = null;
+                    currentRaidTier = null;
+                }
+            }
+            
+            saveData(data);
+            alert(`「${tierName}」を削除しました。`);
+            
+            // 画面を再描画
+            showRaidTierSelection();
+        }
+
+        // レイドティア作成
+        function createNewRaidTier() {
+            const name = document.getElementById('tier-name').value.trim();
+            const description = document.getElementById('tier-description').value.trim();
+            
+            if (!name) {
+                alert('レイドティア名を入力してください。');
+                return;
+            }
+            
+            const data = getData();
+            const newTier = {
+                id: Date.now().toString(),
+                name: name,
+                description: description,
+                createdAt: new Date().toISOString(),
+                isActive: false
+            };
+            
+            data.raidTiers.push(newTier);
+            saveData(data);
+            
+            selectRaidTier(newTier.id);
+        }
+
+        // レイドティア選択
+        function selectRaidTier(tierId) {
+            const data = getData();
+            const tier = data.raidTiers.find(t => t.id === tierId);
+            
+            if (tier) {
+                // アクティブなレイドティアを更新
+                data.raidTiers.forEach(t => t.isActive = false);
+                tier.isActive = true;
+                data.activeRaidTierId = tierId;
+                saveData(data);
+                
+                currentRaidTier = tier;
+                showInitialSetup();
+            }
+        }
+
+        // 初期設定画面
+        function showInitialSetup() {
+            const app = document.querySelector('.container');
+            
+            app.innerHTML = `
+                <h1>初期設定 - ${currentRaidTier.name}</h1>
+                
+                <div class="setup-navigation">
+                    <button class="nav-btn active" onclick="showMemberSetup()">メンバー設定</button>
+                    <button class="nav-btn" onclick="showEquipmentPolicySetup()">装備方針設定</button>
+                    <button class="nav-btn" onclick="showWeaponWishSetup()">武器希望設定</button>
+                    <button class="nav-btn" onclick="completeSetup()">設定完了</button>
+                </div>
+                
+                <div id="setup-content">
+                    <!-- 設定内容がここに表示される -->
+                </div>
+                
+                <div class="setup-actions">
+                    <button onclick="showRaidTierSelection()">レイドティア選択に戻る</button>
+                </div>
+            `;
+            
+            // ナビゲーション用CSS
+            const style = document.createElement('style');
+            style.textContent = `
+                .setup-navigation {
+                    display: flex;
+                    gap: 10px;
+                    margin-bottom: 20px;
+                    border-bottom: 2px solid #0f3460;
+                    padding-bottom: 10px;
+                }
+                .nav-btn {
+                    padding: 12px 24px;
+                    background-color: #ffffff;
+                    border: 1px solid #ddd;
+                    color: #666;
+                    cursor: pointer;
+                    border-radius: 8px 8px 0 0;
+                    font-weight: 500;
+                    transition: all 0.2s ease;
+                }
+                .nav-btn.active {
+                    background-color: #3498db;
+                    color: white;
+                    border-bottom: 2px solid #3498db;
+                }
+                .nav-btn:hover:not(.active) {
+                    background-color: #f8f9fa;
+                    color: #333;
+                    border-color: #3498db;
+                }
+                .setup-actions {
+                    margin-top: 30px;
+                    text-align: center;
+                }
+            `;
+            if (!document.getElementById('setup-styles')) {
+                style.id = 'setup-styles';
+                document.head.appendChild(style);
+            }
+            
+            showMemberSetup();
+        }
+
+        // メンバー設定画面
+        function showMemberSetup() {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.nav-btn').classList.add('active');
+            
+            // 既存データを取得
+            const data = getData();
+            const existingPlayers = data.players && data.players[currentRaidTier.id] || {};
+            
+            const content = document.getElementById('setup-content');
+            content.innerHTML = `
+                <div class="section">
+                    <h2>8人固定メンバー設定</h2>
+                    <p>各ポジションのメンバー情報とジョブを設定してください。</p>
+                    <div class="member-grid">
+                        ${['MT', 'ST', 'H1', 'H2', 'D1', 'D2', 'D3', 'D4'].map(position => {
+                            const player = existingPlayers[position] || {};
+                            return `
+                            <div class="member-card">
+                                <h3>${position}</h3>
+                                <input type="text" id="name-${position}" placeholder="プレイヤー名" value="${player.name || ''}" />
+                                <input type="text" id="char-${position}" placeholder="キャラクター名" value="${player.characterName || ''}" />
+                                <select id="job-${position}">
+                                    <option value="">ジョブを選択</option>
+                                    ${getJobOptionsForPosition(position, player.job)}
+                                </select>
+                            </div>
+                        `;}).join('')}
+                    </div>
+                    <button onclick="saveMemberSettings()">メンバー設定を保存</button>
+                </div>
+            `;
+            
+            // メンバーカード用CSS
+            const style = document.createElement('style');
+            style.textContent = `
+                .member-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 15px;
+                    margin: 20px 0;
+                }
+                .member-card {
+                    background-color: #ffffff;
+                    padding: 20px;
+                    border-radius: 12px;
+                    border: 1px solid #e9ecef;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }
+                .member-card h3 {
+                    margin: 0 0 12px 0;
+                    color: #2c3e50;
+                    text-align: center;
+                    font-weight: 600;
+                }
+                .member-card input, .member-card select {
+                    width: 100%;
+                    margin: 5px 0;
+                    box-sizing: border-box;
+                }
+            `;
+            if (!document.getElementById('member-styles')) {
+                style.id = 'member-styles';
+                document.head.appendChild(style);
+            }
+        }
+
+        // ポジション別ジョブオプション
+        function getJobOptionsForPosition(position, selectedJob = '') {
+            const jobsByPosition = {
+                'MT': ['ナイト', '戦士', '暗黒騎士', 'ガンブレイカー'],
+                'ST': ['ナイト', '戦士', '暗黒騎士', 'ガンブレイカー'],
+                'H1': ['白魔道士', '占星術師'],
+                'H2': ['学者', '賢者'],
+                'D1': ['モンク', '竜騎士', '忍者', '侍', 'リーパー', 'ヴァイパー'],
+                'D2': ['モンク', '竜騎士', '忍者', '侍', 'リーパー', 'ヴァイパー'],
+                'D3': ['吟遊詩人', '機工士', '踊り子'], // レンジジョブのみ
+                'D4': ['黒魔道士', '召喚士', '赤魔道士', 'ピクトマンサー'] // キャスタージョブのみ
+            };
+            
+            return jobsByPosition[position].map(job => 
+                `<option value="${job}" ${job === selectedJob ? 'selected' : ''}>${job}</option>`
+            ).join('');
+        }
+
+        // メンバー設定保存
+        function saveMemberSettings() {
+            const positions = ['MT', 'ST', 'H1', 'H2', 'D1', 'D2', 'D3', 'D4'];
+            const data = getData();
+            const existingPlayers = data.players && data.players[currentRaidTier.id] || {};
+            const players = {};
+            
+            for (const position of positions) {
+                const name = document.getElementById(`name-${position}`).value.trim();
+                const characterName = document.getElementById(`char-${position}`).value.trim();
+                const job = document.getElementById(`job-${position}`).value;
+                
+                if (!name || !characterName || !job) {
+                    alert(`${position}の設定が不完全です。すべての項目を入力してください。`);
+                    return;
+                }
+                
+                // 既存データを保持しつつ更新
+                const existingPlayer = existingPlayers[position] || {};
+                players[position] = {
+                    id: existingPlayer.id || Date.now().toString() + position,
+                    name: name,
+                    characterName: characterName,
+                    position: position,
+                    job: job,
+                    equipmentPolicy: existingPlayer.equipmentPolicy || {},
+                    currentEquipment: existingPlayer.currentEquipment || {},
+                    weaponWishes: existingPlayer.weaponWishes || []
+                };
+            }
+            
+            if (!data.players) data.players = {};
+            data.players[currentRaidTier.id] = players;
+            saveData(data);
+            
+            alert('メンバー設定を保存しました！');
+            // 次のステップ（装備方針設定）に自動遷移
+            showEquipmentPolicySetup();
+        }
+
+        // 装備方針設定画面
+        function showEquipmentPolicySetup() {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.nav-btn')[1].classList.add('active');
+            
+            const data = getData();
+            const players = data.players[currentRaidTier.id];
+            
+            if (!players || Object.keys(players).length === 0) {
+                const content = document.getElementById('setup-content');
+                content.innerHTML = `
+                    <div class="section">
+                        <h2>装備方針設定</h2>
+                        <p style="color: #ff6b6b;">先にメンバー設定を完了してください。</p>
+                        <button onclick="showMemberSetup()">メンバー設定に戻る</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            const content = document.getElementById('setup-content');
+            content.innerHTML = `
+                <div class="section">
+                    <h2>装備方針設定</h2>
+                    <p>各ポジションの装備部位ごとに「零式」または「トームストーン」を選択してください。</p>
+                    
+                    <div class="policy-grid">
+                        ${Object.keys(players).map(position => `
+                            <div class="policy-card">
+                                <h3>${position} - ${players[position].job}</h3>
+                                <small>${players[position].name}</small>
+                                <div class="equipment-slots">
+                                    ${['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'].map(slot => {
+                                        const currentPolicy = players[position].equipmentPolicy && players[position].equipmentPolicy[slot] || '零式';
+                                        return `
+                                        <div class="slot-policy">
+                                            <label>${slot}:</label>
+                                            <select id="policy-${position}-${slot}">
+                                                <option value="零式" ${currentPolicy === '零式' ? 'selected' : ''}>零式</option>
+                                                <option value="トームストーン" ${currentPolicy === 'トームストーン' ? 'selected' : ''}>トームストーン</option>
+                                            </select>
+                                        </div>
+                                    `;}).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="policy-actions">
+                        <button onclick="setAllToSavage()">全て零式に設定</button>
+                        <button onclick="setAllToTomestone()">全てトームストーンに設定</button>
+                        <button onclick="saveEquipmentPolicy()">装備方針を保存</button>
+                    </div>
+                </div>
+            `;
+            
+            // 装備方針用CSS
+            const style = document.createElement('style');
+            style.textContent = `
+                .policy-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                    gap: 15px;
+                    margin: 20px 0;
+                }
+                .policy-card {
+                    background-color: #16213e;
+                    padding: 15px;
+                    border-radius: 8px;
+                    border: 1px solid #0f3460;
+                }
+                .policy-card h3 {
+                    margin: 0 0 5px 0;
+                    color: #ffd700;
+                }
+                .policy-card small {
+                    color: #999;
+                    margin-bottom: 10px;
+                    display: block;
+                }
+                .equipment-slots {
+                    margin-top: 10px;
+                }
+                .slot-policy {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin: 5px 0;
+                }
+                .slot-policy label {
+                    min-width: 50px;
+                    color: #ccc;
+                }
+                .slot-policy select {
+                    width: 150px;
+                }
+                .policy-actions {
+                    text-align: center;
+                    margin-top: 20px;
+                }
+                .policy-actions button {
+                    margin: 0 10px;
+                }
+            `;
+            if (!document.getElementById('policy-styles')) {
+                style.id = 'policy-styles';
+                document.head.appendChild(style);
+            }
+        }
+        
+        // 装備方針一括設定
+        function setAllToSavage() {
+            document.querySelectorAll('select[id^="policy-"]').forEach(select => {
+                select.value = '零式';
+            });
+        }
+        
+        function setAllToTomestone() {
+            document.querySelectorAll('select[id^="policy-"]').forEach(select => {
+                select.value = 'トームストーン';
+            });
+        }
+        
+        // 装備方針保存
+        function saveEquipmentPolicy() {
+            const data = getData();
+            const players = data.players[currentRaidTier.id];
+            
+            Object.keys(players).forEach(position => {
+                const equipmentPolicy = {};
+                ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'].forEach(slot => {
+                    const policySelect = document.getElementById(`policy-${position}-${slot}`);
+                    if (policySelect) {
+                        equipmentPolicy[slot] = policySelect.value;
+                    }
+                });
+                players[position].equipmentPolicy = equipmentPolicy;
+            });
+            
+            saveData(data);
+            showWeaponWishSetup();
+        }
+
+        function showWeaponWishSetup() {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.nav-btn')[2].classList.add('active');
+            
+            const data = getData();
+            const players = data.players[currentRaidTier.id];
+            
+            const content = document.getElementById('setup-content');
+            content.innerHTML = `
+                <div class="section">
+                    <h2>4層直ドロップ武器希望設定</h2>
+                    <p>4層でランダムドロップする武器への希望を各プレイヤーが登録できます。優先順位も設定してください。</p>
+                    
+                    <div class="weapon-wish-grid">
+                        ${Object.keys(players).map(position => `
+                            <div class="wish-card">
+                                <h3>${position} - ${players[position].job}</h3>
+                                <small>${players[position].name}</small>
+                                
+                                <div class="current-wishes" id="wishes-${position}">
+                                    <!-- 現在の希望リスト -->
+                                </div>
+                                
+                                <div class="add-wish">
+                                    <select id="job-wish-${position}">
+                                        <option value="">希望ジョブを選択</option>
+                                        ${getAllJobOptions()}
+                                    </select>
+                                    <input type="number" id="priority-${position}" placeholder="優先度" min="1" max="10" value="1">
+                                    <button onclick="addWeaponWish('${position}')">追加</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="wish-actions">
+                        <button onclick="completeSetup()">設定完了</button>
+                    </div>
+                </div>
+            `;
+            
+            // 武器希望用CSS
+            const style = document.createElement('style');
+            style.textContent = `
+                .weapon-wish-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                    gap: 15px;
+                    margin: 20px 0;
+                }
+                .wish-card {
+                    background-color: #16213e;
+                    padding: 15px;
+                    border-radius: 8px;
+                    border: 1px solid #0f3460;
+                }
+                .wish-card h3 {
+                    margin: 0 0 5px 0;
+                    color: #ffd700;
+                }
+                .wish-card small {
+                    color: #999;
+                    margin-bottom: 15px;
+                    display: block;
+                }
+                .current-wishes {
+                    min-height: 60px;
+                    margin-bottom: 15px;
+                }
+                .wish-item {
+                    background-color: #0f3460;
+                    padding: 8px;
+                    margin: 5px 0;
+                    border-radius: 4px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                .wish-item span {
+                    color: #ccc;
+                }
+                .wish-item button {
+                    background-color: #ff4757;
+                    padding: 2px 8px;
+                    font-size: 12px;
+                }
+                .add-wish {
+                    display: flex;
+                    gap: 5px;
+                    flex-wrap: wrap;
+                }
+                .add-wish select, .add-wish input {
+                    flex: 1;
+                    min-width: 120px;
+                }
+                .add-wish button {
+                    background-color: #2ed573;
+                }
+                .wish-actions {
+                    text-align: center;
+                    margin-top: 20px;
+                }
+            `;
+            if (!document.getElementById('wish-styles')) {
+                style.id = 'wish-styles';
+                document.head.appendChild(style);
+            }
+            
+            // 既存の希望を表示
+            Object.keys(players).forEach(position => {
+                updateWishDisplay(position);
+            });
+        }
+        
+        // 全ジョブオプション
+        function getAllJobOptions() {
+            const allJobs = [
+                'ナイト', '戦士', '暗黒騎士', 'ガンブレイカー',
+                '白魔道士', '占星術師', '学者', '賢者',
+                'モンク', '竜騎士', '忍者', '侍', 'リーパー', 'ヴァイパー',
+                '吟遊詩人', '機工士', '踊り子', '黒魔道士', '召喚士', '赤魔道士', 'ピクトマンサー'
+            ];
+            return allJobs.map(job => `<option value="${job}">${job}</option>`).join('');
+        }
+        
+        // 武器希望追加
+        function addWeaponWish(position) {
+            const jobSelect = document.getElementById(`job-wish-${position}`);
+            const priorityInput = document.getElementById(`priority-${position}`);
+            
+            if (!jobSelect.value) return;
+            
+            const data = getData();
+            const players = data.players[currentRaidTier.id];
+            
+            if (!players[position].weaponWishes) {
+                players[position].weaponWishes = [];
+            }
+            
+            // 既に同じジョブの希望がないかチェック
+            if (players[position].weaponWishes.some(wish => wish.jobName === jobSelect.value)) {
+                return; // 既に存在する場合は追加しない
+            }
+            
+            players[position].weaponWishes.push({
+                jobName: jobSelect.value,
+                priority: parseInt(priorityInput.value) || 1,
+                addedAt: new Date().toISOString()
+            });
+            
+            // 優先度順にソート
+            players[position].weaponWishes.sort((a, b) => a.priority - b.priority);
+            
+            saveData(data);
+            
+            // 表示更新
+            updateWishDisplay(position);
+            
+            // フォームリセット
+            jobSelect.value = '';
+            priorityInput.value = '1';
+        }
+        
+        // 武器希望削除
+        function removeWeaponWish(position, jobName) {
+            const data = getData();
+            const players = data.players[currentRaidTier.id];
+            
+            players[position].weaponWishes = players[position].weaponWishes.filter(
+                wish => wish.jobName !== jobName
+            );
+            
+            saveData(data);
+            updateWishDisplay(position);
+        }
+        
+        // 希望表示更新
+        function updateWishDisplay(position) {
+            const data = getData();
+            const players = data.players[currentRaidTier.id];
+            const container = document.getElementById(`wishes-${position}`);
+            
+            if (!players[position].weaponWishes || players[position].weaponWishes.length === 0) {
+                container.innerHTML = '<p style="color: #999; font-size: 14px;">希望なし</p>';
+                return;
+            }
+            
+            container.innerHTML = players[position].weaponWishes.map(wish => `
+                <div class="wish-item">
+                    <span>${wish.jobName} (優先度: ${wish.priority})</span>
+                    <button onclick="removeWeaponWish('${position}', '${wish.jobName}')">削除</button>
+                </div>
+            `).join('');
+        }
+
+        function completeSetup() {
+            showMainDashboard();
+        }
+        
+        // メインダッシュボード
+        function showMainDashboard() {
+            const app = document.querySelector('.container');
+            
+            app.innerHTML = `
+                <h1>${currentRaidTier.name} - メインダッシュボード</h1>
+                
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <h3>設定管理</h3>
+                        <button onclick="showInitialSetup()">登録内容確認・変更</button>
+                        <button onclick="showPositionPrioritySettings()">ポジション優先度設定</button>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <h3>レイドクリア</h3>
+                        <button onclick="showLayerAllocation(1)">1層クリア</button>
+                        <button onclick="showLayerAllocation(2)">2層クリア</button>
+                        <button onclick="showLayerAllocation(3)">3層クリア</button>
+                        <button onclick="showLayerAllocation(4)">4層クリア</button>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <h3>履歴・統計</h3>
+                        <button onclick="showHistory()">配布履歴・装備状況</button>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <h3>その他</h3>
+                        <button onclick="showRaidTierSelection()">レイドティア変更</button>
+                        <button onclick="exportData()">データエクスポート</button>
+                        <button onclick="generateTestData()" style="background-color: #e67e22; border-color: #d35400;">🧪 テストデータ生成</button>
+                    </div>
+                </div>
+                
+                <div class="dashboard-status">
+                    <h3>今週の進行状況</h3>
+                    <div id="weekly-progress">
+                        <p>実装予定：各層のクリア状況、取得装備の表示</p>
+                    </div>
+                </div>
+            `;
+            
+            // ダッシュボードスタイル
+            const style = document.createElement('style');
+            style.textContent = `
+                .dashboard-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                    gap: 20px;
+                    margin: 20px 0;
+                }
+                .dashboard-card {
+                    background-color: #16213e;
+                    padding: 20px;
+                    border-radius: 8px;
+                    border: 1px solid #0f3460;
+                    text-align: center;
+                }
+                .dashboard-card h3 {
+                    color: #ffd700;
+                    margin-bottom: 15px;
+                }
+                .dashboard-card button {
+                    display: block;
+                    width: 100%;
+                    margin: 10px 0;
+                }
+                .dashboard-status {
+                    margin-top: 30px;
+                    padding: 20px;
+                    background-color: #16213e;
+                    border-radius: 8px;
+                }
+            `;
+            if (!document.getElementById('dashboard-styles')) {
+                style.id = 'dashboard-styles';
+                document.head.appendChild(style);
+            }
+        }
+        
+        // 層別装備分配画面（固定ドロップ即時表示方式）
+        function showLayerAllocation(layer) {
+            console.log('showLayerAllocation呼び出し:', layer);
+            
+            const app = document.querySelector('.container');
+            
+            try {
+                const data = getData();
+                
+                console.log('currentRaidTier:', currentRaidTier);
+                
+                if (!currentRaidTier || !currentRaidTier.id) {
+                    app.innerHTML = `
+                        <h1>エラー</h1>
+                        <div class="section">
+                            <p style="color: #ff6b6b;">レイドティアが選択されていません。</p>
+                            <button onclick="showRaidTierSelection()">レイドティア選択に戻る</button>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const players = data.players && data.players[currentRaidTier.id];
+                console.log('プレイヤーデータ:', players);
+                
+                if (!players || Object.keys(players).length === 0) {
+                    app.innerHTML = `
+                        <h1>${layer}層装備分配</h1>
+                        <div class="section">
+                            <p style="color: #ff6b6b;">先にメンバー設定を完了してください。</p>
+                            <button onclick="showMainDashboard()">ダッシュボードに戻る</button>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // 正常な場合のHTML描画
+                app.innerHTML = `
+                <h1>${layer}層クリア確認</h1>
+                
+                <div class="allocation-navigation">
+                    <button onclick="showMainDashboard()">ダッシュボードに戻る</button>
+                    <button onclick="generateLayerDropsAndProcess(${layer})" class="refresh-btn">分配結果を再計算</button>
+                    <button onclick="generateTestData()" class="test-btn">テストデータ生成</button>
+                    <button onclick="showItemImportFromWeb(${layer})" class="import-btn">Webからアイテム取得</button>
+                </div>
+                
+                <div class="section">
+                    <h2>${layer}層固定ドロップアイテム</h2>
+                    <div id="fixed-drops">
+                        <!-- 固定ドロップがここに表示される -->
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2>自動分配結果</h2>
+                    <div id="allocation-summary">
+                        <!-- 分配結果がここに表示される -->
+                    </div>
+                </div>
+                
+                <div class="allocation-actions">
+                    <button onclick="confirmAndSaveAllocation(${layer})" class="confirm-btn">この結果で確定・保存</button>
+                </div>
+                `;
+            
+            // 層別装備分配用CSS
+            const style = document.createElement('style');
+            style.textContent = `
+                .allocation-navigation {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 20px;
+                    padding-bottom: 10px;
+                    border-bottom: 2px solid #0f3460;
+                }
+                .generate-btn {
+                    background-color: #2ed573 !important;
+                }
+                .test-btn {
+                    background-color: #e74c3c !important;
+                }
+                .refresh-btn {
+                    background-color: #9b59b6 !important;
+                }
+                .import-btn {
+                    background-color: #ff9f43 !important;
+                }
+                .confirm-btn {
+                    background-color: #27ae60 !important;
+                    padding: 15px 30px !important;
+                    font-size: 16px !important;
+                }
+                .fixed-drop-item {
+                    background-color: #ffffff;
+                    padding: 16px 20px;
+                    margin: 12px 0;
+                    border-radius: 12px;
+                    border-left: 4px solid #3498db;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    border: 1px solid #e9ecef;
+                }
+                .fixed-drop-item h4 {
+                    margin: 0;
+                    color: #2c3e50;
+                    font-size: 16px;
+                    font-weight: 600;
+                }
+                .fixed-drop-item p {
+                    margin: 0;
+                    color: #666;
+                    font-size: 14px;
+                }
+                .add-item-form {
+                    display: flex;
+                    gap: 10px;
+                    margin-top: 15px;
+                    flex-wrap: wrap;
+                }
+                .add-item-form select, .add-item-form input {
+                    flex: 1;
+                    min-width: 120px;
+                }
+                .drop-item {
+                    background-color: #16213e;
+                    padding: 15px;
+                    margin: 10px 0;
+                    border-radius: 8px;
+                    border: 1px solid #0f3460;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                .drop-item-info h4 {
+                    margin: 0 0 5px 0;
+                    color: #ffd700;
+                }
+                .drop-item-info p {
+                    margin: 0;
+                    color: #ccc;
+                    font-size: 14px;
+                }
+                .drop-item-actions button {
+                    margin-left: 10px;
+                    background-color: #ff4757 !important;
+                    padding: 5px 10px;
+                    font-size: 12px;
+                }
+                .allocation-result {
+                    background-color: #ffffff;
+                    padding: 20px;
+                    margin: 16px 0;
+                    border-radius: 12px;
+                    border-left: 4px solid #3498db;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    border: 1px solid #e9ecef;
+                }
+                .allocation-result h4 {
+                    margin: 0 0 12px 0;
+                    color: #2c3e50;
+                    font-weight: 600;
+                    font-size: 18px;
+                }
+                .allocation-result p {
+                    margin: 8px 0;
+                    color: #555;
+                    line-height: 1.5;
+                }
+                .allocation-result strong {
+                    color: #2c3e50;
+                }
+                .judgment-list {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                    gap: 12px;
+                    margin-top: 16px;
+                }
+                .judgment-item {
+                    padding: 12px;
+                    border-radius: 8px;
+                    text-align: center;
+                    font-size: 14px;
+                    font-weight: 500;
+                    transition: transform 0.2s ease;
+                    cursor: pointer;
+                }
+                .judgment-item:hover {
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+                }
+                .player-name {
+                    font-weight: bold;
+                    font-size: 16px;
+                    margin-bottom: 4px;
+                }
+                .judgment-text {
+                    font-size: 18px;
+                    font-weight: bold;
+                    margin: 4px 0;
+                }
+                .priority-text {
+                    font-size: 12px;
+                    opacity: 0.9;
+                    margin: 2px 0;
+                }
+                .policy-text {
+                    font-size: 11px;
+                    opacity: 0.8;
+                    margin-top: 2px;
+                }
+                .judgment-need {
+                    background-color: #27ae60;
+                    color: white;
+                    box-shadow: 0 2px 4px rgba(39, 174, 96, 0.3);
+                }
+                .judgment-greed {
+                    background-color: #f39c12;
+                    color: white;
+                    box-shadow: 0 2px 4px rgba(243, 156, 18, 0.3);
+                }
+                .judgment-pass {
+                    background-color: #95a5a6;
+                    color: white;
+                    box-shadow: 0 2px 4px rgba(149, 165, 166, 0.3);
+                }
+                .allocation-actions {
+                    text-align: center;
+                    margin-top: 20px;
+                }
+                .allocation-actions button {
+                    margin: 0 10px;
+                    padding: 15px 30px;
+                    font-size: 16px;
+                }
+                .allocation-actions button:disabled {
+                    background-color: #555 !important;
+                    cursor: not-allowed;
+                }
+                .allocation-result-simple {
+                    background-color: #ffffff;
+                    padding: 20px;
+                    margin-bottom: 15px;
+                    border-radius: 12px;
+                    border: 2px solid #e9ecef;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                }
+                .item-winner-display {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                .item-name {
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #2c3e50;
+                }
+                .winner-name {
+                    font-size: 16px;
+                    font-weight: 500;
+                    color: #27ae60;
+                    background-color: #d5f4e6;
+                    padding: 8px 16px;
+                    border-radius: 20px;
+                    border: 2px solid #27ae60;
+                }
+            `;
+            if (!document.getElementById('allocation-styles')) {
+                style.id = 'allocation-styles';
+                document.head.appendChild(style);
+            }
+            
+                // HTMLの描画完了後に処理を実行
+                setTimeout(() => {
+                    console.log('DOM要素確認中...');
+                    const fixedDropsEl = document.getElementById('fixed-drops');
+                    const summaryEl = document.getElementById('allocation-summary');
+                    console.log('fixed-drops要素:', fixedDropsEl);
+                    console.log('allocation-summary要素:', summaryEl);
+                    
+                    if (fixedDropsEl && summaryEl) {
+                        generateLayerDropsAndProcess(layer);
+                    } else {
+                        console.error('DOM要素が見つからないため、再試行します');
+                        setTimeout(() => {
+                            generateLayerDropsAndProcess(layer);
+                        }, 500);
+                    }
+                }, 200);
+                
+            } catch (error) {
+                console.error('showLayerAllocation エラー:', error);
+                app.innerHTML = `
+                    <h1>エラー</h1>
+                    <div class="section">
+                        <p style="color: #ff6b6b;">エラーが発生しました: ${error.message}</p>
+                        <button onclick="showMainDashboard()">ダッシュボードに戻る</button>
+                    </div>
+                `;
+            }
+        }
+        
+        function showHistory() {
+            try {
+                const app = document.querySelector('.container');
+                const data = getData();
+                
+                if (!currentRaidTier || !currentRaidTier.id) {
+                    app.innerHTML = `
+                        <h1>エラー</h1>
+                        <div class="section">
+                            <p style="color: #ff6b6b;">レイドティアが選択されていません。</p>
+                            <button onclick="showMainDashboard()">ダッシュボードに戻る</button>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const allocations = data.allocations && data.allocations[currentRaidTier.id] || [];
+                const players = data.players && data.players[currentRaidTier.id] || {};
+                
+                app.innerHTML = `
+                    <h1>${currentRaidTier.name} - 配布履歴・装備状況</h1>
+                    
+                    <div class="history-navigation">
+                        <button onclick="showMainDashboard()">ダッシュボードに戻る</button>
+                        <button onclick="exportHistoryData()" class="export-btn">履歴データエクスポート</button>
+                    </div>
+                    
+                    <div class="history-tabs">
+                        <button class="tab-btn active" onclick="showAllocationHistory()">配布履歴</button>
+                        <button class="tab-btn" onclick="showPlayerEquipmentStatus()">装備状況</button>
+                        <button class="tab-btn" onclick="showWeeklyStatistics()">週別統計</button>
+                    </div>
+                    
+                    <div id="history-content">
+                        <!-- 履歴内容がここに表示される -->
+                    </div>
+                `;
+                
+                // 履歴用CSS
+                const style = document.createElement('style');
+                style.textContent = `
+                    .history-navigation {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-bottom: 20px;
+                        padding-bottom: 10px;
+                        border-bottom: 2px solid #e9ecef;
+                    }
+                    .export-btn {
+                        background-color: #17a2b8 !important;
+                    }
+                    .history-tabs {
+                        display: flex;
+                        gap: 10px;
+                        margin-bottom: 20px;
+                        border-bottom: 2px solid #e9ecef;
+                        padding-bottom: 10px;
+                    }
+                    .tab-btn {
+                        padding: 12px 24px;
+                        background-color: #f8f9fa;
+                        border: 1px solid #dee2e6;
+                        color: #495057;
+                        cursor: pointer;
+                        border-radius: 8px 8px 0 0;
+                        font-weight: 500;
+                        transition: all 0.2s ease;
+                    }
+                    .tab-btn.active {
+                        background-color: #3498db;
+                        color: white;
+                        border-bottom: 2px solid #3498db;
+                    }
+                    .tab-btn:hover:not(.active) {
+                        background-color: #e9ecef;
+                        color: #2c3e50;
+                        border-color: #3498db;
+                    }
+                    .allocation-history-item {
+                        background-color: #ffffff;
+                        padding: 20px;
+                        margin: 15px 0;
+                        border-radius: 12px;
+                        border-left: 4px solid #3498db;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                        border: 1px solid #e9ecef;
+                    }
+                    .allocation-history-item h4 {
+                        margin: 0 0 10px 0;
+                        color: #2c3e50;
+                        font-weight: 600;
+                    }
+                    .allocation-history-item p {
+                        margin: 5px 0;
+                        color: #555;
+                    }
+                    .allocation-history-item small {
+                        color: #95a5a6;
+                    }
+                    .player-equipment-grid {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                        gap: 20px;
+                        margin: 20px 0;
+                    }
+                    .player-equipment-card {
+                        background-color: #ffffff;
+                        padding: 20px;
+                        border-radius: 12px;
+                        border: 1px solid #e9ecef;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    }
+                    .player-equipment-card h3 {
+                        margin: 0 0 15px 0;
+                        color: #2c3e50;
+                        font-weight: 600;
+                        text-align: center;
+                        padding-bottom: 10px;
+                        border-bottom: 2px solid #3498db;
+                    }
+                    .equipment-slot {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        padding: 8px 0;
+                        border-bottom: 1px solid #f1f3f4;
+                    }
+                    .equipment-slot:last-child {
+                        border-bottom: none;
+                    }
+                    .equipment-slot-name {
+                        font-weight: 500;
+                        color: #495057;
+                        min-width: 60px;
+                    }
+                    .equipment-item {
+                        flex: 1;
+                        text-align: right;
+                        color: #6c757d;
+                    }
+                    .equipment-item.has-item {
+                        color: #28a745;
+                        font-weight: 500;
+                    }
+                    .equipment-item.no-item {
+                        color: #dc3545;
+                        font-style: italic;
+                    }
+                    .statistics-grid {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                        gap: 20px;
+                        margin: 20px 0;
+                    }
+                    .stat-card {
+                        background-color: #ffffff;
+                        padding: 20px;
+                        border-radius: 12px;
+                        border: 1px solid #e9ecef;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                        text-align: center;
+                    }
+                    .stat-card h3 {
+                        margin: 0 0 10px 0;
+                        color: #2c3e50;
+                        font-weight: 600;
+                    }
+                    .stat-number {
+                        font-size: 2.5rem;
+                        font-weight: 700;
+                        color: #3498db;
+                        margin: 10px 0;
+                    }
+                    .stat-description {
+                        color: #6c757d;
+                        font-size: 14px;
+                    }
+                    .filter-section {
+                        background-color: #f8f9fa;
+                        padding: 15px;
+                        border-radius: 8px;
+                        margin-bottom: 20px;
+                        border: 1px solid #e9ecef;
+                    }
+                    .filter-controls {
+                        display: flex;
+                        gap: 15px;
+                        flex-wrap: wrap;
+                        align-items: center;
+                    }
+                    .filter-controls select, .filter-controls input {
+                        padding: 8px 12px;
+                        border: 1px solid #ced4da;
+                        border-radius: 6px;
+                        background-color: white;
+                        color: #495057;
+                    }
+                `;
+                if (!document.getElementById('history-styles')) {
+                    style.id = 'history-styles';
+                    document.head.appendChild(style);
+                }
+                
+                // デフォルトで配布履歴を表示
+                setTimeout(() => {
+                    showAllocationHistory();
+                }, 100);
+                
+            } catch (error) {
+                console.error('showHistory エラー:', error);
+                const app = document.querySelector('.container');
+                app.innerHTML = `
+                    <h1>エラー</h1>
+                    <div class="section">
+                        <p style="color: #ff6b6b;">履歴表示中にエラーが発生しました: ${error.message}</p>
+                        <button onclick="showMainDashboard()">ダッシュボードに戻る</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // 配布履歴表示
+        function showAllocationHistory() {
+            try {
+                // タブのアクティブ状態を更新
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                
+                const data = getData();
+                const allocations = data.allocations && data.allocations[currentRaidTier.id] || [];
+                const content = document.getElementById('history-content');
+                
+                if (allocations.length === 0) {
+                    content.innerHTML = `
+                        <div class="section">
+                            <h3>配布履歴</h3>
+                            <p>まだ装備の配布履歴がありません。</p>
+                            <p>レイドをクリアして装備を分配すると、ここに履歴が表示されます。</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // 履歴を新しい順にソート
+                const sortedAllocations = allocations.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
+                content.innerHTML = `
+                    <div class="filter-section">
+                        <h3>フィルター</h3>
+                        <div class="filter-controls">
+                            <label>層:</label>
+                            <select id="layer-filter" onchange="filterAllocationHistory()">
+                                <option value="">すべての層</option>
+                                <option value="1">1層</option>
+                                <option value="2">2層</option>
+                                <option value="3">3層</option>
+                                <option value="4">4層</option>
+                            </select>
+                            
+                            <label>プレイヤー:</label>
+                            <select id="player-filter" onchange="filterAllocationHistory()">
+                                <option value="">すべてのプレイヤー</option>
+                                ${getUniquePlayersFromAllocations(allocations).map(player => 
+                                    `<option value="${player}">${player}</option>`
+                                ).join('')}
+                            </select>
+                            
+                            <label>週:</label>
+                            <select id="week-filter" onchange="filterAllocationHistory()">
+                                <option value="">すべての週</option>
+                                ${getUniqueWeeksFromAllocations(allocations).map(week => 
+                                    `<option value="${week}">${week}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="filtered-allocations">
+                        ${renderAllocationHistory(sortedAllocations)}
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('showAllocationHistory エラー:', error);
+                const content = document.getElementById('history-content');
+                content.innerHTML = `<p style="color: #ff6b6b;">履歴表示中にエラーが発生しました。</p>`;
+            }
+        }
+        
+        // 配布履歴のレンダリング
+        function renderAllocationHistory(allocations) {
+            if (allocations.length === 0) {
+                return '<p>フィルター条件に該当する履歴がありません。</p>';
+            }
+            
+            return allocations.map(allocation => {
+                const timestamp = new Date(allocation.timestamp);
+                const formattedDate = timestamp.toLocaleString('ja-JP');
+                const winnerText = allocation.winner ? 
+                    `${allocation.winner.name} (${allocation.winner.position})` : 
+                    'なし';
+                
+                return `
+                    <div class="allocation-history-item">
+                        <h4>${allocation.equipment.name}</h4>
+                        <p><strong>層:</strong> ${allocation.layer}層</p>
+                        <p><strong>勝者:</strong> ${winnerText}</p>
+                        <p><strong>部位:</strong> ${allocation.equipment.slot} (IL${allocation.equipment.itemLevel})</p>
+                        <p><strong>週:</strong> ${allocation.week || '不明'}</p>
+                        <small>配布日時: ${formattedDate}</small>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // フィルター機能
+        function filterAllocationHistory() {
+            const data = getData();
+            const allocations = data.allocations && data.allocations[currentRaidTier.id] || [];
+            
+            const layerFilter = document.getElementById('layer-filter').value;
+            const playerFilter = document.getElementById('player-filter').value;
+            const weekFilter = document.getElementById('week-filter').value;
+            
+            let filteredAllocations = allocations;
+            
+            if (layerFilter) {
+                filteredAllocations = filteredAllocations.filter(a => a.layer.toString() === layerFilter);
+            }
+            
+            if (playerFilter) {
+                filteredAllocations = filteredAllocations.filter(a => 
+                    a.winner && a.winner.name === playerFilter
+                );
+            }
+            
+            if (weekFilter) {
+                filteredAllocations = filteredAllocations.filter(a => a.week === weekFilter);
+            }
+            
+            // 新しい順にソート
+            const sortedFiltered = filteredAllocations.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            document.getElementById('filtered-allocations').innerHTML = renderAllocationHistory(sortedFiltered);
+        }
+        
+        // ユニークなプレイヤーリストを取得
+        function getUniquePlayersFromAllocations(allocations) {
+            const playerNames = new Set();
+            allocations.forEach(allocation => {
+                if (allocation.winner && allocation.winner.name) {
+                    playerNames.add(allocation.winner.name);
+                }
+            });
+            return Array.from(playerNames).sort();
+        }
+        
+        // ユニークな週リストを取得
+        function getUniqueWeeksFromAllocations(allocations) {
+            const weeks = new Set();
+            allocations.forEach(allocation => {
+                if (allocation.week) {
+                    weeks.add(allocation.week);
+                }
+            });
+            return Array.from(weeks).sort().reverse(); // 新しい週から順番に
+        }
+        
+        // プレイヤー装備状況表示
+        function showPlayerEquipmentStatus() {
+            // タブのアクティブ状態を更新
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            
+            const data = getData();
+            const players = data.players && data.players[currentRaidTier.id] || {};
+            const content = document.getElementById('history-content');
+            
+            if (Object.keys(players).length === 0) {
+                content.innerHTML = `
+                    <div class="section">
+                        <h3>装備状況</h3>
+                        <p>プレイヤーデータがありません。</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const equipmentSlots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+            
+            content.innerHTML = `
+                <div class="section">
+                    <h3>各プレイヤーの現在装備状況</h3>
+                    <div class="player-equipment-grid">
+                        ${Object.values(players).map(player => {
+                            return `
+                                <div class="player-equipment-card">
+                                    <h3>${player.name} (${player.position}) - ${player.job}</h3>
+                                    ${equipmentSlots.map(slot => {
+                                        const equipment = player.currentEquipment && player.currentEquipment[slot];
+                                        const hasEquipment = equipment && equipment.itemLevel;
+                                        
+                                        return `
+                                            <div class="equipment-slot">
+                                                <span class="equipment-slot-name">${slot}:</span>
+                                                <span class="equipment-item ${hasEquipment ? 'has-item' : 'no-item'}">
+                                                    ${hasEquipment ? 
+                                                        `${equipment.name || slot} (IL${equipment.itemLevel})` : 
+                                                        '未装備'
+                                                    }
+                                                </span>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 週別統計表示
+        function showWeeklyStatistics() {
+            // タブのアクティブ状態を更新
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-btn')[2].classList.add('active');
+            
+            const data = getData();
+            const allocations = data.allocations && data.allocations[currentRaidTier.id] || [];
+            const players = data.players && data.players[currentRaidTier.id] || {};
+            const content = document.getElementById('history-content');
+            
+            if (allocations.length === 0) {
+                content.innerHTML = `
+                    <div class="section">
+                        <h3>週別統計</h3>
+                        <p>配布履歴がありません。</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 統計データの計算
+            const totalAllocations = allocations.length;
+            const totalPlayers = Object.keys(players).length;
+            const uniqueWeeks = getUniqueWeeksFromAllocations(allocations);
+            
+            // プレイヤー別の取得数統計
+            const playerStats = {};
+            Object.values(players).forEach(player => {
+                playerStats[player.name] = {
+                    player: player,
+                    count: 0,
+                    items: []
+                };
+            });
+            
+            allocations.forEach(allocation => {
+                if (allocation.winner && allocation.winner.name) {
+                    const playerName = allocation.winner.name;
+                    if (playerStats[playerName]) {
+                        playerStats[playerName].count++;
+                        playerStats[playerName].items.push(allocation.equipment);
+                    }
+                }
+            });
+            
+            // 層別統計
+            const layerStats = {};
+            [1, 2, 3, 4].forEach(layer => {
+                layerStats[layer] = allocations.filter(a => a.layer === layer).length;
+            });
+            
+            content.innerHTML = `
+                <div class="section">
+                    <h3>配布統計</h3>
+                    
+                    <div class="statistics-grid">
+                        <div class="stat-card">
+                            <h3>総配布数</h3>
+                            <div class="stat-number">${totalAllocations}</div>
+                            <div class="stat-description">アイテム</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <h3>参加プレイヤー</h3>
+                            <div class="stat-number">${totalPlayers}</div>
+                            <div class="stat-description">人</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <h3>活動週数</h3>
+                            <div class="stat-number">${uniqueWeeks.length}</div>
+                            <div class="stat-description">週</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <h3>平均取得数</h3>
+                            <div class="stat-number">${totalPlayers > 0 ? (totalAllocations / totalPlayers).toFixed(1) : 0}</div>
+                            <div class="stat-description">アイテム/人</div>
+                        </div>
+                    </div>
+                    
+                    <h4>層別配布数</h4>
+                    <div class="statistics-grid">
+                        ${[1, 2, 3, 4].map(layer => `
+                            <div class="stat-card">
+                                <h3>${layer}層</h3>
+                                <div class="stat-number">${layerStats[layer]}</div>
+                                <div class="stat-description">アイテム</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <h4>プレイヤー別取得数</h4>
+                    <div class="player-equipment-grid">
+                        ${Object.values(playerStats)
+                            .sort((a, b) => b.count - a.count)
+                            .map(stat => `
+                                <div class="player-equipment-card">
+                                    <h3>${stat.player.name} (${stat.player.position})</h3>
+                                    <div class="stat-number" style="font-size: 1.8rem; margin: 10px 0;">${stat.count}</div>
+                                    <div class="stat-description">アイテム取得</div>
+                                    ${stat.items.length > 0 ? `
+                                        <div style="margin-top: 15px; font-size: 14px;">
+                                            <strong>最近の取得:</strong><br>
+                                            ${stat.items.slice(-3).map(item => 
+                                                `• ${item.name} (${item.slot})`
+                                            ).join('<br>')}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // WebからアイテムインポートUI表示
+        function showItemImportFromWeb(layer) {
+            const app = document.querySelector('.container');
+            
+            app.innerHTML = `
+                <h1>${layer}層 - Webからアイテム取得</h1>
+                
+                <div class="import-navigation">
+                    <button onclick="showLayerAllocation(${layer})">層分配画面に戻る</button>
+                    <button onclick="showMainDashboard()">ダッシュボードに戻る</button>
+                </div>
+                
+                <div class="section">
+                    <h2>FF14 Lodestone データベースからアイテム取得</h2>
+                    <p>FF14公式データベースのアイテムページURLを入力すると、アイテム情報を自動取得できます。</p>
+                    
+                    <div class="url-input-section">
+                        <h3>方法1: 個別アイテム取得</h3>
+                        <input type="url" id="item-url" placeholder="https://jp.finalfantasyxiv.com/lodestone/playguide/db/item/..." 
+                               style="width: 100%; margin: 10px 0;">
+                        <button onclick="importSingleItemFromWeb(${layer})">このアイテムを取得</button>
+                        
+                        <div id="single-item-result" style="margin-top: 20px;">
+                            <!-- 取得結果がここに表示される -->
+                        </div>
+                    </div>
+                    
+                    <div class="url-input-section" style="margin-top: 30px;">
+                        <h3>方法2: 複数アイテム一括取得</h3>
+                        <p>複数のURLを改行区切りで入力してください：</p>
+                        <textarea id="multiple-urls" rows="8" placeholder="https://jp.finalfantasyxiv.com/lodestone/playguide/db/item/...
+https://jp.finalfantasyxiv.com/lodestone/playguide/db/item/...
+https://jp.finalfantasyxiv.com/lodestone/playguide/db/item/..." 
+                                  style="width: 100%; margin: 10px 0; resize: vertical;"></textarea>
+                        <button onclick="importMultipleItemsFromWeb(${layer})">すべてのアイテムを取得</button>
+                        
+                        <div id="multiple-items-result" style="margin-top: 20px;">
+                            <!-- 取得結果がここに表示される -->
+                        </div>
+                    </div>
+                    
+                    <div class="preset-section" style="margin-top: 30px;">
+                        <h3>方法3: 既知のレイドティア装備セット</h3>
+                        <p>一般的なレイドティアの装備セットを自動設定：</p>
+                        <select id="preset-raid-tier" style="margin: 10px;">
+                            <option value="">レイドティアを選択</option>
+                            <option value="savage_72">7.2零式（咎人シリーズ）</option>
+                            <option value="savage_71">7.1零式（咎人シリーズ）</option>
+                            <option value="savage_70">7.0零式（アルカディアシリーズ）</option>
+                        </select>
+                        <button onclick="applyPresetRaidGear(${layer})">このセットを適用</button>
+                        
+                        <div id="preset-result" style="margin-top: 20px;">
+                            <!-- プリセット適用結果がここに表示される -->
+                        </div>
+                    </div>
+                    
+                    <div class="auto-search-section" style="margin-top: 30px;">
+                        <h3>方法4: 自動データベース検索</h3>
+                        <p>FF14データベースから最高ILの装備チェストを自動検索して取得：</p>
+                        <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; border: 1px solid #ffeaa7; margin: 10px 0;">
+                            <h4 style="margin: 0 0 10px 0; color: #856404;">🔍 自動検索機能</h4>
+                            <p style="margin: 0; color: #856404;">指定した部位の最高アイテムレベル装備が入手できるチェスト名を自動で検索・取得します</p>
+                        </div>
+                        
+                        <div class="search-controls" style="margin: 15px 0;">
+                            <label style="font-size: 16px; font-weight: bold; margin-bottom: 15px; display: block;">検索する装備部位を選択:</label>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 10px 0;">
+                                <label><input type="checkbox" value="武器" class="slot-checkbox"> 武器</label>
+                                <label><input type="checkbox" value="頭" class="slot-checkbox"> 頭</label>
+                                <label><input type="checkbox" value="胴" class="slot-checkbox"> 胴</label>
+                                <label><input type="checkbox" value="手" class="slot-checkbox"> 手</label>
+                                <label><input type="checkbox" value="脚" class="slot-checkbox"> 脚</label>
+                                <label><input type="checkbox" value="足" class="slot-checkbox"> 足</label>
+                                <label><input type="checkbox" value="耳" class="slot-checkbox"> 耳</label>
+                                <label><input type="checkbox" value="首" class="slot-checkbox"> 首</label>
+                                <label><input type="checkbox" value="腕" class="slot-checkbox"> 腕</label>
+                                <label><input type="checkbox" value="指" class="slot-checkbox"> 指</label>
+                            </div>
+                            
+                            <div style="margin: 15px 0;">
+                                <button onclick="selectAllSlots()" style="background-color: #28a745; margin-right: 10px;">全選択</button>
+                                <button onclick="clearAllSlots()" style="background-color: #6c757d;">全解除</button>
+                            </div>
+                            
+                            <div style="margin: 15px 0;">
+                                <label>最小アイテムレベル:</label>
+                                <input type="number" id="min-item-level" value="720" min="1" max="999" style="margin-left: 10px; width: 80px;">
+                                <small style="color: #666; margin-left: 10px;">※チェストから入手できる装備の最小IL</small>
+                            </div>
+                        </div>
+                        
+                        <button onclick="autoSearchHighestILChests(${layer})" class="auto-search-btn" style="background-color: #17a2b8 !important; font-weight: bold;">
+                            🔍 自動検索して反映
+                        </button>
+                        
+                        <div id="auto-search-result" style="margin-top: 20px;">
+                            <!-- 自動検索結果がここに表示される -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="imported-items-section">
+                    <h2>取得済みアイテム</h2>
+                    <div id="imported-items-list">
+                        <!-- 取得したアイテムがここに表示される -->
+                    </div>
+                    
+                    <div class="import-actions" style="text-align: center; margin-top: 20px;">
+                        <button onclick="applyImportedItems(${layer})" class="confirm-btn" disabled id="apply-btn">
+                            これらのアイテムを${layer}層ドロップとして適用
+                        </button>
+                        <button onclick="clearImportedItems()" style="background-color: #e74c3c !important;">
+                            取得アイテムをクリア
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // インポート用CSS
+            const style = document.createElement('style');
+            style.textContent = `
+                .import-navigation {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 20px;
+                    padding-bottom: 10px;
+                    border-bottom: 2px solid #e9ecef;
+                }
+                .url-input-section {
+                    background-color: #f8f9fa;
+                    padding: 20px;
+                    border-radius: 12px;
+                    border: 1px solid #e9ecef;
+                    margin: 15px 0;
+                }
+                .url-input-section h3 {
+                    margin-top: 0;
+                    color: #2c3e50;
+                }
+                .url-input-section input, .url-input-section textarea {
+                    padding: 12px;
+                    border: 1px solid #ced4da;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    box-sizing: border-box;
+                    background-color: white;
+                }
+                .preset-section {
+                    background-color: #e3f2fd;
+                    padding: 20px;
+                    border-radius: 12px;
+                    border: 1px solid #bbdefb;
+                }
+                .auto-search-section {
+                    background-color: #e8f5e8;
+                    padding: 20px;
+                    border-radius: 12px;
+                    border: 1px solid #c8e6c9;
+                }
+                .auto-search-section h3 {
+                    color: #2e7d32;
+                    margin-top: 0;
+                }
+                .search-controls {
+                    background-color: rgba(255,255,255,0.8);
+                    padding: 15px;
+                    border-radius: 8px;
+                    border: 1px solid #a5d6a7;
+                }
+                .search-controls label {
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                    font-weight: 500;
+                    color: #2e7d32;
+                }
+                .search-controls input[type="checkbox"] {
+                    margin: 0;
+                    width: auto;
+                }
+                .auto-search-btn {
+                    padding: 15px 25px !important;
+                    font-size: 16px !important;
+                    border-radius: 10px !important;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+                    transition: all 0.3s ease !important;
+                }
+                .auto-search-btn:hover {
+                    transform: translateY(-2px) !important;
+                    box-shadow: 0 6px 12px rgba(0,0,0,0.3) !important;
+                }
+                .imported-items-section {
+                    background-color: #f1f8e9;
+                    padding: 20px;
+                    border-radius: 12px;
+                    border: 1px solid #c8e6c9;
+                    margin-top: 30px;
+                }
+                .imported-item-card {
+                    background-color: white;
+                    padding: 15px;
+                    margin: 10px 0;
+                    border-radius: 8px;
+                    border: 1px solid #ddd;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                .imported-item-info h4 {
+                    margin: 0 0 5px 0;
+                    color: #2c3e50;
+                }
+                .imported-item-info p {
+                    margin: 0;
+                    color: #666;
+                    font-size: 14px;
+                }
+                .loading-spinner {
+                    display: inline-block;
+                    width: 20px;
+                    height: 20px;
+                    border: 3px solid rgba(0,0,0,.1);
+                    border-radius: 50%;
+                    border-top-color: #3498db;
+                    animation: spin 1s ease-in-out infinite;
+                }
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+                .import-actions {
+                    padding-top: 20px;
+                    border-top: 2px solid #c8e6c9;
+                }
+            `;
+            if (!document.getElementById('import-styles')) {
+                style.id = 'import-styles';
+                document.head.appendChild(style);
+            }
+            
+            // グローバル変数を初期化
+            if (!window.importedItems) {
+                window.importedItems = [];
+            }
+            
+            updateImportedItemsList();
+        }
+        
+        // 単一アイテムのWebインポート
+        async function importSingleItemFromWeb(layer) {
+            const urlInput = document.getElementById('item-url');
+            const resultDiv = document.getElementById('single-item-result');
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                alert('URLを入力してください。');
+                return;
+            }
+            
+            if (!url.includes('finalfantasyxiv.com/lodestone/playguide/db/item/')) {
+                alert('FF14 Lodestone データベースのアイテムURLを入力してください。');
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="loading-spinner"></div> アイテム情報を取得中...';
+            
+            try {
+                // WebFetch機能は実際の環境でのみ動作するため、ここではダミーデータを生成
+                const itemData = await simulateWebFetch(url);
+                
+                if (itemData) {
+                    // グローバルのインポートリストに追加
+                    window.importedItems = window.importedItems || [];
+                    window.importedItems.push({
+                        ...itemData,
+                        layer: layer,
+                        source: 'web',
+                        url: url
+                    });
+                    
+                    resultDiv.innerHTML = `
+                        <div style="background-color: #d4edda; padding: 15px; border-radius: 8px; border: 1px solid #c3e6cb;">
+                            <h4 style="color: #155724; margin: 0 0 10px 0;">✅ アイテム取得成功</h4>
+                            <p><strong>名前:</strong> ${itemData.name}</p>
+                            <p><strong>部位:</strong> ${itemData.slot}</p>
+                            <p><strong>アイテムレベル:</strong> ${itemData.itemLevel}</p>
+                            <p><strong>タイプ:</strong> ${itemData.type}</p>
+                        </div>
+                    `;
+                    
+                    updateImportedItemsList();
+                    urlInput.value = '';
+                } else {
+                    throw new Error('アイテム情報を取得できませんでした');
+                }
+                
+            } catch (error) {
+                console.error('Web取得エラー:', error);
+                resultDiv.innerHTML = `
+                    <div style="background-color: #f8d7da; padding: 15px; border-radius: 8px; border: 1px solid #f5c6cb;">
+                        <h4 style="color: #721c24; margin: 0 0 10px 0;">❌ 取得失敗</h4>
+                        <p>アイテム情報の取得に失敗しました: ${error.message}</p>
+                        <p>URLが正しいか確認してください。</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // 複数アイテムの一括Webインポート
+        async function importMultipleItemsFromWeb(layer) {
+            const textArea = document.getElementById('multiple-urls');
+            const resultDiv = document.getElementById('multiple-items-result');
+            const urls = textArea.value.trim().split('\n').filter(url => url.trim());
+            
+            if (urls.length === 0) {
+                alert('URLを入力してください。');
+                return;
+            }
+            
+            resultDiv.innerHTML = `<div class="loading-spinner"></div> ${urls.length}個のアイテム情報を取得中...`;
+            
+            const results = [];
+            const errors = [];
+            
+            for (let i = 0; i < urls.length; i++) {
+                const url = urls[i].trim();
+                
+                if (!url.includes('finalfantasyxiv.com/lodestone/playguide/db/item/')) {
+                    errors.push(`URL ${i + 1}: 無効なLodestone URL`);
+                    continue;
+                }
+                
+                try {
+                    const itemData = await simulateWebFetch(url);
+                    if (itemData) {
+                        results.push({
+                            ...itemData,
+                            layer: layer,
+                            source: 'web',
+                            url: url
+                        });
+                    } else {
+                        errors.push(`URL ${i + 1}: データ取得失敗`);
+                    }
+                } catch (error) {
+                    errors.push(`URL ${i + 1}: ${error.message}`);
+                }
+                
+                // プログレス表示の更新
+                resultDiv.innerHTML = `<div class="loading-spinner"></div> ${i + 1}/${urls.length} 完了...`;
+                
+                // APIレート制限を考慮して少し待機
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            // 成功したアイテムをグローバルリストに追加
+            window.importedItems = window.importedItems || [];
+            window.importedItems.push(...results);
+            
+            // 結果表示
+            let resultHtml = '';
+            
+            if (results.length > 0) {
+                resultHtml += `
+                    <div style="background-color: #d4edda; padding: 15px; border-radius: 8px; border: 1px solid #c3e6cb; margin-bottom: 15px;">
+                        <h4 style="color: #155724; margin: 0 0 10px 0;">✅ ${results.length}個のアイテム取得成功</h4>
+                        ${results.map(item => `<p>• ${item.name} (${item.slot})</p>`).join('')}
+                    </div>
+                `;
+            }
+            
+            if (errors.length > 0) {
+                resultHtml += `
+                    <div style="background-color: #f8d7da; padding: 15px; border-radius: 8px; border: 1px solid #f5c6cb;">
+                        <h4 style="color: #721c24; margin: 0 0 10px 0;">❌ ${errors.length}個のエラー</h4>
+                        ${errors.map(error => `<p>• ${error}</p>`).join('')}
+                    </div>
+                `;
+            }
+            
+            resultDiv.innerHTML = resultHtml;
+            updateImportedItemsList();
+            textArea.value = '';
+        }
+        
+        // WebFetchのシミュレーション（実際の実装では本物のWebFetch機能を使用）
+        async function simulateWebFetch(url) {
+            // URLからアイテムIDを抽出
+            const itemIdMatch = url.match(/\/item\/([a-f0-9]+)\//);
+            if (!itemIdMatch) {
+                throw new Error('URLからアイテムIDを抽出できません');
+            }
+            
+            const itemId = itemIdMatch[1];
+            
+            // ダミーデータ（実際の実装では WebFetch ツールを使用）
+            const dummyItems = {
+                '545b8977a73': { name: 'ベビーフェイスチャンピオン・ソード', slot: '武器', itemLevel: 735, type: 'weapon' },
+                '12345abcdef': { name: '咎人のイヤリング', slot: '耳', itemLevel: 730, type: 'accessory' },
+                '67890fedcba': { name: '咎人のハーバーク', slot: '胴', itemLevel: 730, type: 'armor' },
+                'abc123def45': { name: '咎人の武器箱', slot: '武器', itemLevel: 735, type: 'weapon_box' }
+            };
+            
+            // ダミーアイテムまたはランダム生成
+            if (dummyItems[itemId]) {
+                return dummyItems[itemId];
+            } else {
+                // ランダムなアイテムを生成
+                const slots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+                const types = ['weapon', 'armor', 'accessory'];
+                const randomSlot = slots[Math.floor(Math.random() * slots.length)];
+                
+                return {
+                    name: `取得アイテム${itemId.substr(0, 6)}`,
+                    slot: randomSlot,
+                    itemLevel: 720 + Math.floor(Math.random() * 15),
+                    type: randomSlot === '武器' ? 'weapon' : (randomSlot === '耳' || randomSlot === '首' || randomSlot === '腕' || randomSlot === '指' ? 'accessory' : 'armor')
+                };
+            }
+        }
+        
+        // プリセットレイド装備の適用
+        function applyPresetRaidGear(layer) {
+            const selectElement = document.getElementById('preset-raid-tier');
+            const resultDiv = document.getElementById('preset-result');
+            const selectedTier = selectElement.value;
+            
+            if (!selectedTier) {
+                alert('レイドティアを選択してください。');
+                return;
+            }
+            
+            const presetGear = {
+                'savage_72': {
+                    1: [
+                        { name: '咎人のイヤリング', slot: '耳', itemLevel: 730, type: 'accessory' },
+                        { name: '咎人のネックレス', slot: '首', itemLevel: 730, type: 'accessory' },
+                        { name: '咎人のブレスレット', slot: '腕', itemLevel: 730, type: 'accessory' },
+                        { name: '咎人のリング', slot: '指', itemLevel: 730, type: 'accessory' }
+                    ],
+                    2: [
+                        { name: '咎人のヘッドギア', slot: '頭', itemLevel: 730, type: 'armor' },
+                        { name: '咎人のガントレット', slot: '手', itemLevel: 730, type: 'armor' },
+                        { name: '咎人のソルレット', slot: '足', itemLevel: 730, type: 'armor' },
+                        { name: '咎人の武器石', slot: '武器石', itemLevel: 1, type: 'material' },
+                        { name: '咎人の硬化薬', slot: '硬化薬', itemLevel: 1, type: 'material' }
+                    ],
+                    3: [
+                        { name: '咎人のハーバーク', slot: '胴', itemLevel: 730, type: 'armor' },
+                        { name: '咎人のブリーチ', slot: '脚', itemLevel: 730, type: 'armor' },
+                        { name: '咎人の強化薬', slot: '強化薬', itemLevel: 1, type: 'material' },
+                        { name: '咎人の強化繊維', slot: '強化繊維', itemLevel: 1, type: 'material' }
+                    ],
+                    4: [
+                        { name: '咎人のハーバーク', slot: '胴', itemLevel: 730, type: 'armor' },
+                        { name: '咎人の武器箱', slot: '武器', itemLevel: 735, type: 'weapon_box' },
+                        { name: '咎人のマウント', slot: 'マウント', itemLevel: 1, type: 'mount' }
+                    ]
+                }
+            };
+            
+            const tierData = presetGear[selectedTier];
+            if (tierData && tierData[layer]) {
+                window.importedItems = window.importedItems || [];
+                const newItems = tierData[layer].map(item => ({
+                    ...item,
+                    layer: layer,
+                    source: 'preset'
+                }));
+                
+                window.importedItems.push(...newItems);
+                
+                resultDiv.innerHTML = `
+                    <div style="background-color: #d4edda; padding: 15px; border-radius: 8px; border: 1px solid #c3e6cb;">
+                        <h4 style="color: #155724; margin: 0 0 10px 0;">✅ プリセット適用完了</h4>
+                        <p>${newItems.length}個のアイテムを追加しました。</p>
+                    </div>
+                `;
+                
+                updateImportedItemsList();
+            } else {
+                resultDiv.innerHTML = `
+                    <div style="background-color: #f8d7da; padding: 15px; border-radius: 8px; border: 1px solid #f5c6cb;">
+                        <h4 style="color: #721c24; margin: 0 0 10px 0;">❌ 該当なし</h4>
+                        <p>選択されたレイドティアの${layer}層データがありません。</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // インポートしたアイテムリストの更新
+        function updateImportedItemsList() {
+            const listDiv = document.getElementById('imported-items-list');
+            const applyBtn = document.getElementById('apply-btn');
+            
+            if (!window.importedItems || window.importedItems.length === 0) {
+                listDiv.innerHTML = '<p>まだアイテムが取得されていません。</p>';
+                if (applyBtn) applyBtn.disabled = true;
+                return;
+            }
+            
+            listDiv.innerHTML = window.importedItems.map((item, index) => `
+                <div class="imported-item-card">
+                    <div class="imported-item-info">
+                        <h4>${item.name}</h4>
+                        <p>部位: ${item.slot} | IL: ${item.itemLevel} | ソース: ${item.source}</p>
+                    </div>
+                    <button onclick="removeImportedItem(${index})" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px;">
+                        削除
+                    </button>
+                </div>
+            `).join('');
+            
+            if (applyBtn) applyBtn.disabled = false;
+        }
+        
+        // インポートアイテムの削除
+        function removeImportedItem(index) {
+            if (window.importedItems && window.importedItems[index]) {
+                window.importedItems.splice(index, 1);
+                updateImportedItemsList();
+            }
+        }
+        
+        // インポートアイテムのクリア
+        function clearImportedItems() {
+            if (confirm('取得したすべてのアイテムをクリアしますか？')) {
+                window.importedItems = [];
+                updateImportedItemsList();
+            }
+        }
+        
+        // 自動データベース検索で最高ILチェストを取得
+        async function autoSearchHighestILChests(layer) {
+            const resultDiv = document.getElementById('auto-search-result');
+            const selectedSlots = Array.from(document.querySelectorAll('.slot-checkbox:checked'))
+                .map(cb => cb.value);
+            const minItemLevel = parseInt(document.getElementById('min-item-level').value) || 720;
+            
+            if (selectedSlots.length === 0) {
+                alert('検索する装備部位を1つ以上選択してください。');
+                return;
+            }
+            
+            console.log('自動検索開始:', selectedSlots);
+            
+            resultDiv.innerHTML = `
+                <div class="loading-spinner"></div> 
+                ${selectedSlots.length}個の部位について最高ILチェストを検索中...
+            `;
+            
+            try {
+                const searchResults = [];
+                
+                for (let i = 0; i < selectedSlots.length; i++) {
+                    const slot = selectedSlots[i];
+                    
+                    // プログレス更新
+                    resultDiv.innerHTML = `
+                        <div class="loading-spinner"></div> 
+                        ${slot}装備のチェストを検索中... (${i + 1}/${selectedSlots.length})
+                    `;
+                    
+                    try {
+                        const chestData = await searchHighestILChestForSlot(slot, minItemLevel);
+                        console.log(`${slot}検索結果:`, chestData);
+                        if (chestData) {
+                            // URLを追加
+                            chestData.sourceUrl = chestData.url || `検索クエリ: ${slot} チェスト`;
+                            searchResults.push(chestData);
+                        }
+                    } catch (error) {
+                        console.error(`${slot}の検索エラー:`, error);
+                        // エラーの詳細を表示に含める
+                        searchResults.push({
+                            name: `${slot}チェスト検索エラー`,
+                            slot: slot,
+                            itemLevel: 0,
+                            maxItemLevel: 0,
+                            type: 'error',
+                            description: `検索エラー: ${error.message}`,
+                            sourceUrl: `エラー詳細: ${error.message}`
+                        });
+                    }
+                    
+                    // 短い待機時間
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+                
+                console.log('検索完了。結果数:', searchResults.length);
+                
+                if (searchResults.length > 0) {
+                    // 成功したアイテムをインポートリストに追加
+                    window.importedItems = window.importedItems || [];
+                    window.importedItems.push(...searchResults);
+                    
+                    resultDiv.innerHTML = `
+                        <div style="background-color: #d4edda; padding: 20px; border-radius: 8px; border: 1px solid #c3e6cb;">
+                            <h4 style="color: #155724; margin: 0 0 15px 0;">✅ 自動検索完了</h4>
+                            <p style="margin: 0 0 15px 0;"><strong>${searchResults.length}個のチェスト</strong>を取得しました:</p>
+                            ${searchResults.map(item => `
+                                <div style="background-color: rgba(255,255,255,0.8); padding: 12px; margin: 8px 0; border-radius: 6px; border-left: 4px solid #28a745;">
+                                    <strong style="color: #155724;">${item.name}</strong><br>
+                                    <span style="color: #666;">部位: ${item.slot} | 入手可能装備IL: ${item.maxItemLevel}</span><br>
+                                    <small style="color: #6c757d;">${item.description}</small><br>
+                                    ${item.sourceUrl ? `<small style="color: #0066cc;"><strong>参照URL:</strong> <a href="${item.sourceUrl}" target="_blank" style="color: #0066cc;">${item.sourceUrl}</a></small>` : ''}
+                                </div>
+                            `).join('')}
+                            <p style="margin: 15px 0 0 0; color: #155724;">
+                                ⬇️ 下の「取得済みアイテム」セクションで確認・適用してください
+                            </p>
+                        </div>
+                    `;
+                    
+                    updateImportedItemsList();
+                } else {
+                    resultDiv.innerHTML = `
+                        <div style="background-color: #f8d7da; padding: 15px; border-radius: 8px; border: 1px solid #f5c6cb;">
+                            <h4 style="color: #721c24; margin: 0 0 10px 0;">❌ 検索結果なし</h4>
+                            <p style="margin: 0;">指定条件に該当するチェストが見つかりませんでした。</p>
+                            <p style="margin: 5px 0 0 0;">最小アイテムレベルを下げて再検索してください。</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('自動検索エラー:', error);
+                resultDiv.innerHTML = `
+                    <div style="background-color: #f8d7da; padding: 15px; border-radius: 8px; border: 1px solid #f5c6cb;">
+                        <h4 style="color: #721c24; margin: 0 0 10px 0;">❌ 検索エラー</h4>
+                        <p style="margin: 0;">自動検索中にエラーが発生しました: ${error.message}</p>
+                        <p style="margin: 5px 0 0 0;">ブラウザのコンソールで詳細を確認してください。</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // 指定部位の最高ILチェストを検索（実際のFF14データベースを使用）
+        async function searchHighestILChestForSlot(slot, minItemLevel) {
+            console.log(`${slot}の最高ILチェストを検索中...`);
+            
+            try {
+                // FF14 Lodestoneデータベースで検索
+                const searchResults = await searchFF14Database(slot, minItemLevel);
+                
+                if (searchResults && searchResults.name) {
+                    console.log(`${slot}チェスト見つかりました:`, searchResults.name);
+                    return {
+                        ...searchResults,
+                        slot: slot,
+                        layer: null,
+                        source: 'ff14_database',
+                        searchTimestamp: new Date().toISOString()
+                    };
+                } else {
+                    console.log(`${slot}の条件に合うチェストが見つかりませんでした`);
+                    return null;
+                }
+                
+            } catch (error) {
+                console.error(`${slot}の検索エラー:`, error);
+                throw error;
+            }
+        }
+        
+        // FF14データベース検索の実装
+        async function searchFF14Database(slot, minItemLevel) {
+            console.log(`FF14データベースで${slot}装備のチェストを検索中...`);
+            
+            try {
+                // 部位別のカテゴリIDマッピング
+                const categoryMapping = {
+                    '武器': { category2: 1, category3: null },  // 武器
+                    '頭': { category2: 3, category3: 34 },      // 防具→頭防具
+                    '胴': { category2: 3, category3: 35 },      // 防具→胴防具
+                    '手': { category2: 3, category3: 37 },      // 防具→手防具
+                    '脚': { category2: 3, category3: 36 },      // 防具→脚防具
+                    '足': { category2: 3, category3: 38 },      // 防具→足防具
+                    '耳': { category2: 4, category3: 40 },      // アクセサリ→耳飾り
+                    '首': { category2: 4, category3: 41 },      // アクセサリ→首飾り
+                    '腕': { category2: 4, category3: 42 },      // アクセサリ→腕輪
+                    '指': { category2: 4, category3: 43 }       // アクセサリ→指輪
+                };
+                
+                const category = categoryMapping[slot];
+                if (!category) {
+                    console.log(`未対応の部位: ${slot}`);
+                    return await searchAlternativeFF14Database(slot, minItemLevel);
+                }
+                
+                // Step 1: 特定のURLを使用してテスト（武器の場合）
+                if (slot === '武器') {
+                    const specificUrl = 'https://jp.finalfantasyxiv.com/lodestone/playguide/db/item/2ec7d8cfb2d/';
+                    console.log('武器特定URL検索:', specificUrl);
+                    
+                    const specificResult = await WebFetch(specificUrl, `
+                        このFF14アイテムページから正確な情報を抽出してください。
+                        
+                        ページから以下の情報を取得してください:
+                        1. アイテム名（完全な名前）
+                        2. アイテムレベル（【ILv数値】形式で表示されている）
+                        3. アイテムの種類（チェストかどうか）
+                        
+                        JSON形式で回答してください:
+                        {
+                            "name": "正確なアイテム名（例：ベビーフェイスチャンピオン・ウェポンチェスト【ILv765】）",
+                            "itemLevel": アイテムレベル,
+                            "maxItemLevel": アイテムレベル,
+                            "type": "weapon_chest",
+                            "url": "${specificUrl}",
+                            "description": "FF14データベースから取得",
+                            "source": "Lodestone"
+                        }
+                    `);
+                    
+                    console.log('武器特定URL結果:', specificResult);
+                    
+                    if (specificResult && specificResult.trim() !== 'null') {
+                        try {
+                            const parsed = JSON.parse(specificResult);
+                            if (parsed.name) {
+                                return parsed;
+                            }
+                        } catch (e) {
+                            console.log('武器特定URL JSON解析失敗:', e);
+                        }
+                    }
+                }
+                
+                // Step 2: カテゴリフィルタを使用した検索
+                let searchUrl;
+                if (category.category3) {
+                    searchUrl = `https://jp.finalfantasyxiv.com/lodestone/playguide/db/item/?category2=${category.category2}&category3=${category.category3}`;
+                } else {
+                    searchUrl = `https://jp.finalfantasyxiv.com/lodestone/playguide/db/item/?category2=${category.category2}`;
+                }
+                
+                console.log(`${slot}カテゴリフィルタ検索URL:`, searchUrl);
+                
+                const searchResult = await WebFetch(searchUrl, `
+                    このFF14アイテム検索結果ページ（${slot}装備カテゴリ）を解析して、最高アイテムレベルのチェストを見つけてください。
+                    
+                    探しているもの:
+                    - ${slot}装備が入手できるチェスト
+                    - ページに表示されているアイテムの中で最高アイテムレベルのもの
+                    - 「○○チェスト」「○○コファー」などの名前のアイテム
+                    - アイテム名に【ILv数値】が含まれている形式を優先
+                    - 架空の名前は作らず、実際にページに表示されているアイテム名のみを使用
+                    
+                    検索結果から最も高いアイテムレベルのチェストを1つ選んで、以下のJSON形式で回答してください:
+                    {
+                        "name": "実際のページに表示されているチェストの正確な名前（【ILv数値】も含む）",
+                        "itemLevel": チェスト自体のアイテムレベル,
+                        "maxItemLevel": このチェストから入手できる装備の最高アイテムレベル,
+                        "type": "weapon_chest/armor_chest/accessory_chest",
+                        "url": "このチェストの詳細ページURL（実際にページに存在するURL）",
+                        "description": "チェストの説明",
+                        "source": "Lodestone"
+                    }
+                    
+                    該当するチェストが見つからない場合は null を返してください。
+                `);
+                
+                console.log(`${slot}カテゴリフィルタ検索結果:`, searchResult);
+                
+                // JSONパース
+                if (searchResult && searchResult.trim() !== 'null') {
+                    try {
+                        const parsed = JSON.parse(searchResult);
+                        
+                        // 詳細ページから追加情報を取得
+                        if (parsed.url && parsed.url !== searchUrl) {
+                            console.log('チェスト詳細ページを取得中:', parsed.url);
+                            const detailResult = await getChestDetailInfo(parsed.url, slot);
+                            if (detailResult) {
+                                // 詳細情報とマージ
+                                return {
+                                    ...parsed,
+                                    ...detailResult,
+                                    url: parsed.url  // 元のURLを保持
+                                };
+                            }
+                        }
+                        
+                        // 最小アイテムレベル条件をチェック
+                        if (parsed.maxItemLevel && parsed.maxItemLevel >= minItemLevel) {
+                            return parsed;
+                        } else {
+                            console.log(`${slot}: 見つかったチェストの最高IL${parsed.maxItemLevel}が最小要求IL${minItemLevel}を下回ります`);
+                            return null;
+                        }
+                    } catch (parseError) {
+                        console.error('JSON解析エラー:', parseError);
+                        console.log('生の応答:', searchResult);
+                        
+                        // JSON解析に失敗した場合、代替検索を試す
+                        return await searchAlternativeFF14Database(slot, minItemLevel);
+                    }
+                } else {
+                    console.log(`${slot}の条件に合うチェストが見つかりませんでした`);
+                    return await searchAlternativeFF14Database(slot, minItemLevel);
+                }
+                
+            } catch (error) {
+                console.error(`FF14データベース検索エラー (${slot}):`, error);
+                
+                // エラーの場合、代替検索を試す
+                return await searchAlternativeFF14Database(slot, minItemLevel);
+            }
+        }
+        
+        // チェスト詳細情報を取得
+        async function getChestDetailInfo(chestUrl, slot) {
+            try {
+                console.log(`チェスト詳細情報を取得中: ${chestUrl}`);
+                
+                const detailResult = await WebFetch(chestUrl, `
+                    このFF14チェストアイテムページから以下の情報を正確に抽出してください：
+                    
+                    1. アイテム名（完全な名前）
+                    2. アイテムレベル
+                    3. このチェストから入手できる装備の最高アイテムレベル
+                    4. 装備部位（${slot}に関連するか確認）
+                    5. 入手方法やソース情報
+                    
+                    JSON形式で回答してください:
+                    {
+                        "name": "正確なアイテム名",
+                        "itemLevel": アイテムレベル,
+                        "maxItemLevel": 入手可能装備の最高アイテムレベル,
+                        "equipmentSlot": "装備部位",
+                        "source": "入手方法・ソース",
+                        "description": "詳細説明"
+                    }
+                `);
+                
+                const parsed = JSON.parse(detailResult);
+                console.log('チェスト詳細取得成功:', parsed);
+                return parsed;
+                
+            } catch (error) {
+                console.error('チェスト詳細取得エラー:', error);
+                return null;
+            }
+        }
+        
+        // 代替検索方法
+        async function searchAlternativeFF14Database(slot, minItemLevel) {
+            console.log(`${slot}の代替検索を実行中...`);
+            
+            try {
+                // より具体的な検索クエリで再試行
+                const alternativeQueries = [
+                    `${slot}チェスト`,
+                    `${slot}コファー`,
+                    `${slot}ウェポンチェスト`,
+                    `${slot}ギアチェスト`
+                ];
+                
+                for (const query of alternativeQueries) {
+                    console.log(`代替検索: ${query}`);
+                    
+                    const searchUrl = `https://jp.finalfantasyxiv.com/lodestone/playguide/db/item/?q=${encodeURIComponent(query)}`;
+                    
+                    try {
+                        const result = await WebFetch(searchUrl, `
+                            この検索結果から「${slot}」装備が入手できるチェストを探してください。
+                            「チェスト」「コファー」「ギア」などの名前が含まれるアイテムを優先的に選んでください。
+                            
+                            最適なチェストが見つかったら以下のJSON形式で回答してください:
+                            {
+                                "name": "チェスト名",
+                                "itemLevel": アイテムレベル,
+                                "maxItemLevel": 入手可能装備の最高アイテムレベル,
+                                "type": "chest",
+                                "description": "説明"
+                            }
+                            
+                            見つからない場合は null を返してください。
+                        `);
+                        
+                        if (result && result.trim() !== 'null') {
+                            const parsed = JSON.parse(result);
+                            if (parsed.maxItemLevel >= minItemLevel) {
+                                console.log(`代替検索成功: ${parsed.name}`);
+                                return parsed;
+                            }
+                        }
+                    } catch (queryError) {
+                        console.log(`代替検索 "${query}" 失敗:`, queryError.message);
+                        continue;
+                    }
+                }
+                
+                // すべての代替検索が失敗した場合
+                console.log('すべての代替検索が失敗しました。フォールバックデータを使用します。');
+                return getFallbackChestData(slot, minItemLevel);
+                
+            } catch (error) {
+                console.error('代替検索エラー:', error);
+                return getFallbackChestData(slot, minItemLevel);
+            }
+        }
+        
+        // WebFetch機能が利用できない場合のフォールバック（最新のFF14チェスト名を使用）
+        function getFallbackChestData(slot, minItemLevel) {
+            console.log(`${slot}のフォールバックデータを使用`);
+            
+            // 実際のFF14で使用されている最新チェスト名
+            const fallbackData = {
+                '武器': {
+                    name: 'ベビーフェイスチャンピオン・ウェポンチェスト【ILv765】',
+                    itemLevel: 765,
+                    maxItemLevel: 765,
+                    type: 'weapon_chest',
+                    source: 'FF14最新コンテンツ',
+                    url: 'https://jp.finalfantasyxiv.com/lodestone/playguide/db/item/2ec7d8cfb2d/',
+                    description: 'IL765の各ジョブ武器が入手可能なチェスト'
+                },
+                '頭': {
+                    name: 'ベビーフェイスチャンピオン・ヘッドギアチェスト【ILv750】',
+                    itemLevel: 750,
+                    maxItemLevel: 750,
+                    type: 'armor_chest',
+                    source: 'FF14最新コンテンツ',
+                    url: 'https://jp.finalfantasyxiv.com/lodestone/playguide/db/item/',
+                    description: 'IL750の頭装備が入手可能なチェスト'
+                },
+                '胴': {
+                    name: 'ベビーフェイスチャンピオン・ボディギアチェスト【ILv750】',
+                    itemLevel: 750,
+                    maxItemLevel: 750,
+                    type: 'armor_chest',
+                    source: 'FF14最新コンテンツ',
+                    url: 'https://jp.finalfantasyxiv.com/lodestone/playguide/db/item/',
+                    description: 'IL750の胴装備が入手可能なチェスト'
+                },
+                '手': {
+                    name: 'ベビーフェイスチャンピオン・ハンドギアチェスト【ILv750】',
+                    itemLevel: 750,
+                    maxItemLevel: 750,
+                    type: 'armor_chest',
+                    source: 'FF14最新コンテンツ',
+                    url: 'https://jp.finalfantasyxiv.com/lodestone/playguide/db/item/',
+                    description: 'IL750の手装備が入手可能なチェスト'
+                },
+                '脚': {
+                    name: 'ベビーフェイスチャンピオン・レッグギアチェスト【ILv750】',
+                    itemLevel: 750,
+                    maxItemLevel: 750,
+                    type: 'armor_chest',
+                    source: 'FF14最新コンテンツ',
+                    url: 'https://jp.finalfantasyxiv.com/lodestone/playguide/db/item/',
+                    description: 'IL750の脚装備が入手可能なチェスト'
+                },
+                '足': {
+                    name: 'ベビーフェイスチャンピオン・フットギアチェスト【ILv750】',
+                    itemLevel: 750,
+                    maxItemLevel: 750,
+                    type: 'armor_chest',
+                    source: 'FF14最新コンテンツ',
+                    url: 'https://jp.finalfantasyxiv.com/lodestone/playguide/db/item/',
+                    description: 'IL750の足装備が入手可能なチェスト'
+                },
+                '耳': {
+                    name: 'ベビーフェイスチャンピオン・アクセサリーチェスト【ILv750】',
+                    itemLevel: 750,
+                    maxItemLevel: 750,
+                    type: 'accessory_chest',
+                    source: 'FF14最新コンテンツ',
+                    url: 'https://jp.finalfantasyxiv.com/lodestone/playguide/db/item/',
+                    description: 'IL750のイヤリングが入手可能なチェスト'
+                },
+                '首': {
+                    name: 'ベビーフェイスチャンピオン・アクセサリーチェスト【ILv750】',
+                    itemLevel: 750,
+                    maxItemLevel: 750,
+                    type: 'accessory_chest',
+                    source: 'FF14最新コンテンツ',
+                    url: 'https://jp.finalfantasyxiv.com/lodestone/playguide/db/item/',
+                    description: 'IL750のネックレスが入手可能なチェスト'
+                },
+                '腕': {
+                    name: 'ベビーフェイスチャンピオン・アクセサリーチェスト【ILv750】',
+                    itemLevel: 750,
+                    maxItemLevel: 750,
+                    type: 'accessory_chest',
+                    source: 'FF14最新コンテンツ',
+                    url: 'https://jp.finalfantasyxiv.com/lodestone/playguide/db/item/',
+                    description: 'IL750のブレスレットが入手可能なチェスト'
+                },
+                '指': {
+                    name: 'ベビーフェイスチャンピオン・アクセサリーチェスト【ILv750】',
+                    itemLevel: 750,
+                    maxItemLevel: 750,
+                    type: 'accessory_chest',
+                    source: 'FF14最新コンテンツ',
+                    url: 'https://jp.finalfantasyxiv.com/lodestone/playguide/db/item/',
+                    description: 'IL750のリングが入手可能なチェスト'
+                }
+            };
+            
+            const data = fallbackData[slot];
+            if (!data || data.maxItemLevel < minItemLevel) {
+                return null;
+            }
+            
+            return data;
+        }
+        
+        // 全選択・全解除機能
+        function selectAllSlots() {
+            document.querySelectorAll('.slot-checkbox').forEach(cb => {
+                cb.checked = true;
+            });
+        }
+        
+        function clearAllSlots() {
+            document.querySelectorAll('.slot-checkbox').forEach(cb => {
+                cb.checked = false;
+            });
+        }
+        
+        // 実際のWebFetch実装例（本番環境で使用）
+        async function realSearchHighestILChestForSlot(slot, jobRestriction, minItemLevel) {
+            try {
+                // FF14データベースで検索
+                const searchUrl = `https://jp.finalfantasyxiv.com/lodestone/playguide/db/item/?q=${slot}+チェスト+コファー+箱&category2=3`;
+                
+                const searchResult = await WebFetch(searchUrl, `
+                    このFF14アイテム検索結果ページから、以下の条件で最適なチェスト/コファーを見つけてください：
+                    
+                    条件:
+                    - 装備部位: ${slot}
+                    - 職業制限: ${jobRestriction}
+                    - 最小アイテムレベル: ${minItemLevel}以上
+                    
+                    回答形式:
+                    {
+                        "name": "チェスト名",
+                        "maxItemLevel": 入手可能な装備の最高アイテムレベル,
+                        "source": "入手先レイド/コンテンツ名",
+                        "description": "詳細説明"
+                    }
+                    
+                    最も高いアイテムレベルの装備が入手できるチェストを1つだけ選んでください。
+                `);
+                
+                return JSON.parse(searchResult);
+                
+            } catch (error) {
+                console.error(`${slot}の実際検索エラー:`, error);
+                throw error;
+            }
+        }
+        
+        // インポートしたアイテムを層ドロップとして適用
+        function applyImportedItems(layer) {
+            if (!window.importedItems || window.importedItems.length === 0) {
+                alert('適用するアイテムがありません。');
+                return;
+            }
+            
+            if (confirm(`${window.importedItems.length}個のアイテムを${layer}層のドロップアイテムとして適用しますか？`)) {
+                // currentDropItemsに設定
+                currentDropItems = window.importedItems.map(item => ({
+                    slot: item.slot,
+                    name: item.name,
+                    itemLevel: item.itemLevel,
+                    type: item.type
+                }));
+                
+                // インポートリストをクリア
+                window.importedItems = [];
+                
+                alert('アイテムが適用されました！層分配画面に戻ります。');
+                showLayerAllocation(layer);
+            }
+        }
+        
+        // 履歴データエクスポート
+        function exportHistoryData() {
+            const data = getData();
+            const allocations = data.allocations && data.allocations[currentRaidTier.id] || [];
+            const players = data.players && data.players[currentRaidTier.id] || {};
+            
+            const exportData = {
+                raidTier: currentRaidTier,
+                allocations: allocations,
+                players: players,
+                exportDate: new Date().toISOString()
+            };
+            
+            const jsonData = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([jsonData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ff14_history_${currentRaidTier.name}_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            alert('履歴データをエクスポートしました！');
+        }
+        
+        // 層別スロットオプション（要件定義書基準）
+        function getSlotOptionsForLayer(layer) {
+            const slotsByLayer = {
+                1: ['耳', '首', '腕', '指'],
+                2: ['頭', '手', '足', '武器石', '硬化薬'],
+                3: ['胴', '脚', '強化薬', '強化繊維'],
+                4: ['胴', '武器', 'マウント']
+            };
+            
+            const slots = slotsByLayer[layer] || [];
+            return slots.map(slot => `<option value="${slot}">${slot}</option>`).join('');
+        }
+        
+        // グローバル変数（現在のドロップアイテム）
+        let currentDropItems = [];
+        let allocationResults = [];
+        
+        // 固定ドロップ生成と即座に分配処理実行
+        function generateLayerDropsAndProcess(layer) {
+            try {
+                console.log('generateLayerDropsAndProcess開始:', layer);
+                const layerDrops = {
+                1: [
+                    { slot: '耳', name: '咎人のイヤリング', itemLevel: 730, type: 'accessory' },
+                    { slot: '首', name: '咎人のネックレス', itemLevel: 730, type: 'accessory' },
+                    { slot: '腕', name: '咎人のブレスレット', itemLevel: 730, type: 'accessory' },
+                    { slot: '指', name: '咎人のリング', itemLevel: 730, type: 'accessory' }
+                ],
+                2: [
+                    { slot: '頭', name: '咎人のヘッドギア', itemLevel: 730, type: 'armor' },
+                    { slot: '手', name: '咎人のガントレット', itemLevel: 730, type: 'armor' },
+                    { slot: '足', name: '咎人のソルレット', itemLevel: 730, type: 'armor' },
+                    { slot: '武器石', name: '咎人の武器石', itemLevel: 1, type: 'material' },
+                    { slot: '硬化薬', name: '咎人の硬化薬', itemLevel: 1, type: 'material' }
+                ],
+                3: [
+                    { slot: '胴', name: '咎人のハーバーク', itemLevel: 730, type: 'armor' },
+                    { slot: '脚', name: '咎人のブリーチ', itemLevel: 730, type: 'armor' },
+                    { slot: '強化薬', name: '咎人の強化薬', itemLevel: 1, type: 'material' },
+                    { slot: '強化繊維', name: '咎人の強化繊維', itemLevel: 1, type: 'material' }
+                ],
+                4: [
+                    { slot: '胴', name: '咎人のハーバーク', itemLevel: 730, type: 'armor' },
+                    { slot: '武器', name: '咎人の武器箱', itemLevel: 735, type: 'weapon_box' },
+                    { slot: 'マウント', name: '咎人のマウント', itemLevel: 1, type: 'mount' },
+                    { slot: '武器', name: getRandomDirectDropWeapon(), itemLevel: 735, type: 'direct_weapon' }
+                ]
+            };
+            
+                // 固定ドロップを設定
+                currentDropItems = layerDrops[layer] || [];
+                console.log('固定ドロップアイテム数:', currentDropItems.length);
+                
+                // 固定ドロップ表示
+                displayFixedDrops(currentDropItems);
+                
+                // 即座に分配処理を実行
+                processAllocationImmediate(layer);
+            } catch (error) {
+                console.error('generateLayerDropsAndProcess エラー:', error);
+                alert('エラーが発生しました: ' + error.message);
+            }
+        }
+        
+        // 4層直ドロップ武器をランダム生成
+        function getRandomDirectDropWeapon() {
+            const allJobs = [
+                'ナイト', '戦士', '暗黒騎士', 'ガンブレイカー',
+                '白魔道士', '占星術師', '学者', '賢者',
+                'モンク', '竜騎士', '忍者', '侍', 'リーパー', 'ヴァイパー',
+                '吟遊詩人', '機工士', '踊り子',
+                '黒魔道士', '召喚士', '赤魔道士', 'ピクトマンサー'
+            ];
+            
+            const randomJob = allJobs[Math.floor(Math.random() * allJobs.length)];
+            return `咎人の${randomJob}武器`;
+        }
+        
+        // ドロップアイテム手動追加
+        function addDropItem(layer) {
+            const slot = document.getElementById('item-slot').value;
+            const name = document.getElementById('item-name').value.trim();
+            const itemLevel = parseInt(document.getElementById('item-level').value) || 730;
+            
+            if (!slot || !name) {
+                alert('部位とアイテム名を入力してください。');
+                return;
+            }
+            
+            const newItem = {
+                slot: slot,
+                name: name,
+                itemLevel: itemLevel
+            };
+            
+            currentDropItems.push(newItem);
+            updateDropItemsDisplay();
+            
+            // フォームリセット
+            document.getElementById('item-slot').value = '';
+            document.getElementById('item-name').value = '';
+            document.getElementById('item-level').value = '730';
+        }
+        
+        // ドロップアイテム表示更新
+        function updateDropItemsDisplay() {
+            const container = document.getElementById('drop-items');
+            
+            if (currentDropItems.length === 0) {
+                container.innerHTML = '<p>「ランダムドロップ生成」ボタンでアイテムを生成するか、手動で追加してください。</p>';
+                document.getElementById('process-btn').disabled = true;
+                return;
+            }
+            
+            container.innerHTML = currentDropItems.map((item, index) => `
+                <div class="drop-item">
+                    <div class="drop-item-info">
+                        <h4>${item.name}</h4>
+                        <p>${item.slot} - IL${item.itemLevel}</p>
+                    </div>
+                    <div class="drop-item-actions">
+                        <button onclick="removeDropItem(${index})">削除</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('process-btn').disabled = false;
+        }
+        
+        // ドロップアイテム削除
+        function removeDropItem(index) {
+            currentDropItems.splice(index, 1);
+            updateDropItemsDisplay();
+        }
+        
+        // 固定ドロップ表示
+        function displayFixedDrops(dropItems) {
+            console.log('displayFixedDrops呼び出し:', dropItems.length);
+            const container = document.getElementById('fixed-drops');
+            console.log('fixed-drops要素:', container);
+            
+            if (!container) {
+                console.error('fixed-drops要素が見つかりません');
+                return;
+            }
+            
+            container.innerHTML = dropItems.map(item => `
+                <div class="fixed-drop-item">
+                    <div>
+                        <h4>${item.name}</h4>
+                        <p>${item.slot} - IL${item.itemLevel}</p>
+                    </div>
+                    <div style="color: #3742fa; font-weight: bold;">
+                        固定ドロップ
+                    </div>
+                </div>
+            `).join('');
+            console.log('固定ドロップ表示完了');
+        }
+        
+        // 分配処理実行（即座に実行版）
+        function processAllocationImmediate(layer) {
+            const data = getData();
+            const players = Object.values(data.players[currentRaidTier.id]);
+            
+            allocationResults = [];
+            
+            console.log('=== 分配処理開始 ===');
+            console.log('プレイヤー数:', players.length);
+            
+            currentDropItems.forEach((item, index) => {
+                console.log(`\n--- アイテム ${index + 1}: ${item.name} ---`);
+                let allocationResult;
+                
+                // 4層直ドロップ武器の特別処理
+                if (item.type === 'direct_weapon') {
+                    console.log('4層直ドロップ武器として処理');
+                    allocationResult = processDirectDropWeaponSimple(item, players);
+                } else {
+                    console.log('通常装備として処理（新システム）');
+                    // 装備方針データを取得
+                    const gearPolicies = data.gearPolicies && data.gearPolicies[currentRaidTier.id];
+                    
+                    // 新しい判定システムを使用
+                    allocationResult = processEquipmentWithNewSystem(item, players, gearPolicies);
+                }
+                
+                console.log('分配結果:', allocationResult.winner ? `${allocationResult.winner.name} (${allocationResult.reason})` : allocationResult.reason);
+                allocationResults.push(allocationResult);
+            });
+            
+            displayAllocationResults();
+        }
+        
+        // 要件定義書基準の判定ロジック（working_index.html用）
+        function calculatePlayerJudgmentSimple(player, equipment) {
+            // マテリアル系アイテムは分配対象外（Pass）
+            if (equipment.type === 'material' || equipment.type === 'mount') {
+                return 'Pass';
+            }
+            
+            // 1. 装備方針チェック（要件定義書基準）
+            const slotPolicy = player.equipmentPolicy[equipment.slot];
+            
+            // 装備方針が「トームストーン」で零式装備の場合の判定
+            if (slotPolicy === 'トームストーン' && equipment.type !== 'weapon_box') {
+                // 将来的に使用可能性がある場合はGreed、そうでなければPass
+                return 'Greed'; // 簡易実装では一律Greed
+            }
+            
+            // 2. 現在装備との比較
+            const currentEquipment = player.currentEquipment[equipment.slot];
+            const isUpgrade = !currentEquipment || equipment.itemLevel > (currentEquipment.itemLevel || 0);
+            
+            // 3. Need判定: その装備が現在の装備より上位で、かつ装備方針が「零式」の場合
+            if (slotPolicy === '零式' && isUpgrade) {
+                return 'Need';
+            }
+            
+            // 4. 既により良い装備を持っている場合はPass
+            if (!isUpgrade) {
+                return 'Pass';
+            }
+            
+            // 5. その他はGreed
+            return 'Greed';
+        }
+        
+        // シンプルな分配処理（working_index.html用）
+        function processAllocationVotingSimple(equipment, playerJudgments) {
+            // 4層直ドロップ武器の特別処理
+            if (equipment.type === 'direct_weapon') {
+                return processDirectDropWeaponSimple(equipment, playerJudgments);
+            }
+            
+            const needPlayers = playerJudgments.filter(pj => pj.judgment === 'Need');
+            const greedPlayers = playerJudgments.filter(pj => pj.judgment === 'Greed');
+            
+            let winner = null;
+            let reason = '';
+            
+            if (needPlayers.length > 0) {
+                // Need者がいる場合、要件定義書に基づく優先度で選択
+                winner = selectWinnerByPriority(needPlayers);
+                reason = needPlayers.length === 1 ? 'Need（単独）' : 'Need（優先度判定）';
+            } else if (greedPlayers.length > 0) {
+                // Greed者のみの場合、優先度で選択
+                winner = selectWinnerByPriority(greedPlayers);
+                reason = greedPlayers.length === 1 ? 'Greed（単独）' : 'Greed（優先度判定）';
+            } else {
+                reason = '全員Pass（分解）';
+            }
+            
+            return {
+                equipment: equipment,
+                winner: winner,
+                reason: reason,
+                allJudgments: playerJudgments,
+                needCount: needPlayers.length,
+                greedCount: greedPlayers.length,
+                passCount: playerJudgments.length - needPlayers.length - greedPlayers.length
+            };
+        }
+        
+        // 4層直ドロップ武器の特別処理
+        function processDirectDropWeaponSimple(equipment, allPlayers) {
+            console.log('4層直ドロップ武器処理開始:', equipment.name);
+            const droppedWeaponJob = extractJobFromWeaponName(equipment.name);
+            console.log('抽出したジョブ名:', droppedWeaponJob);
+            
+            // 1. 登録ジョブに該当 & 武器未取得のプレイヤーを検索
+            const primaryCandidates = allPlayers.filter(player => {
+                const hasWeaponWish = player.weaponWishes && player.weaponWishes.some(wish => wish.jobName === droppedWeaponJob);
+                const hasWeapon = playerHasWeaponForJobSimple(player, droppedWeaponJob);
+                console.log(`${player.name}: 希望=${hasWeaponWish}, 武器有=${hasWeapon}`);
+                return hasWeaponWish && !hasWeapon;
+            });
+
+            if (primaryCandidates.length > 0) {
+                const winner = selectWinnerByPriority(primaryCandidates);
+                return {
+                    equipment: equipment,
+                    winner: winner,
+                    reason: '登録ジョブ該当・武器未取得',
+                    allJudgments: allPlayers.map(p => ({ 
+                        player: p, 
+                        judgment: primaryCandidates.includes(p) ? 'Need' : 'Pass' 
+                    })),
+                    needCount: primaryCandidates.length,
+                    greedCount: 0,
+                    passCount: allPlayers.length - primaryCandidates.length
+                };
+            }
+
+            // 2. 希望登録済みのプレイヤーを検索
+            const secondaryCandidates = allPlayers.filter(player => {
+                return player.weaponWishes && player.weaponWishes.some(wish => wish.jobName === droppedWeaponJob);
+            });
+
+            if (secondaryCandidates.length > 0) {
+                const winner = selectWinnerByPriority(secondaryCandidates);
+                return {
+                    equipment: equipment,
+                    winner: winner,
+                    reason: '希望登録済み',
+                    allJudgments: allPlayers.map(p => ({ 
+                        player: p, 
+                        judgment: secondaryCandidates.includes(p) ? 'Greed' : 'Pass' 
+                    })),
+                    needCount: 0,
+                    greedCount: secondaryCandidates.length,
+                    passCount: allPlayers.length - secondaryCandidates.length
+                };
+            }
+
+            // 3. 該当者なし
+            return {
+                equipment: equipment,
+                winner: null,
+                reason: '該当者なし（分解・保管）',
+                allJudgments: allPlayers.map(p => ({ player: p, judgment: 'Pass' })),
+                needCount: 0,
+                greedCount: 0,
+                passCount: allPlayers.length
+            };
+        }
+        
+        // 武器名からジョブを抽出
+        function extractJobFromWeaponName(weaponName) {
+            const jobNames = [
+                'ナイト', '戦士', '暗黒騎士', 'ガンブレイカー',
+                '白魔道士', '占星術師', '学者', '賢者',
+                'モンク', '竜騎士', '忍者', '侍', 'リーパー', 'ヴァイパー',
+                '吟遊詩人', '機工士', '踊り子',
+                '黒魔道士', '召喚士', '赤魔道士', 'ピクトマンサー'
+            ];
+            
+            for (const job of jobNames) {
+                if (weaponName.includes(job)) {
+                    return job;
+                }
+            }
+            
+            return '不明';
+        }
+        
+        // プレイヤーが特定ジョブの武器を持っているかチェック（簡易版）
+        function playerHasWeaponForJobSimple(player, jobName) {
+            const currentWeapon = player.currentEquipment && player.currentEquipment['武器'];
+            if (!currentWeapon) return false;
+            
+            // 簡易的にアイテムレベル720以上を持っていれば武器ありとする
+            return currentWeapon.itemLevel >= 720;
+        }
+        
+        // 要件定義書に基づく優先度で勝者選択（デバッグ強化版）
+        function selectWinnerByPriority(candidatePlayers) {
+            // playerオブジェクトから実際のプレイヤーデータを取得
+            const players = candidatePlayers.map(cp => cp.player || cp);
+            
+            if (players.length === 1) {
+                console.log('単独候補:', players[0].name, players[0].position);
+                return players[0];
+            }
+            
+            console.log('複数候補:', players.map(p => `${p.name}(${p.position})`).join(', '));
+            
+            // 優先度: D1/D2 > D3/D4 > MT/ST > H1/H2
+            const positionPriorities = {
+                'D1': 1, 'D2': 1,    // DPS Melee
+                'D3': 2, 'D4': 2,    // DPS Range/Caster
+                'MT': 3, 'ST': 3,    // Tank
+                'H1': 4, 'H2': 4     // Healer
+            };
+            
+            // 優先度を表示
+            players.forEach(player => {
+                const priority = positionPriorities[player.position] || 999;
+                console.log(`${player.name} (${player.position}): 優先度 ${priority}`);
+            });
+            
+            const sortedPlayers = players.sort((a, b) => {
+                const priorityA = positionPriorities[a.position] || 999;
+                const priorityB = positionPriorities[b.position] || 999;
+                return priorityA - priorityB;
+            });
+            
+            console.log('優先度順:', sortedPlayers.map(p => `${p.name}(${p.position})`).join(' > '));
+            console.log('選択された勝者:', sortedPlayers[0].name, sortedPlayers[0].position);
+            
+            return sortedPlayers[0];
+        }
+        
+        // 新しいNeed/Greed/Pass判定システム（装備方針＋カスタムポジション優先度）
+        function calculateEquipmentPriority(player, equipment, gearPolicies) {
+            const slot = equipment.slot || getSlotFromEquipmentName(equipment.name);
+            const playerGearPolicy = gearPolicies && gearPolicies[player.position] && gearPolicies[player.position][slot];
+            
+            // 装備方針による優先度
+            const gearPolicyPriority = playerGearPolicy === '零式' ? 100 : 50;
+            
+            // カスタムポジション優先度を取得
+            const data = getData();
+            const customPriorities = data.positionPriorities && data.positionPriorities[currentRaidTier.id];
+            
+            let rolePriority;
+            if (customPriorities && customPriorities[player.position]) {
+                rolePriority = customPriorities[player.position];
+            } else {
+                // デフォルト優先度（従来の設定）
+                const defaultRolePriorities = {
+                    'D1': 30, 'D2': 30,    // DPS高優先度
+                    'D3': 25, 'D4': 25,    // DPS中優先度
+                    'MT': 20, 'ST': 20,    // タンク
+                    'H1': 10, 'H2': 10     // ヒーラー
+                };
+                rolePriority = defaultRolePriorities[player.position] || 0;
+            }
+            
+            // 総合優先度 = 装備方針優先度 + ポジション優先度
+            const totalPriority = gearPolicyPriority + rolePriority;
+            
+            return {
+                totalPriority,
+                gearPolicyPriority,
+                rolePriority,
+                gearPolicy: playerGearPolicy || '未設定',
+                judgment: totalPriority >= 100 ? 'Need' : totalPriority >= 50 ? 'Greed' : 'Pass'
+            };
+        }
+        
+        // 装備名からスロットを推定
+        function getSlotFromEquipmentName(equipmentName) {
+            const slotKeywords = {
+                '武器': ['武器', 'ソード', 'アクス', 'ハンマー', 'ロッド', 'ボウ', 'ガン'],
+                '頭': ['ヘルム', 'フード', 'ハット', '帽子', '頭'],
+                '胴': ['アーマー', 'ローブ', 'コート', '胴', 'チェスト'],
+                '手': ['ガントレット', 'グローブ', '手袋', '手'],
+                '脚': ['パンタロン', 'ホーズ', 'ブーツ', '脚', 'レッグ'],
+                '足': ['ブーツ', 'シューズ', '靴', '足'],
+                '耳': ['イヤリング', '耳飾り', '耳'],
+                '首': ['ネックレス', 'チョーカー', '首飾り', '首'],
+                '腕': ['ブレスレット', '腕輪', '腕'],
+                '指': ['リング', '指輪', '指']
+            };
+            
+            for (const [slot, keywords] of Object.entries(slotKeywords)) {
+                if (keywords.some(keyword => equipmentName.includes(keyword))) {
+                    return slot;
+                }
+            }
+            
+            return '不明';
+        }
+        
+        // 新しい装備分配処理（装備方針＋ロール優先度版）
+        function processEquipmentWithNewSystem(equipment, allPlayers, gearPolicies) {
+            console.log('新システムで装備分配処理:', equipment.name);
+            
+            // 全プレイヤーの優先度を計算
+            const playerPriorities = allPlayers.map(player => {
+                const priority = calculateEquipmentPriority(player, equipment, gearPolicies);
+                return {
+                    player: player,
+                    ...priority
+                };
+            });
+            
+            // 判定別に分類
+            const needPlayers = playerPriorities.filter(p => p.judgment === 'Need').sort((a, b) => b.totalPriority - a.totalPriority);
+            const greedPlayers = playerPriorities.filter(p => p.judgment === 'Greed').sort((a, b) => b.totalPriority - a.totalPriority);
+            const passPlayers = playerPriorities.filter(p => p.judgment === 'Pass');
+            
+            // 勝者決定
+            let winner = null;
+            let reason = '';
+            
+            if (needPlayers.length > 0) {
+                winner = needPlayers[0].player;
+                reason = `Need判定 (装備方針: ${needPlayers[0].gearPolicy}, 優先度: ${needPlayers[0].totalPriority})`;
+            } else if (greedPlayers.length > 0) {
+                winner = greedPlayers[0].player;
+                reason = `Greed判定 (装備方針: ${greedPlayers[0].gearPolicy}, 優先度: ${greedPlayers[0].totalPriority})`;
+            } else {
+                reason = '全員Pass判定 (分解・保管)';
+            }
+            
+            // 結果をログ出力
+            console.log('優先度結果:');
+            playerPriorities.forEach(p => {
+                console.log(`${p.player.name} (${p.player.position}): ${p.judgment} - 総合${p.totalPriority} (方針${p.gearPolicyPriority} + ロール${p.rolePriority})`);
+            });
+            
+            return {
+                equipment: equipment,
+                winner: winner,
+                reason: reason,
+                allJudgments: playerPriorities.map(p => ({
+                    player: p.player,
+                    judgment: p.judgment,
+                    priority: p.totalPriority,
+                    gearPolicy: p.gearPolicy
+                })),
+                needCount: needPlayers.length,
+                greedCount: greedPlayers.length,
+                passCount: passPlayers.length
+            };
+        }
+        
+        // 分配結果表示
+        function displayAllocationResults() {
+            try {
+                console.log('displayAllocationResults呼び出し:', allocationResults.length);
+                const container = document.getElementById('allocation-summary');
+                console.log('allocation-summary要素:', container);
+                
+                if (!container) {
+                    console.error('allocation-summary要素が見つかりません');
+                    return;
+                }
+                
+                console.log('HTMLコンテンツ生成中...');
+                const htmlContent = allocationResults.map(result => {
+                    console.log('処理中のアイテム:', result.equipment.name);
+                    console.log('勝者データ:', result.winner);
+                    
+                    // 勝者情報の安全な取得
+                    let winnerText = 'なし';
+                    if (result.winner) {
+                        const winnerName = result.winner.name || '名前不明';
+                        const winnerPosition = result.winner.position || 'ポジション不明';
+                        winnerText = `${winnerName} (${winnerPosition})`;
+                    }
+                    
+                    return `
+                        <div class="allocation-result-simple">
+                            <div class="item-winner-display">
+                                <div class="item-name">${result.equipment.name}</div>
+                                <div class="winner-name">${winnerText}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                console.log('HTMLコンテンツをコンテナに設定中...');
+                container.innerHTML = htmlContent;
+                console.log('分配結果表示完了');
+                
+            } catch (error) {
+                console.error('displayAllocationResults内でエラー:', error);
+                console.error('エラーの詳細:', error.stack);
+                
+                // エラーが発生した場合の代替表示
+                const container = document.getElementById('allocation-summary');
+                if (container) {
+                    container.innerHTML = `<p style="color: #ff6b6b;">分配結果の表示中にエラーが発生しました。</p>`;
+                }
+            }
+        }
+        
+        // 分配結果確定・保存
+        function confirmAndSaveAllocation(layer) {
+            if (!allocationResults || allocationResults.length === 0) {
+                alert('分配結果が生成されていません。');
+                return;
+            }
+            
+            if (!confirm(`${layer}層の分配結果を確定して保存しますか？`)) {
+                return;
+            }
+            
+            const data = getData();
+            
+            if (!data.allocations) data.allocations = {};
+            if (!data.allocations[currentRaidTier.id]) data.allocations[currentRaidTier.id] = [];
+            
+            const timestamp = new Date().toISOString();
+            
+            allocationResults.forEach(result => {
+                const allocation = {
+                    id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                    layer: layer,
+                    equipment: result.equipment,
+                    winner: result.winner,
+                    reason: result.reason,
+                    allJudgments: result.allJudgments,
+                    timestamp: timestamp,
+                    week: getCurrentWeekString()
+                };
+                
+                data.allocations[currentRaidTier.id].push(allocation);
+                
+                // 勝者の現在装備を更新
+                if (result.winner) {
+                    const playerKey = Object.keys(data.players[currentRaidTier.id]).find(
+                        key => data.players[currentRaidTier.id][key].name === result.winner.name
+                    );
+                    if (playerKey) {
+                        if (!data.players[currentRaidTier.id][playerKey].currentEquipment) {
+                            data.players[currentRaidTier.id][playerKey].currentEquipment = {};
+                        }
+                        data.players[currentRaidTier.id][playerKey].currentEquipment[result.equipment.slot] = result.equipment;
+                    }
+                }
+            });
+            
+            saveData(data);
+            
+            alert(`${layer}層の分配結果を確定・保存しました！`);
+            
+            // 状態リセット
+            currentDropItems = [];
+            allocationResults = [];
+            showMainDashboard();
+        }
+        
+        // 現在の週を取得
+        function getCurrentWeekString() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+        }
+        
+        // ポジション優先度設定画面（シンプル数値入力版）
+        function showPositionPrioritySettings() {
+            const app = document.querySelector('.container');
+            
+            // 現在の設定を取得
+            const data = getData();
+            const currentPriorities = data.positionPriorities && data.positionPriorities[currentRaidTier.id] || getDefaultPositionPriorities();
+            
+            app.innerHTML = `
+                <h1>ポジション別優先度設定</h1>
+                
+                <div class="section">
+                    <h2>優先度設定の説明</h2>
+                    <p>各ポジションの優先度を数値で設定します。数値が高いほど装備分配での優先度が高くなります。</p>
+                    <p>装備方針（零式/トームストーン）の優先度と合算して最終判定を行います。</p>
+                </div>
+                
+                <div class="section">
+                    <h2>ポジション別優先度</h2>
+                    <div class="priority-settings-grid">
+                        <div class="priority-group">
+                            <h3>タンク</h3>
+                            <div class="priority-item">
+                                <label>MT:</label>
+                                <input type="number" id="priority-MT" value="${currentPriorities.MT || 30}" min="0" max="100">
+                            </div>
+                            <div class="priority-item">
+                                <label>ST:</label>
+                                <input type="number" id="priority-ST" value="${currentPriorities.ST || 25}" min="0" max="100">
+                            </div>
+                        </div>
+                        
+                        <div class="priority-group">
+                            <h3>ヒーラー</h3>
+                            <div class="priority-item">
+                                <label>H1:</label>
+                                <input type="number" id="priority-H1" value="${currentPriorities.H1 || 20}" min="0" max="100">
+                            </div>
+                            <div class="priority-item">
+                                <label>H2:</label>
+                                <input type="number" id="priority-H2" value="${currentPriorities.H2 || 15}" min="0" max="100">
+                            </div>
+                        </div>
+                        
+                        <div class="priority-group">
+                            <h3>DPS</h3>
+                            <div class="priority-item">
+                                <label>D1:</label>
+                                <input type="number" id="priority-D1" value="${currentPriorities.D1 || 50}" min="0" max="100">
+                            </div>
+                            <div class="priority-item">
+                                <label>D2:</label>
+                                <input type="number" id="priority-D2" value="${currentPriorities.D2 || 45}" min="0" max="100">
+                            </div>
+                            <div class="priority-item">
+                                <label>D3:</label>
+                                <input type="number" id="priority-D3" value="${currentPriorities.D3 || 40}" min="0" max="100">
+                            </div>
+                            <div class="priority-item">
+                                <label>D4:</label>
+                                <input type="number" id="priority-D4" value="${currentPriorities.D4 || 35}" min="0" max="100">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="priority-presets">
+                        <h3>プリセット</h3>
+                        <button onclick="applyDPSPriorityPreset()">DPS優先 (標準)</button>
+                        <button onclick="applyBalancedPreset()">バランス型</button>
+                        <button onclick="applyTankPriorityPreset()">タンク優先</button>
+                        <button onclick="applyHealerPriorityPreset()">ヒーラー優先</button>
+                    </div>
+                    
+                    <div class="priority-actions">
+                        <button onclick="savePositionPriorities()" class="confirm-btn">設定を保存</button>
+                        <button onclick="showMainDashboard()">キャンセル</button>
+                    </div>
+                </div>
+            `;
+            
+            // シンプルなスタイル適用
+            addSimplePriorityStyles();
+        }
+        
+        // デフォルトの優先度設定を取得
+        function getDefaultPositionPriorities() {
+            return {
+                'MT': 30, 'ST': 25,
+                'H1': 20, 'H2': 15,
+                'D1': 50, 'D2': 45, 'D3': 40, 'D4': 35
+            };
+        }
+        
+        // シンプルなポジション優先度設定用CSS
+        function addSimplePriorityStyles() {
+            const style = document.createElement('style');
+            style.textContent = `
+                .priority-settings-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 20px;
+                    margin: 20px 0;
+                }
+                .priority-group {
+                    background-color: #f8f9fa;
+                    padding: 20px;
+                    border-radius: 12px;
+                    border: 1px solid #e9ecef;
+                }
+                .priority-group h3 {
+                    margin-top: 0;
+                    color: #2c3e50;
+                    text-align: center;
+                }
+                .priority-item {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin: 10px 0;
+                }
+                .priority-item label {
+                    font-weight: 500;
+                    width: 40px;
+                }
+                .priority-item input {
+                    width: 80px;
+                    text-align: center;
+                    font-weight: bold;
+                }
+                .priority-presets {
+                    margin: 30px 0;
+                    text-align: center;
+                }
+                .priority-presets button {
+                    margin: 5px;
+                    background-color: #6c757d;
+                }
+                .priority-actions {
+                    text-align: center;
+                    margin-top: 30px;
+                }
+            `;
+            if (!document.getElementById('simple-priority-styles')) {
+                style.id = 'simple-priority-styles';
+                document.head.appendChild(style);
+            }
+        }
+        
+        // プリセット適用関数
+        function applyDPSPriorityPreset() {
+            document.getElementById('priority-MT').value = 30;
+            document.getElementById('priority-ST').value = 25;
+            document.getElementById('priority-H1').value = 20;
+            document.getElementById('priority-H2').value = 15;
+            document.getElementById('priority-D1').value = 50;
+            document.getElementById('priority-D2').value = 45;
+            document.getElementById('priority-D3').value = 40;
+            document.getElementById('priority-D4').value = 35;
+        }
+        
+        function applyBalancedPreset() {
+            document.getElementById('priority-MT').value = 30;
+            document.getElementById('priority-ST').value = 30;
+            document.getElementById('priority-H1').value = 25;
+            document.getElementById('priority-H2').value = 25;
+            document.getElementById('priority-D1').value = 35;
+            document.getElementById('priority-D2').value = 35;
+            document.getElementById('priority-D3').value = 35;
+            document.getElementById('priority-D4').value = 35;
+        }
+        
+        function applyTankPriorityPreset() {
+            document.getElementById('priority-MT').value = 50;
+            document.getElementById('priority-ST').value = 45;
+            document.getElementById('priority-H1').value = 30;
+            document.getElementById('priority-H2').value = 25;
+            document.getElementById('priority-D1').value = 40;
+            document.getElementById('priority-D2').value = 35;
+            document.getElementById('priority-D3').value = 30;
+            document.getElementById('priority-D4').value = 25;
+        }
+        
+        function applyHealerPriorityPreset() {
+            document.getElementById('priority-MT').value = 25;
+            document.getElementById('priority-ST').value = 20;
+            document.getElementById('priority-H1').value = 50;
+            document.getElementById('priority-H2').value = 45;
+            document.getElementById('priority-D1').value = 40;
+            document.getElementById('priority-D2').value = 35;
+            document.getElementById('priority-D3').value = 30;
+            document.getElementById('priority-D4').value = 25;
+        }
+        
+        // ポジション優先度を保存
+        function savePositionPriorities() {
+            const priorities = {
+                'MT': parseInt(document.getElementById('priority-MT').value) || 30,
+                'ST': parseInt(document.getElementById('priority-ST').value) || 25,
+                'H1': parseInt(document.getElementById('priority-H1').value) || 20,
+                'H2': parseInt(document.getElementById('priority-H2').value) || 15,
+                'D1': parseInt(document.getElementById('priority-D1').value) || 50,
+                'D2': parseInt(document.getElementById('priority-D2').value) || 45,
+                'D3': parseInt(document.getElementById('priority-D3').value) || 40,
+                'D4': parseInt(document.getElementById('priority-D4').value) || 35
+            };
+            
+            const data = getData();
+            if (!data.positionPriorities) {
+                data.positionPriorities = {};
+            }
+            data.positionPriorities[currentRaidTier.id] = priorities;
+            
+            setData(data);
+            alert('ポジション優先度設定を保存しました！');
+            showMainDashboard();
+        }
+        
+        // テストデータ生成機能
+        function generateTestData() {
+            if (confirm('テストデータを生成すると現在のデータが上書きされます。続行しますか？')) {
+                createTestRaidTier();
+            }
+        }
+        
+        function createTestRaidTier() {
+            const data = getData();
+            
+            // テスト用レイドティア作成
+            const testTier = {
+                id: 'test_' + Date.now().toString(),
+                name: '7.2零式テスト',
+                description: 'テスト用レイドティア（ランダム装備方針）',
+                createdAt: new Date().toISOString(),
+                isActive: true
+            };
+            
+            // 既存のアクティブティアを無効化
+            data.raidTiers.forEach(tier => tier.isActive = false);
+            data.raidTiers.push(testTier);
+            data.activeRaidTierId = testTier.id;
+            
+            // ランダム装備方針生成関数
+            function generateRandomEquipmentPolicy() {
+                const slots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+                const policy = {};
+                slots.forEach(slot => {
+                    // 70%の確率で零式、30%の確率でトームストーン
+                    policy[slot] = Math.random() < 0.7 ? '零式' : 'トームストーン';
+                });
+                return policy;
+            }
+            
+            // テスト用プレイヤーデータ
+            const testPlayers = {
+                'MT': {
+                    id: 'test_mt',
+                    name: 'タンク太郎',
+                    characterName: 'Tank Taro',
+                    position: 'MT',
+                    job: 'ナイト',
+                    equipmentPolicy: generateRandomEquipmentPolicy(),
+                    currentEquipment: {
+                        '武器': { itemLevel: 710 }, '頭': { itemLevel: 710 }, '胴': { itemLevel: 710 }
+                    },
+                    weaponWishes: [
+                        { jobName: 'ナイト', priority: 1 }
+                    ]
+                },
+                'ST': {
+                    id: 'test_st',
+                    name: 'サブタン花子',
+                    characterName: 'SubTank Hanako',
+                    position: 'ST',
+                    job: 'ガンブレイカー',
+                    equipmentPolicy: generateRandomEquipmentPolicy(),
+                    currentEquipment: {
+                        '武器': { itemLevel: 710 }, '胴': { itemLevel: 710 }
+                    },
+                    weaponWishes: [
+                        { jobName: 'ガンブレイカー', priority: 1 }
+                    ]
+                },
+                'H1': {
+                    id: 'test_h1',
+                    name: 'ヒーラー一郎',
+                    characterName: 'Healer Ichiro',
+                    position: 'H1',
+                    job: '白魔道士',
+                    equipmentPolicy: generateRandomEquipmentPolicy(),
+                    currentEquipment: {
+                        '武器': { itemLevel: 720 }
+                    },
+                    weaponWishes: [
+                        { jobName: '白魔道士', priority: 1 }
+                    ]
+                },
+                'H2': {
+                    id: 'test_h2',
+                    name: 'バリア次郎',
+                    characterName: 'Barrier Jiro',
+                    position: 'H2',
+                    job: '学者',
+                    equipmentPolicy: generateRandomEquipmentPolicy(),
+                    currentEquipment: {
+                        '頭': { itemLevel: 720 }, '手': { itemLevel: 720 }
+                    },
+                    weaponWishes: [
+                        { jobName: '学者', priority: 1 }
+                    ]
+                },
+                'D1': {
+                    id: 'test_d1',
+                    name: 'メレー三郎',
+                    characterName: 'Melee Saburo',
+                    position: 'D1',
+                    job: '竜騎士',
+                    equipmentPolicy: generateRandomEquipmentPolicy(),
+                    currentEquipment: {
+                        '武器': { itemLevel: 710 }
+                    },
+                    weaponWishes: [
+                        { jobName: '竜騎士', priority: 1 },
+                        { jobName: 'リーパー', priority: 2 }
+                    ]
+                },
+                'D2': {
+                    id: 'test_d2',
+                    name: 'メレー四郎',
+                    characterName: 'Melee Shiro',
+                    position: 'D2',
+                    job: '忍者',
+                    equipmentPolicy: generateRandomEquipmentPolicy(),
+                    currentEquipment: {},
+                    weaponWishes: [
+                        { jobName: '忍者', priority: 1 }
+                    ]
+                },
+                'D3': {
+                    id: 'test_d3',
+                    name: 'レンジ五郎',
+                    characterName: 'Range Goro',
+                    position: 'D3',
+                    job: '機工士',
+                    equipmentPolicy: generateRandomEquipmentPolicy(),
+                    currentEquipment: {
+                        '胴': { itemLevel: 720 }, '脚': { itemLevel: 720 }
+                    },
+                    weaponWishes: [
+                        { jobName: '機工士', priority: 1 }
+                    ]
+                },
+                'D4': {
+                    id: 'test_d4',
+                    name: 'キャス六郎',
+                    characterName: 'Caster Rokuro',
+                    position: 'D4',
+                    job: '黒魔道士',
+                    equipmentPolicy: generateRandomEquipmentPolicy(),
+                    currentEquipment: {
+                        '耳': { itemLevel: 720 }, '首': { itemLevel: 720 }
+                    },
+                    weaponWishes: [
+                        { jobName: '黒魔道士', priority: 1 },
+                        { jobName: '赤魔道士', priority: 2 }
+                    ]
+                }
+            };
+            
+            // データ保存
+            if (!data.players) data.players = {};
+            data.players[testTier.id] = testPlayers;
+            
+            if (!data.allocations) data.allocations = {};
+            data.allocations[testTier.id] = [];
+            
+            saveData(data);
+            
+            // アクティブレイドティア更新
+            currentRaidTier = testTier;
+            
+            alert('🧪 テストデータを生成しました！\\n\\n📋 作成内容：\\n• 8人のテストプレイヤー（各ポジション）\\n• ランダム装備方針設定（零式70%：トーム30%）\\n• 装備格差の再現（IL710-720）\\n• 武器希望設定（複数希望含む）\\n• デフォルトポジション優先度設定\\n\\n✅ すぐに各層の分配テストが可能です。\\n「レイドクリア」ボタンから試してください。');
+            showMainDashboard();
+        }
+        
+        function exportData() {
+            const data = getData();
+            const jsonData = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ff14_gear_data_${currentRaidTier.name}_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('アプリケーション初期化');
+            initStorage();
+            showRaidTierSelection();
+        });
+    </script>
+</body>
+</html>

@@ -756,6 +756,75 @@
             color: #495057;
         }
         
+        /* 分配優先度設定 */
+        .priority-container {
+            max-width: 600px;
+            margin: 20px auto;
+        }
+        .priority-list {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid #e9ecef;
+        }
+        .priority-item {
+            display: flex;
+            align-items: center;
+            background-color: white;
+            margin: 5px 0;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            cursor: move;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .priority-item:hover {
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
+        }
+        .priority-item.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+        .priority-number {
+            width: 40px;
+            height: 40px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-right: 15px;
+        }
+        .priority-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .priority-info .position-name {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+        .priority-info .player-details {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 2px;
+        }
+        .drag-handle {
+            color: #6c757d;
+            font-size: 1.2rem;
+            cursor: grab;
+            padding: 5px;
+        }
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+        
         /* 分配結果表示 */
         .predicted-winner {
             background-color: #e8f4f8;
@@ -1694,11 +1763,6 @@
                             <div class="layer-card">
                                 <div class="layer-header">${layer}層クリア</div>
                                 <div class="layer-content">
-                                    ${layer === 4 ? `
-                                        <button onclick="showWeaponDropSettings()" style="width: 100%; margin-bottom: 8px;" class="nav-button secondary">
-                                            直ドロップ武器設定
-                                        </button>
-                                    ` : ''}
                                     <button onclick="processLayerAllocation(${layer})" style="width: 100%; margin-top: 10px;">
                                         ${layer}層 装備分配開始
                                     </button>
@@ -1713,11 +1777,125 @@
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button onclick="showAllocationHistory()" class="nav-button">配布履歴確認</button>
                         <button onclick="showStatistics()" class="nav-button">統計情報</button>
+                        <button onclick="showPrioritySettings()" class="nav-button">分配優先度設定</button>
                         <button onclick="generateTestData()" class="export-button">テストデータ生成</button>
                         <button onclick="exportData()" class="export-button">データエクスポート</button>
                     </div>
                 </div>
             `;
+        }
+
+        // 分配優先度設定画面
+        function showPrioritySettings() {
+            const data = getData();
+            const players = data.players[currentRaidTier.id] || {};
+            
+            // 既存の優先度設定を取得、なければデフォルト順序
+            const currentPriority = data.allocationPriority && data.allocationPriority[currentRaidTier.id] 
+                ? data.allocationPriority[currentRaidTier.id] 
+                : ['D1', 'D2', 'D3', 'D4', 'H1', 'H2', 'MT', 'ST'];
+            
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <h1>分配優先度設定</h1>
+                <h2>${currentRaidTier.name}</h2>
+                
+                <div class="section">
+                    <h3>強化薬・武器石などの分配優先度を設定</h3>
+                    <p>下のリストをドラッグ&ドロップして優先度を変更してください。上にあるポジションが優先されます。</p>
+                    
+                    <div class="priority-container">
+                        <div class="priority-list" id="priority-list">
+                            ${currentPriority.map((position, index) => {
+                                const player = players[position];
+                                if (!player) return '';
+                                
+                                return `
+                                    <div class="priority-item" draggable="true" data-position="${position}">
+                                        <div class="priority-number">${index + 1}</div>
+                                        <div class="priority-info">
+                                            <span class="position-name">${position}</span>
+                                            <span class="player-details">${player.name} (${player.job})</span>
+                                        </div>
+                                        <div class="drag-handle">⋮⋮</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="navigation">
+                        <button class="nav-button secondary" onclick="showMainDashboard()">ダッシュボードに戻る</button>
+                        <button class="nav-button" onclick="savePrioritySettings()">設定保存</button>
+                    </div>
+                </div>
+            `;
+            
+            // ドラッグ&ドロップ機能を初期化
+            initializeDragAndDrop();
+        }
+        
+        // ドラッグ&ドロップ機能初期化
+        function initializeDragAndDrop() {
+            const priorityList = document.getElementById('priority-list');
+            let draggedElement = null;
+            
+            priorityList.addEventListener('dragstart', (e) => {
+                if (e.target.classList.contains('priority-item')) {
+                    draggedElement = e.target;
+                    e.target.style.opacity = '0.5';
+                }
+            });
+            
+            priorityList.addEventListener('dragend', (e) => {
+                if (e.target.classList.contains('priority-item')) {
+                    e.target.style.opacity = '1';
+                    updatePriorityNumbers();
+                }
+            });
+            
+            priorityList.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+            
+            priorityList.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (draggedElement && e.target.classList.contains('priority-item')) {
+                    const rect = e.target.getBoundingClientRect();
+                    const midY = rect.top + rect.height / 2;
+                    
+                    if (e.clientY < midY) {
+                        priorityList.insertBefore(draggedElement, e.target);
+                    } else {
+                        priorityList.insertBefore(draggedElement, e.target.nextSibling);
+                    }
+                    
+                    updatePriorityNumbers();
+                }
+            });
+        }
+        
+        // 優先度番号を更新
+        function updatePriorityNumbers() {
+            const items = document.querySelectorAll('.priority-item');
+            items.forEach((item, index) => {
+                const numberElement = item.querySelector('.priority-number');
+                numberElement.textContent = index + 1;
+            });
+        }
+        
+        // 優先度設定保存
+        function savePrioritySettings() {
+            const data = getData();
+            const items = document.querySelectorAll('.priority-item');
+            const newPriority = Array.from(items).map(item => item.dataset.position);
+            
+            if (!data.allocationPriority) data.allocationPriority = {};
+            data.allocationPriority[currentRaidTier.id] = newPriority;
+            
+            saveData(data);
+            alert('分配優先度を保存しました。');
+            showMainDashboard();
         }
 
         // 直ドロップ武器設定画面
@@ -1792,64 +1970,9 @@
 
         // 層別装備分配処理
         function processLayerAllocation(layer) {
-            if (layer === 4) {
-                show4thLayerWeaponSelection();
-            } else {
-                generateLayerDropsAndProcess(layer);
-            }
+            generateLayerDropsAndProcess(layer);
         }
         
-        // 4層武器選択画面
-        function show4thLayerWeaponSelection() {
-            const content = document.getElementById('content');
-            const weaponsByJob = {
-                'ナイト': 'ナイト武器', '戦士': '戦士武器', '暗黒騎士': '暗黒騎士武器', 'ガンブレイカー': 'ガンブレイカー武器',
-                '白魔道士': '白魔道士武器', '占星術士': '占星術士武器', '学者': '学者武器', '賢者': '賢者武器',
-                'モンク': 'モンク武器', '竜騎士': '竜騎士武器', '忍者': '忍者武器', '侍': '侍武器', 'リーパー': 'リーパー武器', 'ヴァイパー': 'ヴァイパー武器',
-                '黒魔道士': '黒魔道士武器', '召喚士': '召喚士武器', '赤魔道士': '赤魔道士武器', 'ピクトマンサー': 'ピクトマンサー武器',
-                '吟遊詩人': '吟遊詩人武器', '機工士': '機工士武器', '踊り子': '踊り子武器'
-            };
-            
-            const allWeapons = Object.values(weaponsByJob);
-            
-            content.innerHTML = `
-                <h1>4層 直ドロップ武器選択</h1>
-                <h2>${currentRaidTier.name}</h2>
-                
-                <div class="section">
-                    <h3>今回ドロップした直ドロップ武器を選択してください</h3>
-                    <p>4層で直接ドロップした武器を1種類選択してください。この武器の分配判定を行います。</p>
-                    
-                    <div class="direct-weapon-selection">
-                        <label for="direct-weapon-select">直ドロップ武器:</label>
-                        <select id="direct-weapon-select" style="width: 300px; padding: 10px; font-size: 16px;">
-                            <option value="">武器を選択してください</option>
-                            ${allWeapons.map(weapon => `
-                                <option value="${weapon}">${weapon}</option>
-                            `).join('')}
-                        </select>
-                    </div>
-                    
-                    <div class="navigation" style="margin-top: 30px;">
-                        <button class="nav-button secondary" onclick="showMainDashboard()">ダッシュボードに戻る</button>
-                        <button class="nav-button" onclick="start4thLayerAllocation()">分配開始</button>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // 4層分配開始
-        function start4thLayerAllocation() {
-            const selectedWeapon = document.getElementById('direct-weapon-select').value;
-            if (!selectedWeapon) {
-                alert('直ドロップ武器を選択してください。');
-                return;
-            }
-            
-            // 選択された武器で4層分配を開始
-            generateLayerDropsAndProcess(4, selectedWeapon);
-        }
-
         // 層別ドロップ生成と分配処理
         function generateLayerDropsAndProcess(layer, directWeapon = null) {
             try {
@@ -1935,6 +2058,34 @@
                     
                     // 希望順位でソート（第一希望が最優先）
                     needPlayers.sort((a, b) => a.priority - b.priority);
+                } else if (item.type === 'material') {
+                    // 強化薬・武器石の場合は優先度設定で判定
+                    const allocationPriority = data.allocationPriority && data.allocationPriority[currentRaidTier.id] 
+                        ? data.allocationPriority[currentRaidTier.id] 
+                        : ['D1', 'D2', 'D3', 'D4', 'H1', 'H2', 'MT', 'ST'];
+                    
+                    allocationPriority.forEach((position, index) => {
+                        const player = players[position];
+                        if (player) {
+                            needPlayers.push({
+                                position: position,
+                                name: player.name,
+                                job: player.job,
+                                priority: index // 優先度設定順
+                            });
+                        }
+                    });
+                    
+                    // 残りのプレイヤーはPass
+                    Object.entries(players).forEach(([position, player]) => {
+                        if (!allocationPriority.includes(position)) {
+                            passPlayers.push({
+                                position: position,
+                                name: player.name,
+                                job: player.job
+                            });
+                        }
+                    });
                 } else {
                     // 通常の装備方針判定
                     Object.entries(players).forEach(([position, player]) => {
@@ -1983,6 +2134,41 @@
                 <h1>${layer}層 装備分配結果</h1>
                 <h2>${currentRaidTier.name}</h2>
                 
+                ${layer === 4 ? `
+                    <div class="section" style="background-color: #f8f9fa; padding: 20px; margin-bottom: 20px; border-radius: 8px;">
+                        <h3>4層 直ドロップ武器設定</h3>
+                        <p>今回ドロップした直ドロップ武器を選択してください。選択すると分配判定が自動更新されます。</p>
+                        
+                        <div class="direct-weapon-selection" style="margin-bottom: 15px;">
+                            <label for="direct-weapon-select-live" style="display: block; margin-bottom: 5px; font-weight: bold;">直ドロップ武器:</label>
+                            <select id="direct-weapon-select-live" onchange="updateDirectWeaponAllocation()" style="width: 300px; padding: 10px; font-size: 16px;">
+                                <option value="">武器を選択してください</option>
+                                <option value="ナイト武器">ナイト武器</option>
+                                <option value="戦士武器">戦士武器</option>
+                                <option value="暗黒騎士武器">暗黒騎士武器</option>
+                                <option value="ガンブレイカー武器">ガンブレイカー武器</option>
+                                <option value="白魔道士武器">白魔道士武器</option>
+                                <option value="占星術士武器">占星術士武器</option>
+                                <option value="学者武器">学者武器</option>
+                                <option value="賢者武器">賢者武器</option>
+                                <option value="モンク武器">モンク武器</option>
+                                <option value="竜騎士武器">竜騎士武器</option>
+                                <option value="忍者武器">忍者武器</option>
+                                <option value="侍武器">侍武器</option>
+                                <option value="リーパー武器">リーパー武器</option>
+                                <option value="ヴァイパー武器">ヴァイパー武器</option>
+                                <option value="黒魔道士武器">黒魔道士武器</option>
+                                <option value="召喚士武器">召喚士武器</option>
+                                <option value="赤魔道士武器">赤魔道士武器</option>
+                                <option value="ピクトマンサー武器">ピクトマンサー武器</option>
+                                <option value="吟遊詩人武器">吟遊詩人武器</option>
+                                <option value="機工士武器">機工士武器</option>
+                                <option value="踊り子武器">踊り子武器</option>
+                            </select>
+                        </div>
+                    </div>
+                ` : ''}
+                
                 <div class="allocation-section">
                     <div class="allocation-grid">
                         ${allocationResults.map((result, index) => {
@@ -2003,7 +2189,7 @@
                                         <div class="predicted-player">
                                             ${result.winner ? 
                                                 `${result.winner.name} (${result.winner.position} - ${result.winner.job}) 🏆` : 
-                                                '該当者なし'
+                                                'フリロ'
                                             }
                                         </div>
                                     </div>
@@ -2012,6 +2198,7 @@
                                         <h5>実際の取得者</h5>
                                         <select id="actual-winner-${index}" class="actual-winner-select">
                                             <option value="">取得者を選択してください</option>
+                                            <option value="フリロ" ${!result.winner ? 'selected' : ''}>フリロ</option>
                                             ${allPlayers.map(player => `
                                                 <option value="${player.position}" ${result.winner && result.winner.position === player.position ? 'selected' : ''}>
                                                     ${player.name} (${player.position} - ${player.job})
@@ -2092,17 +2279,31 @@
                 const actualWinnerPosition = actualWinnerSelect ? actualWinnerSelect.value : '';
                 
                 if (actualWinnerPosition) {
-                    const actualWinner = players[actualWinnerPosition];
-                    if (actualWinner) {
+                    let winner = null;
+                    
+                    if (actualWinnerPosition === 'フリロ') {
+                        winner = {
+                            position: 'フリロ',
+                            name: 'フリロ',
+                            job: 'フリロ'
+                        };
+                    } else {
+                        const actualWinner = players[actualWinnerPosition];
+                        if (actualWinner) {
+                            winner = {
+                                position: actualWinnerPosition,
+                                name: actualWinner.name,
+                                job: actualWinner.job
+                            };
+                        }
+                    }
+                    
+                    if (winner) {
                         data.allocations[currentRaidTier.id].push({
                             id: 'alloc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
                             layer: layer,
                             equipment: result.equipment,
-                            winner: {
-                                position: actualWinnerPosition,
-                                name: actualWinner.name,
-                                job: actualWinner.job
-                            },
+                            winner: winner,
                             predictedWinner: result.winner,
                             timestamp: new Date().toISOString(),
                             week: currentWeek,
@@ -2117,6 +2318,137 @@
             
             alert(`${layer}層の装備分配を記録しました。`);
             showMainDashboard();
+        }
+
+        // 直ドロップ武器選択時の分配更新
+        function updateDirectWeaponAllocation() {
+            const selectedWeapon = document.getElementById('direct-weapon-select-live').value;
+            
+            if (selectedWeapon) {
+                // 現在の4層アイテムに直ドロップ武器を追加
+                const data = getData();
+                const players = data.players[currentRaidTier.id] || {};
+                
+                // 基本4層アイテム
+                const baseItems = [
+                    { slot: '胴', name: '胴 - ボディギアチェスト', itemLevel: 730, type: 'armor' },
+                    { slot: 'マウント', name: 'マウント', itemLevel: 1, type: 'mount' },
+                    { slot: '武器', name: '武器 - ウェポンチェスト', itemLevel: 735, type: 'weapon_box' }
+                ];
+                
+                // 直ドロップ武器を追加
+                baseItems.push({ 
+                    slot: '武器', 
+                    name: `${selectedWeapon} - 直ドロップ`, 
+                    itemLevel: 735, 
+                    type: 'direct_weapon', 
+                    weaponName: selectedWeapon 
+                });
+                
+                currentDropItems = baseItems;
+                
+                // 分配結果を再計算
+                allocationResults = currentDropItems.map(item => {
+                    const needPlayers = [];
+                    const greedPlayers = [];
+                    const passPlayers = [];
+                    
+                    if (item.type === 'direct_weapon') {
+                        // 直ドロ武器の場合は希望リストで判定
+                        Object.entries(players).forEach(([position, player]) => {
+                            const weaponWishes = player.weaponWishes || [];
+                            const wishIndex = weaponWishes.indexOf(item.weaponName);
+                            
+                            if (wishIndex !== -1) {
+                                needPlayers.push({
+                                    position: position,
+                                    name: player.name,
+                                    job: player.job,
+                                    priority: wishIndex,
+                                    wishPriority: wishIndex + 1
+                                });
+                            } else {
+                                passPlayers.push({
+                                    position: position,
+                                    name: player.name,
+                                    job: player.job
+                                });
+                            }
+                        });
+                        
+                        needPlayers.sort((a, b) => a.priority - b.priority);
+                    } else if (item.type === 'material') {
+                        // 強化薬・武器石の場合は優先度設定で判定
+                        const allocationPriority = data.allocationPriority && data.allocationPriority[currentRaidTier.id] 
+                            ? data.allocationPriority[currentRaidTier.id] 
+                            : ['D1', 'D2', 'D3', 'D4', 'H1', 'H2', 'MT', 'ST'];
+                        
+                        allocationPriority.forEach((position, index) => {
+                            const player = players[position];
+                            if (player) {
+                                needPlayers.push({
+                                    position: position,
+                                    name: player.name,
+                                    job: player.job,
+                                    priority: index
+                                });
+                            }
+                        });
+                        
+                        Object.entries(players).forEach(([position, player]) => {
+                            if (!allocationPriority.includes(position)) {
+                                passPlayers.push({
+                                    position: position,
+                                    name: player.name,
+                                    job: player.job
+                                });
+                            }
+                        });
+                    } else {
+                        // 通常の装備方針判定
+                        Object.entries(players).forEach(([position, player]) => {
+                            const policy = player.equipmentPolicy[item.slot];
+                            
+                            if (policy === '零式') {
+                                needPlayers.push({
+                                    position: position,
+                                    name: player.name,
+                                    job: player.job,
+                                    priority: getPriority(player.job)
+                                });
+                            } else if (policy === 'トームストーン' && item.type !== 'material' && item.type !== 'mount') {
+                                greedPlayers.push({
+                                    position: position,
+                                    name: player.name,
+                                    job: player.job,
+                                    priority: getPriority(player.job)
+                                });
+                            } else {
+                                passPlayers.push({
+                                    position: position,
+                                    name: player.name,
+                                    job: player.job
+                                });
+                            }
+                        });
+                        
+                        needPlayers.sort((a, b) => a.priority - b.priority);
+                        greedPlayers.sort((a, b) => a.priority - b.priority);
+                    }
+                    
+                    return {
+                        equipment: item,
+                        need: needPlayers,
+                        greed: greedPlayers,
+                        pass: passPlayers,
+                        winner: needPlayers.length > 0 ? needPlayers[0] : 
+                                (greedPlayers.length > 0 ? greedPlayers[0] : null)
+                    };
+                });
+                
+                // 分配結果表示を更新
+                displayAllocationResults(4);
+            }
         }
 
         // 配布履歴表示

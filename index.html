@@ -582,8 +582,19 @@
 
         // データ管理関数
         function getLocalData() {
-            return dataSync ? dataSync.getLocalData() : 
-                   JSON.parse(localStorage.getItem('ff14RaidData') || '{"raidTiers":[],"activeRaidTierId":null,"players":{},"allocations":{}}');
+            const defaultData = {
+                raidTiers: [],
+                activeRaidTierId: null,
+                players: {},
+                allocations: {},
+                settings: {
+                    teamMembers: [],
+                    permissions: {}
+                }
+            };
+            
+            // オフラインモード用のローカルストレージデータを取得
+            return JSON.parse(localStorage.getItem('ff14_gear_data') || JSON.stringify(defaultData));
         }
 
         async function saveData(data) {
@@ -2689,8 +2700,17 @@
     </script>
 
     <!-- GitHub API連携JavaScript -->
-    <script src="js/github-api.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/data-sync.js"></script>
+    <script>
+        // クラス重複を避けるため、条件付きで読み込み
+        if (typeof GitHubAPI === 'undefined') {
+            document.write('<script src="js/github-api.js"><\/script>');
+        }
+        if (typeof AuthManager === 'undefined') {
+            document.write('<script src="js/auth.js"><\/script>');
+        }
+        if (typeof DataSyncManager === 'undefined') {
+            document.write('<script src="js/data-sync.js"><\/script>');
+        }
+    </script>
 </body>
 </html>

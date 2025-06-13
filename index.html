@@ -480,8 +480,29 @@
         function useOfflineMode() {
             if (confirm('オフラインモードではデータの共有ができません。続行しますか？')) {
                 updateDebugInfo('Using offline mode', 'Offline');
+                // オフラインモード用の初期化
+                initializeOfflineMode();
                 showRaidTierSelection();
                 addSyncStatusIndicator();
+            }
+        }
+
+        function initializeOfflineMode() {
+            // オフラインモード用のデータ初期化
+            const defaultData = {
+                raidTiers: [],
+                activeRaidTierId: null,
+                players: {},
+                allocations: {},
+                settings: {
+                    teamMembers: [],
+                    permissions: {}
+                }
+            };
+            
+            // ローカルストレージに初期データがない場合は作成
+            if (!localStorage.getItem('ff14_gear_data')) {
+                localStorage.setItem('ff14_gear_data', JSON.stringify(defaultData));
             }
         }
 

@@ -306,9 +306,6 @@
     </div>
 
     <!-- GitHub API連携スクリプト -->
-    <script src="js/github-api.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/data-sync.js"></script>
     
     <script>
         // デバッグ関数
@@ -336,40 +333,97 @@
             }
         });
 
+        // オフライン検出機能
+        function isOnline() {
+            return navigator.onLine;
+        }
+
         async function initializeApp() {
             try {
-                updateDebugInfo('Creating API instances');
+                updateDebugInfo('Starting initialization');
+                
+                // オフライン状態の確認
+                const online = isOnline();
+                updateDebugInfo(online ? 'Online mode detected' : 'Offline mode detected');
                 
                 // GitHub API初期化
                 githubAPI = new GitHubAPI();
                 authManager = new AuthManager(githubAPI);
                 dataSync = new DataSyncManager(githubAPI, authManager);
                 
-                updateDebugInfo('Checking authentication');
-
-                // 認証状態確認
-                if (authManager.isAuthenticated()) {
-                    updateDebugInfo('Validating token');
-                    const isValid = await githubAPI.validateToken();
-                    if (!isValid) {
-                        updateDebugInfo('Token invalid, logging out');
-                        authManager.logout();
-                        showLoginScreen();
-                        return;
-                    }
-                    
-                    updateDebugInfo('Loading app data', 'Authenticated');
-                    // 認証済みの場合はデータを読み込んで開始
-                    await loadAndStartApp();
+                if (online) {
+                    // オンライン時の初期化
+                    await initializeOnlineMode();
                 } else {
-                    updateDebugInfo('Not authenticated', 'None');
-                    // 未認証の場合はログイン画面
-                    showLoginScreen();
+                    // オフライン時の初期化
+                    await initializeOfflineMode();
                 }
             } catch (error) {
                 updateDebugInfo('Init error', null, error.message);
                 console.error('初期化エラー:', error);
-                showErrorScreen('初期化エラー: ' + error.message);
+                // オフラインモードで再試行
+                try {
+                    updateDebugInfo('Retrying in offline mode');
+                    await initializeOfflineMode();
+                } catch (fallbackError) {
+                    showErrorScreen('初期化に失敗しました。ページを再読み込みしてください。');
+                }
+            }
+        }
+
+        async function initializeOnlineMode() {
+            updateDebugInfo('Checking authentication');
+            
+            // 認証状態確認
+            const token = localStorage.getItem('github_token');
+            if (token) {
+                updateDebugInfo('Validating token');
+                const isValid = await githubAPI.validateToken();
+                if (!isValid) {
+                    updateDebugInfo('Token invalid, switching to offline');
+                    await initializeOfflineMode();
+                    return;
+                }
+                
+                updateDebugInfo('Loading app data', 'Authenticated');
+                await loadAndStartApp();
+            } else {
+                updateDebugInfo('Not authenticated', 'None');
+                // 未認証でもオフラインモードで続行可能にする
+                const localData = getLocalData();
+                if (localData.raidTiers && localData.raidTiers.length > 0) {
+                    updateDebugInfo('Local data found, starting offline');
+                    await initializeOfflineMode();
+                } else {
+                    showLoginScreen();
+                }
+            }
+        }
+
+        async function initializeOfflineMode() {
+            updateDebugInfo('Starting offline mode');
+            
+            // 同期ステータス表示
+            addSyncStatusIndicator();
+            document.querySelector('.sync-status').className = 'sync-status offline';
+            document.querySelector('.sync-status').innerHTML = '<span>📱</span> オフラインモード';
+            
+            // ローカルデータの読み込み
+            const data = getLocalData();
+            
+            if (data.raidTiers && data.raidTiers.length > 0) {
+                currentRaidTier = data.raidTiers.find(t => t.id === data.activeRaidTierId);
+                updateDebugInfo('Local data loaded', 'Offline');
+                
+                if (currentRaidTier) {
+                    showMainDashboard();
+                } else {
+                    showRaidTierSelection();
+                }
+            } else {
+                updateDebugInfo('No local data, showing setup');
+                // ローカルデータがない場合は初期設定画面
+                showRaidTierSelection();
             }
         }
 

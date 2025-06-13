@@ -326,9 +326,6 @@
 
         // アプリケーション初期化
         document.addEventListener('DOMContentLoaded', async function() {
-            // JavaScriptファイルの読み込み完了を待つ
-            await waitForScripts();
-            
             try {
                 updateDebugInfo('Starting initialization');
                 await initializeApp();
@@ -338,24 +335,6 @@
                 showErrorScreen('初期化に失敗しました: ' + error.message);
             }
         });
-
-        // 外部JavaScriptファイルの読み込み完了を待つ
-        function waitForScripts() {
-            return new Promise((resolve) => {
-                const checkScripts = () => {
-                    if (typeof GitHubAPI !== 'undefined' && 
-                        typeof AuthManager !== 'undefined' && 
-                        typeof DataSyncManager !== 'undefined') {
-                        updateDebugInfo('Scripts loaded successfully');
-                        resolve();
-                    } else {
-                        updateDebugInfo('Waiting for scripts...');
-                        setTimeout(checkScripts, 100);
-                    }
-                };
-                checkScripts();
-            });
-        }
 
         async function initializeApp() {
             try {

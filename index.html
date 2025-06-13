@@ -2698,7 +2698,8 @@
                         headers: { 'Authorization': `token ${this.token}` }
                     });
                     return response.ok;
-                } catch {
+                } catch (error) {
+                    console.warn('GitHub API接続エラー（オフラインモード）:', error);
                     return false;
                 }
             }

@@ -95,9 +95,9 @@
 
   コード設定値:
   // GitHub API設定
-  this.owner = 'hirqt';
+  this.owner = 'rnq27gq';
   this.repo = 'ff14-raid-gear-system';
-  this.baseURL = 'https://api.github.com/repos/hirqt/ff14-raid-gear-system/contents';
+  this.baseURL = 'https://api.github.com/repos/rnq27gq/ff14-raid-gear-system/contents';
 
   📚 データ構造設計
 

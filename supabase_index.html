@@ -439,7 +439,15 @@
         .wish-priority select,
         .wish-priority input {
             flex: 1;
-            min-width: 150px;
+            min-width: 120px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+        
+        .wish-priority select option {
+            font-size: 0.85rem;
         }
         h1 {
             text-align: center;
@@ -625,8 +633,8 @@
         }
         
         .slot-col.not-acquired {
-            background-color: #f8d7da;
-            color: #721c24;
+            background-color: #e9ecef;
+            color: #6c757d;
         }
         
         /* フォーム用スタイル */
@@ -1790,10 +1798,6 @@
             const content = document.getElementById('content');
             
             content.innerHTML = `
-                <div class="navigation-top-left">
-                    <button class="nav-button" onclick="showMainDashboard()">レイド選択画面に戻る</button>
-                </div>
-                
                 <h1>${currentRaidTier.name}</h1>
                 <h2>チーム: ${currentTeamId}</h2>
                 
@@ -1816,8 +1820,8 @@
                 </div>
                 
                 <div class="section">
-                    <h3>ティア情報</h3>
-                    <p><strong>レイドティア:</strong> ${currentRaidTier.name}</p>
+                    <h3>レイド情報</h3>
+                    <p><strong>レイド名:</strong> ${currentRaidTier.name}</p>
                     <p><strong>説明:</strong> ${currentRaidTier.description || '零式レイド'}</p>
                     <p><strong>登録メンバー:</strong> ${Object.keys(appData.players[currentRaidTier.id] || {}).length}人</p>
                     <p><strong>配布履歴:</strong> ${(appData.allocations[currentRaidTier.id] || []).length}件</p>
@@ -2029,7 +2033,7 @@
                                     <div style="margin: 10px 0;">
                                         <label>プレイヤー名（必須）:</label>
                                         <input type="text" id="${position}-name" value="${player.name || ''}" 
-                                               placeholder="プレイヤー名を入力" style="width: 100%;">
+                                               placeholder="プレイヤー名を入力" class="job-select">
                                     </div>
                                     
                                     
@@ -2127,7 +2131,7 @@
                                     <div class="weapon-wishes">
                                         <div class="wish-priority">
                                             <label>第一希望 (メインジョブ):</label>
-                                            <input type="text" value="${mainWeapon}" readonly style="background-color: #e9ecef;">
+                                            <input type="text" value="${mainWeapon}" readonly style="background-color: #e9ecef; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85rem; min-width: 120px;">
                                         </div>
                                         <div class="wish-priority">
                                             <label>第二希望:</label>
@@ -2938,7 +2942,7 @@
                     <button onclick="confirmAllocation(${layer})" class="confirm-btn">
                         分配を確定
                     </button>
-                    <button onclick="showEquipmentAllocation()" class="cancel-btn">
+                    <button onclick="showTierDashboard()" class="cancel-btn">
                         キャンセル
                     </button>
                 </div>

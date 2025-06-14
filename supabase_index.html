@@ -611,12 +611,12 @@
         </div>
     </div>
 
-    <!-- Supabase認証情報（本番用） -->
+    <!-- Supabase認証情報（GitHub Secrets経由で注入） -->
     <script>
-        // GitHub Pages用の設定（機密情報は環境に応じて更新）
+        // GitHub Actionsによってデプロイ時に認証情報が注入されます
         window.SUPABASE_CONFIG = {
             SUPABASE_URL: 'https://bpzvuwhnjvbfohopeoxr.supabase.co',
-            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwenZ1d2huanZiZm9ob3Blb3hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk4NzE3MDMsImV4cCI6MjA2NTQ0NzcwM30.pYiMUoptXLpWyFAlUkCE973ipObCEQgOUyILEpodVC8',
+            SUPABASE_ANON_KEY: null, // GitHub Actionsで置換される
             DEMO_TEAM_ID: 'demo-team',
             DEMO_PASSWORD: 'demo123'
         };
@@ -654,7 +654,7 @@
                 const supabaseKey = window.SUPABASE_CONFIG?.SUPABASE_ANON_KEY;
                 
                 if (!supabaseUrl || !supabaseKey) {
-                    throw new Error('Supabase認証情報が設定されていません。config/supabase_credentials.js を確認してください。');
+                    throw new Error('Supabase認証情報が設定されていません。GitHub Secretsの設定を確認してください。');
                 }
                 
                 window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);

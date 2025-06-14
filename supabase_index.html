@@ -724,6 +724,106 @@
             font-style: italic;
         }
         
+        .weapon-selection {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #e9ecef;
+        }
+        
+        .weapon-selection h5 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .weapon-selection select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+        }
+        
+        .predicted-winner {
+            background: #e8f4fd;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #3498db;
+        }
+        
+        .judgment-details {
+            margin-top: 15px;
+        }
+        
+        .judgment-toggle {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        
+        .judgment-toggle:hover {
+            background: #e9ecef;
+        }
+        
+        .judgment-content {
+            border: 1px solid #e9ecef;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            padding: 15px;
+            background: #f8f9fa;
+        }
+        
+        .need-section, .greed-section, .pass-section {
+            margin: 10px 0;
+        }
+        
+        .need-section h6 {
+            color: #e74c3c;
+            margin-bottom: 8px;
+        }
+        
+        .greed-section h6 {
+            color: #f39c12;
+            margin-bottom: 8px;
+        }
+        
+        .pass-section h6 {
+            color: #95a5a6;
+            margin-bottom: 8px;
+        }
+        
+        .candidate-item.need {
+            background: #fdf2f2;
+            border-left: 4px solid #e74c3c;
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 3px;
+        }
+        
+        .candidate-item.greed {
+            background: #fef9e7;
+            border-left: 4px solid #f39c12;
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 3px;
+        }
+        
+        .candidate-item.pass {
+            background: #f8f9fa;
+            border-left: 4px solid #95a5a6;
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 3px;
+            color: #666;
+        }
+        
         .allocation-actions {
             display: flex;
             gap: 15px;
@@ -2437,28 +2537,28 @@
         function getLayerDrops(layer) {
             const drops = {
                 1: [
-                    { slot: '耳', type: 'equipment' },
-                    { slot: '首', type: 'equipment' },
-                    { slot: '腕', type: 'equipment' },
-                    { slot: '指', type: 'equipment' }
+                    { name: '耳装備', slot: '耳', type: 'equipment', itemLevel: 'i730' },
+                    { name: '首装備', slot: '首', type: 'equipment', itemLevel: 'i730' },
+                    { name: '腕装備', slot: '腕', type: 'equipment', itemLevel: 'i730' },
+                    { name: '指装備', slot: '指', type: 'equipment', itemLevel: 'i730' }
                 ],
                 2: [
-                    { slot: '頭', type: 'equipment' },
-                    { slot: '手', type: 'equipment' },
-                    { slot: '足', type: 'equipment' },
-                    { slot: '武器石', type: 'material' },
-                    { slot: '硬化薬', type: 'material' }
+                    { name: '頭装備', slot: '頭', type: 'equipment', itemLevel: 'i730' },
+                    { name: '手装備', slot: '手', type: 'equipment', itemLevel: 'i730' },
+                    { name: '足装備', slot: '足', type: 'equipment', itemLevel: 'i730' },
+                    { name: '武器石', slot: '武器石', type: 'material', itemLevel: '' },
+                    { name: '硬化薬', slot: '硬化薬', type: 'material', itemLevel: '' }
                 ],
                 3: [
-                    { slot: '胴', type: 'equipment' },
-                    { slot: '脚', type: 'equipment' },
-                    { slot: '強化薬', type: 'material' },
-                    { slot: '強化繊維', type: 'material' }
+                    { name: '胴装備', slot: '胴', type: 'equipment', itemLevel: 'i730' },
+                    { name: '脚装備', slot: '脚', type: 'equipment', itemLevel: 'i730' },
+                    { name: '強化薬', slot: '強化薬', type: 'material', itemLevel: '' },
+                    { name: '強化繊維', slot: '強化繊維', type: 'material', itemLevel: '' }
                 ],
                 4: [
-                    { slot: '胴', type: 'equipment' },
-                    { slot: '武器箱', type: 'weapon_box' },
-                    { slot: '直ドロップ武器', type: 'direct_weapon' }
+                    { name: '胴装備', slot: '胴', type: 'equipment', itemLevel: 'i730' },
+                    { name: '武器箱', slot: '武器箱', type: 'weapon_box', itemLevel: 'i730' },
+                    { name: '直ドロップ武器', slot: '武器', type: 'direct_weapon', itemLevel: 'i730', weapon: null }
                 ]
             };
             
@@ -2471,27 +2571,30 @@
             const results = {};
             
             drops.forEach(drop => {
-                const candidates = [];
+                const allCandidates = [];
                 
                 Object.entries(players).forEach(([position, player]) => {
                     const priority = calculatePlayerPriority(player, drop);
-                    if (priority.canReceive) {
-                        candidates.push({
-                            position,
-                            player,
-                            priority: priority.score,
-                            reason: priority.reason
-                        });
-                    }
+                    allCandidates.push({
+                        position,
+                        player,
+                        priority: priority.score,
+                        reason: priority.reason,
+                        type: priority.type,
+                        canReceive: priority.canReceive
+                    });
                 });
                 
-                // 優先度順でソート
-                candidates.sort((a, b) => b.priority - a.priority);
+                // 優先度順でソート（全プレイヤー）
+                allCandidates.sort((a, b) => b.priority - a.priority);
+                
+                // 取得可能な候補者のみ抽出
+                const candidates = allCandidates.filter(c => c.canReceive);
                 
                 results[drop.slot] = {
                     drop,
-                    candidates,
-                    recommended: candidates[0] || null
+                    candidates: allCandidates, // 全プレイヤーの判定結果
+                    recommended: candidates[0] || null // 最優先の取得可能者
                 };
             });
             
@@ -2502,42 +2605,88 @@
         function calculatePlayerPriority(player, drop) {
             let score = 0;
             let canReceive = false;
-            let reason = '';
+            let reason = 'Pass';
+            let type = 'pass';
             
             if (drop.type === 'equipment') {
                 // 装備の場合
-                const policy = player.equipmentPolicy[drop.slot];
-                const hasEquipment = player.currentEquipment[drop.slot];
+                const policy = player.equipmentPolicy?.[drop.slot] || 'トームストーン';
+                const hasEquipment = player.currentEquipment?.[drop.slot];
                 
                 if (policy === '零式' && !hasEquipment) {
                     canReceive = true;
-                    score = 100;
-                    reason = 'Need (零式優先)';
-                } else if (policy === 'トームストーン' && !hasEquipment) {
+                    type = 'need';
+                    score = 1000 - (player.dynamicPriority || 0);
+                    reason = 'Need (零式)';
+                } else if (!hasEquipment) {
                     canReceive = true;
-                    score = 50;
-                    reason = 'Greed (トームストーン可)';
+                    type = 'greed';
+                    score = 500 - (player.dynamicPriority || 0);
+                    reason = 'Greed (トーム可)';
                 } else {
-                    reason = 'Pass (不要)';
+                    type = 'pass';
+                    reason = 'Pass (所持済み)';
                 }
             } else if (drop.type === 'material') {
-                // 強化素材の場合
-                canReceive = true;
-                score = 75 - (player.dynamicPriority || 0);
-                reason = 'Need (強化素材)';
-            } else if (drop.type === 'weapon_box' || drop.type === 'direct_weapon') {
-                // 武器の場合
-                const needsWeapon = !player.currentEquipment['武器'];
-                if (needsWeapon) {
+                // 強化素材の場合（分配優先度設定に基づく）
+                const materialAllocations = appData.allocations?.[currentRaidTier.id] || [];
+                const hasThisMaterial = materialAllocations.some(alloc => 
+                    alloc.position === player.position && alloc.slot === drop.slot
+                );
+                
+                if (!hasThisMaterial) {
                     canReceive = true;
-                    score = 90;
-                    reason = 'Need (武器)';
+                    type = 'need';
+                    score = getMaterialPriority(player.position, drop.slot) - (player.dynamicPriority || 0);
+                    reason = 'Need (素材)';
                 } else {
+                    type = 'pass';
+                    reason = 'Pass (取得済み)';
+                }
+            } else if (drop.type === 'weapon_box') {
+                // 武器箱の場合
+                const hasWeapon = player.currentEquipment?.['武器'];
+                if (!hasWeapon) {
+                    canReceive = true;
+                    type = 'need';
+                    score = 2000 - (player.dynamicPriority || 0);
+                    reason = 'Need (武器箱)';
+                } else {
+                    type = 'pass';
+                    reason = 'Pass (武器所持済み)';
+                }
+            } else if (drop.type === 'direct_weapon') {
+                // 直ドロップ武器の場合（武器希望に基づく）
+                const weaponWishes = player.weaponWishes || [];
+                const hasWeapon = player.currentEquipment?.['武器'];
+                const weaponType = drop.weapon; // 選択された武器種
+                
+                if (!hasWeapon && weaponType && weaponWishes.includes(weaponType)) {
+                    canReceive = true;
+                    type = 'need';
+                    const wishIndex = weaponWishes.indexOf(weaponType);
+                    score = 3000 - (wishIndex * 100) - (player.dynamicPriority || 0);
+                    reason = `Need (第${wishIndex + 1}希望)`;
+                } else if (!hasWeapon) {
+                    canReceive = true;
+                    type = 'greed';
+                    score = 100 - (player.dynamicPriority || 0);
+                    reason = 'Greed (武器)';
+                } else {
+                    type = 'pass';
                     reason = 'Pass (武器所持済み)';
                 }
             }
             
-            return { canReceive, score, reason };
+            return { canReceive, score, reason, type };
+        }
+        
+        // 強化素材の分配優先度取得
+        function getMaterialPriority(position, materialType) {
+            // デフォルトの分配優先度順序（設定可能にする予定）
+            const defaultOrder = ['D1', 'D2', 'D3', 'D4', 'H1', 'H2', 'MT', 'ST'];
+            const positionIndex = defaultOrder.indexOf(position);
+            return 800 - (positionIndex * 50); // 高い順位ほど高スコア
         }
         
         // 分配結果表示
@@ -2550,21 +2699,67 @@
                     <h4>${layer}層 装備分配結果</h4>
                     <p>推奨分配者が自動計算されました。必要に応じて変更してください。</p>
                 </div>
-                
-                <div class="allocation-grid">
             `;
             
-            Object.entries(results).forEach(([slot, result]) => {
+            // 直ドロップ武器選択（4層のみ）
+            if (layer === 4) {
+                html += `
+                    <div class="weapon-selection">
+                        <h5>直ドロップ武器選択:</h5>
+                        <select id="directWeaponSelect" onchange="updateDirectWeapon()">
+                            <option value="">武器を選択してください</option>
+                            <option value="ナイト">ナイト武器</option>
+                            <option value="戦士">戦士武器</option>
+                            <option value="暗黒騎士">暗黒騎士武器</option>
+                            <option value="ガンブレイカー">ガンブレイカー武器</option>
+                            <option value="白魔道士">白魔道士武器</option>
+                            <option value="学者">学者武器</option>
+                            <option value="占星術士">占星術士武器</option>
+                            <option value="賢者">賢者武器</option>
+                            <option value="モンク">モンク武器</option>
+                            <option value="竜騎士">竜騎士武器</option>
+                            <option value="忍者">忍者武器</option>
+                            <option value="侍">侍武器</option>
+                            <option value="リーパー">リーパー武器</option>
+                            <option value="ヴァイパー">ヴァイパー武器</option>
+                            <option value="黒魔道士">黒魔道士武器</option>
+                            <option value="召喚士">召喚士武器</option>
+                            <option value="赤魔道士">赤魔道士武器</option>
+                            <option value="ピクトマンサー">ピクトマンサー武器</option>
+                            <option value="吟遊詩人">吟遊詩人武器</option>
+                            <option value="機工士">機工士武器</option>
+                            <option value="踊り子">踊り子武器</option>
+                        </select>
+                    </div>
+                `;
+            }
+            
+            html += `<div class="allocation-grid">`;
+            
+            Object.entries(results).forEach(([itemKey, result]) => {
+                const drop = result.drop;
+                const needCandidates = result.candidates.filter(c => c.type === 'need');
+                const greedCandidates = result.candidates.filter(c => c.type === 'greed');
+                const passCandidates = result.candidates.filter(c => c.type === 'pass');
+                
                 html += `
                     <div class="allocation-item">
                         <div class="item-header">
-                            <h5>${slot}</h5>
-                            <span class="item-type">${getItemTypeLabel(result.drop.type)}</span>
+                            <h5>${drop.name} ${drop.itemLevel}</h5>
+                            <span class="item-type">${getItemTypeLabel(drop.type)}</span>
+                        </div>
+                        
+                        <div class="predicted-winner">
+                            <strong>予測取得者:</strong> 
+                            ${result.recommended ? 
+                                `${result.recommended.player.name} (${result.recommended.position}) - ${result.recommended.reason}` : 
+                                '該当者なし'
+                            }
                         </div>
                         
                         <div class="allocation-choice">
-                            <label>取得者:</label>
-                            <select id="allocation-${slot}" onchange="updateAllocationChoice('${slot}')">
+                            <label>実際の取得者:</label>
+                            <select id="allocation-${itemKey}" onchange="updateAllocationChoice('${itemKey}')">
                                 <option value="">選択してください</option>
                                 ${result.candidates.map(candidate => `
                                     <option value="${candidate.position}" 
@@ -2572,17 +2767,51 @@
                                         ${candidate.player.name} (${candidate.position}) - ${candidate.reason}
                                     </option>
                                 `).join('')}
-                                <option value="discard">破棄/ロット無し</option>
+                                <option value="フリロ">フリロ</option>
+                                <option value="discard">破棄</option>
                             </select>
                         </div>
                         
-                        <div class="candidates-detail">
-                            <strong>候補者詳細:</strong>
-                            ${result.candidates.length > 0 ? result.candidates.map(candidate => `
-                                <div class="candidate-item">
-                                    ${candidate.player.name} (${candidate.position}): ${candidate.reason} (優先度: ${candidate.priority})
+                        <div class="judgment-details">
+                            <div class="judgment-section">
+                                <button class="judgment-toggle" onclick="toggleJudgment('${itemKey}')">
+                                    判定詳細を表示 ▼
+                                </button>
+                                <div id="judgment-${itemKey}" class="judgment-content" style="display: none;">
+                                    ${needCandidates.length > 0 ? `
+                                        <div class="need-section">
+                                            <h6>🔥 Need (${needCandidates.length}人)</h6>
+                                            ${needCandidates.map(candidate => `
+                                                <div class="candidate-item need">
+                                                    ${candidate.player.name} (${candidate.position}): ${candidate.reason} (${candidate.priority})
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    ` : ''}
+                                    
+                                    ${greedCandidates.length > 0 ? `
+                                        <div class="greed-section">
+                                            <h6>⭐ Greed (${greedCandidates.length}人)</h6>
+                                            ${greedCandidates.map(candidate => `
+                                                <div class="candidate-item greed">
+                                                    ${candidate.player.name} (${candidate.position}): ${candidate.reason} (${candidate.priority})
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    ` : ''}
+                                    
+                                    ${passCandidates.length > 0 ? `
+                                        <div class="pass-section">
+                                            <h6>❌ Pass (${passCandidates.length}人)</h6>
+                                            ${passCandidates.map(candidate => `
+                                                <div class="candidate-item pass">
+                                                    ${candidate.player.name} (${candidate.position}): ${candidate.reason}
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    ` : ''}
                                 </div>
-                            `).join('') : '<div class="no-candidates">該当者なし</div>'}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -2608,6 +2837,37 @@
             allocationResults.scrollIntoView({ behavior: 'smooth' });
         }
         
+        // 直ドロップ武器更新
+        function updateDirectWeapon() {
+            const weaponSelect = document.getElementById('directWeaponSelect');
+            const selectedWeapon = weaponSelect.value;
+            
+            if (selectedWeapon) {
+                // 直ドロップ武器の分配を再計算
+                const drops = getLayerDrops(4);
+                const weaponDrop = drops.find(d => d.type === 'direct_weapon');
+                if (weaponDrop) {
+                    weaponDrop.weapon = selectedWeapon;
+                    const allocationResults = calculateAllocation(4, drops);
+                    displayAllocationResults(4, allocationResults);
+                }
+            }
+        }
+        
+        // 判定詳細の表示切り替え
+        function toggleJudgment(itemKey) {
+            const content = document.getElementById(`judgment-${itemKey}`);
+            const button = content.previousElementSibling;
+            
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                button.textContent = '判定詳細を隠す ▲';
+            } else {
+                content.style.display = 'none';
+                button.textContent = '判定詳細を表示 ▼';
+            }
+        }
+        
         // アイテムタイプラベル
         function getItemTypeLabel(type) {
             const labels = {
@@ -2630,21 +2890,44 @@
             try {
                 const allocations = [];
                 const selects = document.querySelectorAll('[id^="allocation-"]');
+                const allocationId = Date.now().toString();
                 
                 selects.forEach(select => {
-                    const slot = select.id.replace('allocation-', '');
+                    const itemKey = select.id.replace('allocation-', '');
                     const position = select.value;
                     
-                    if (position && position !== 'discard') {
+                    if (position && position !== 'discard' && position !== 'フリロ') {
                         const player = appData.players[currentRaidTier.id][position];
-                        allocations.push({
-                            slot,
-                            position,
-                            playerName: player.name,
-                            timestamp: new Date().toISOString(),
-                            layer,
-                            week: getCurrentWeek()
-                        });
+                        const drops = getLayerDrops(layer);
+                        const drop = drops.find(d => d.slot === itemKey || d.name.includes(itemKey));
+                        
+                        if (drop && player) {
+                            const allocation = {
+                                id: `${allocationId}-${itemKey}`,
+                                layer: layer,
+                                slot: drop.slot,
+                                position: position,
+                                playerName: player.name,
+                                characterName: player.characterName || '',
+                                job: player.job,
+                                equipment: {
+                                    name: drop.name,
+                                    slot: drop.slot,
+                                    itemLevel: drop.itemLevel
+                                },
+                                timestamp: new Date().toISOString(),
+                                week: getCurrentWeek(),
+                                raidTier: currentRaidTier.name,
+                                // 詳細情報
+                                itemType: drop.type,
+                                equipmentName: drop.name,
+                                equipmentSlot: drop.slot,
+                                winner: position,
+                                winnerName: player.name
+                            };
+                            
+                            allocations.push(allocation);
+                        }
                     }
                 });
                 
@@ -2663,12 +2946,24 @@
                     
                     // プレイヤーの装備状況更新
                     const player = appData.players[currentRaidTier.id][allocation.position];
-                    player.currentEquipment[allocation.slot] = allocation.layer;
-                    player.allocationHistory = player.allocationHistory || [];
-                    player.allocationHistory.push(allocation);
-                    
-                    // 動的優先度更新
-                    player.dynamicPriority = (player.dynamicPriority || 0) + getItemPriority(allocation.slot);
+                    if (player) {
+                        // 現在装備の更新
+                        if (!player.currentEquipment) player.currentEquipment = {};
+                        player.currentEquipment[allocation.slot] = true;
+                        
+                        // 分配履歴の更新
+                        if (!player.allocationHistory) player.allocationHistory = [];
+                        player.allocationHistory.push({
+                            equipment: allocation.equipment,
+                            timestamp: allocation.timestamp,
+                            week: allocation.week,
+                            layer: allocation.layer
+                        });
+                        
+                        // 動的優先度更新
+                        const itemPriority = getItemPriority(allocation.slot);
+                        player.dynamicPriority = (player.dynamicPriority || 0) + itemPriority;
+                    }
                 });
                 
                 // Supabaseに保存

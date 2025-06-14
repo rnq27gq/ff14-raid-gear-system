@@ -628,6 +628,61 @@
             background-color: #f8d7da;
             color: #721c24;
         }
+        
+        /* フォーム用スタイル */
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .primary-btn {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .primary-btn:hover {
+            background: linear-gradient(135deg, #229954 0%, #1e8449 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+        }
+        
+        .secondary-btn {
+            background-color: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .secondary-btn:hover {
+            background-color: #7f8c8d;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(149, 165, 166, 0.3);
+        }
         .nav-button {
             background-color: #5a9fd4;
             color: white;
@@ -1770,18 +1825,96 @@
             `;
         }
         
-        // 新しいレイドティア作成
-        async function createNewTier() {
-            const name = prompt('レイドティア名を入力してください（例：7.1 アークガーディアン零式）:');
-            if (!name) return;
+        // 新しいレイド作成画面を表示
+        function createNewTier() {
+            showCreateTierForm();
+        }
+        
+        // レイド作成フォーム表示
+        function showCreateTierForm() {
+            const content = document.getElementById('content');
             
-            const description = prompt('説明を入力してください（省略可）:') || '零式レイド';
+            content.innerHTML = `
+                <div class="navigation-top-left">
+                    <button class="nav-button" onclick="showMainDashboard()">レイド選択画面に戻る</button>
+                </div>
+                
+                <h1>新しいレイドを作成</h1>
+                <h2>チーム: ${currentTeamId}</h2>
+                
+                <div class="section">
+                    <h3>レイド情報を入力してください</h3>
+                    
+                    <div class="form-grid" style="max-width: 600px;">
+                        <div class="form-group">
+                            <label for="tierName">レイド名（必須）:</label>
+                            <input type="text" id="tierName" 
+                                   placeholder="例：7.1 アークガーディアン零式" 
+                                   style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px;">
+                            <small style="color: #666; margin-top: 5px; display: block;">
+                                パッチ番号やボス名を含めると分かりやすくなります
+                            </small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="tierDescription">説明（省略可）:</label>
+                            <textarea id="tierDescription" 
+                                      placeholder="例：新パッチの零式コンテンツ、IL730装備がドロップ" 
+                                      style="width: 100%; height: 80px; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; resize: vertical;"></textarea>
+                            <small style="color: #666; margin-top: 5px; display: block;">
+                                空欄の場合は「零式レイド」が設定されます
+                            </small>
+                        </div>
+                        
+                        <div class="form-actions" style="margin-top: 30px;">
+                            <button onclick="submitCreateTier()" class="primary-btn" style="margin-right: 15px;">
+                                レイドを作成
+                            </button>
+                            <button onclick="showMainDashboard()" class="secondary-btn">
+                                キャンセル
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section" style="background-color: #f8f9fa; border-left: 4px solid #17a2b8;">
+                    <h4>💡 作成後の流れ</h4>
+                    <ol style="margin: 10px 0; padding-left: 20px;">
+                        <li>レイドを作成すると、そのレイド専用のダッシュボードに移動します</li>
+                        <li>まずは「メンバー管理」から8人のメンバー情報を登録してください</li>
+                        <li>装備方針や武器希望を設定して、装備分配を開始できます</li>
+                    </ol>
+                </div>
+            `;
+            
+            // フォーカスを名前入力欄に設定
+            setTimeout(() => {
+                const nameInput = document.getElementById('tierName');
+                if (nameInput) nameInput.focus();
+            }, 100);
+        }
+        
+        // レイド作成実行
+        async function submitCreateTier() {
+            const nameInput = document.getElementById('tierName');
+            const descriptionInput = document.getElementById('tierDescription');
+            
+            const name = nameInput.value.trim();
+            const description = descriptionInput.value.trim() || '零式レイド';
+            
+            if (!name) {
+                showError('レイド名を入力してください。');
+                nameInput.focus();
+                return;
+            }
             
             try {
+                showMessage('レイドを作成中...', 'info');
+                
                 const tierId = 'tier_' + Date.now();
                 const tierData = {
-                    name: name.trim(),
-                    description: description.trim(),
+                    name: name,
+                    description: description,
                     createdAt: new Date().toISOString()
                 };
                 
@@ -1803,14 +1936,15 @@
                 if (!appData.raidTiers) appData.raidTiers = {};
                 appData.raidTiers[tierId] = tierData;
                 
-                showSuccess(`レイドティア「${name}」を作成しました`);
+                showSuccess(`レイド「${name}」を作成しました`);
                 
-                // 表示更新
-                displayRaidTiers();
+                // 作成したレイドを選択してダッシュボードに移動
+                currentRaidTier = { id: tierId, ...tierData };
+                showTierDashboard();
                 
             } catch (error) {
-                console.error('ティア作成エラー:', error);
-                showError('レイドティアの作成に失敗しました: ' + error.message);
+                console.error('レイド作成エラー:', error);
+                showError('レイドの作成に失敗しました: ' + error.message);
             }
         }
         

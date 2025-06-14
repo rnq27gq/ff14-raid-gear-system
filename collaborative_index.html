@@ -2126,9 +2126,19 @@
                     Object.entries(players).forEach(([position, player]) => {
                         const policy = player.equipmentPolicy[item.slot];
                         
-                        // 現在装備状況を確認
+                        // 現在装備状況を確認（currentEquipmentまたは分配履歴から）
                         const currentEquipment = player.currentEquipment && player.currentEquipment[item.slot];
-                        const hasEquipment = currentEquipment && currentEquipment.itemLevel;
+                        const hasEquipmentFromCurrentEquipment = currentEquipment && currentEquipment.itemLevel;
+                        
+                        // 分配履歴からも装備取得状況を確認
+                        const allocations = data.allocations[currentRaidTier.id] || [];
+                        const hasEquipmentFromHistory = allocations.some(allocation => 
+                            allocation.winner && 
+                            allocation.winner.position === position && 
+                            allocation.equipment.slot === item.slot
+                        );
+                        
+                        const hasEquipment = hasEquipmentFromCurrentEquipment || hasEquipmentFromHistory;
                         
                         // 装備方針と現在装備状況に基づく判定
                         if ((policy === '零式' || !policy) && !hasEquipment) {
@@ -2374,6 +2384,16 @@
                         
                         // 累積的優先度システムのため、履歴は全て保持
                         // （全員に装備を行き渡らせることが目的）
+                        
+                        // 現在装備状況を更新
+                        if (!winnerPlayer.currentEquipment) {
+                            winnerPlayer.currentEquipment = {};
+                        }
+                        winnerPlayer.currentEquipment[allocation.equipment.slot] = {
+                            itemLevel: allocation.equipment.itemLevel || 730,
+                            name: allocation.equipment.name,
+                            timestamp: allocation.timestamp
+                        };
                     }
                 }
             });
@@ -2475,9 +2495,19 @@
                         Object.entries(players).forEach(([position, player]) => {
                             const policy = player.equipmentPolicy[item.slot];
                             
-                            // 現在装備状況を確認
+                            // 現在装備状況を確認（currentEquipmentまたは分配履歴から）
                             const currentEquipment = player.currentEquipment && player.currentEquipment[item.slot];
-                            const hasEquipment = currentEquipment && currentEquipment.itemLevel;
+                            const hasEquipmentFromCurrentEquipment = currentEquipment && currentEquipment.itemLevel;
+                            
+                            // 分配履歴からも装備取得状況を確認
+                            const allocations = data.allocations[currentRaidTier.id] || [];
+                            const hasEquipmentFromHistory = allocations.some(allocation => 
+                                allocation.winner && 
+                                allocation.winner.position === position && 
+                                allocation.equipment.slot === item.slot
+                            );
+                            
+                            const hasEquipment = hasEquipmentFromCurrentEquipment || hasEquipmentFromHistory;
                             
                             // 装備方針と現在装備状況に基づく判定
                             if ((policy === '零式' || !policy) && !hasEquipment) {

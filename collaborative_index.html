@@ -1298,12 +1298,31 @@
         // ローカルストレージ関数
         function getData() {
             const data = localStorage.getItem('ff14RaidData');
-            return data ? JSON.parse(data) : {
+            const parsedData = data ? JSON.parse(data) : {
                 raidTiers: [],
                 activeRaidTierId: null,
                 players: {},
                 allocations: {}
             };
+            
+            // 既存データのマイグレーション処理
+            if (parsedData.players) {
+                Object.keys(parsedData.players).forEach(tierId => {
+                    const tierPlayers = parsedData.players[tierId];
+                    Object.keys(tierPlayers).forEach(position => {
+                        const player = tierPlayers[position];
+                        // 新しいフィールドがない場合は初期化
+                        if (player.dynamicPriority === undefined) {
+                            player.dynamicPriority = 0;
+                        }
+                        if (!player.allocationHistory) {
+                            player.allocationHistory = [];
+                        }
+                    });
+                });
+            }
+            
+            return parsedData;
         }
 
         function saveData(data) {
@@ -1665,7 +1684,9 @@
                     position: position,
                     equipmentPolicy: existingPlayer.equipmentPolicy || {},
                     weaponWishes: existingPlayer.weaponWishes || [],
-                    currentEquipment: existingPlayer.currentEquipment || {}
+                    currentEquipment: existingPlayer.currentEquipment || {},
+                    dynamicPriority: existingPlayer.dynamicPriority || 0,
+                    allocationHistory: existingPlayer.allocationHistory || []
                 };
             }
             
@@ -2110,14 +2131,14 @@
                                 position: position,
                                 name: player.name,
                                 job: player.job,
-                                priority: getPriority(player.job)
+                                priority: getDynamicPriority(position, player.job)
                             });
                         } else if (policy === 'トームストーン' && item.type !== 'material' && item.type !== 'mount') {
                             greedPlayers.push({
                                 position: position,
                                 name: player.name,
                                 job: player.job,
-                                priority: getPriority(player.job)
+                                priority: getDynamicPriority(position, player.job)
                             });
                         } else {
                             passPlayers.push({
@@ -2326,6 +2347,38 @@
                 }
             });
             
+            // 装備取得者のプレイヤー履歴を更新
+            data.allocations[currentRaidTier.id].forEach(allocation => {
+                if (allocation.winner && allocation.winner.position !== 'フリロ') {
+                    const winnerPlayer = players[allocation.winner.position];
+                    if (winnerPlayer) {
+                        // プレイヤーの装備履歴に追加
+                        if (!winnerPlayer.allocationHistory) {
+                            winnerPlayer.allocationHistory = [];
+                        }
+                        
+                        // 同じ装備の重複を避けるため、同週同層の記録があるかチェック
+                        const isDuplicate = winnerPlayer.allocationHistory.some(hist => 
+                            hist.week === allocation.week && 
+                            hist.layer === allocation.layer && 
+                            hist.equipment.slot === allocation.equipment.slot
+                        );
+                        
+                        if (!isDuplicate) {
+                            winnerPlayer.allocationHistory.push({
+                                equipment: allocation.equipment,
+                                timestamp: allocation.timestamp,
+                                week: allocation.week,
+                                layer: allocation.layer
+                            });
+                        }
+                        
+                        // 累積的優先度システムのため、履歴は全て保持
+                        // （全員に装備を行き渡らせることが目的）
+                    }
+                }
+            });
+            
             saveData(data);
             
             alert(`${layer}層の装備分配を記録しました。`);
@@ -2428,14 +2481,14 @@
                                     position: position,
                                     name: player.name,
                                     job: player.job,
-                                    priority: getPriority(player.job)
+                                    priority: getDynamicPriority(position, player.job)
                                 });
                             } else if (policy === 'トームストーン' && item.type !== 'material' && item.type !== 'mount') {
                                 greedPlayers.push({
                                     position: position,
                                     name: player.name,
                                     job: player.job,
-                                    priority: getPriority(player.job)
+                                    priority: getDynamicPriority(position, player.job)
                                 });
                             } else {
                                 passPlayers.push({
@@ -2661,6 +2714,56 @@
             return priorities[job] || 5;
         }
 
+        // 動的優先度計算（装備取得履歴を考慮）
+        function getDynamicPriority(playerPosition, job) {
+            const data = getData();
+            const players = data.players[currentRaidTier.id] || {};
+            const player = players[playerPosition];
+            
+            if (!player) {
+                return getPriority(job);
+            }
+            
+            const basePriority = getPriority(job);
+            
+            // 装備取得履歴による累積的な優先度調整
+            let priorityAdjustment = 0;
+            
+            if (player.allocationHistory && player.allocationHistory.length > 0) {
+                // 各取得アイテムに対して累積的にペナルティを加算
+                player.allocationHistory.forEach(allocation => {
+                    // フリロは優先度調整に影響しない
+                    if (allocation.winner && allocation.winner.position === 'フリロ') {
+                        return;
+                    }
+                    
+                    // 装備の重要度による基本ペナルティ
+                    let basePenalty = 2;
+                    if (allocation.equipment.slot === '武器') {
+                        basePenalty = 3; // 武器は重要度が高い
+                    } else if (['頭', '胴', '脚'].includes(allocation.equipment.slot)) {
+                        basePenalty = 2; // 主要防具
+                    } else if (['マウント', '硬化薬', '強化繊維', '武器石'].includes(allocation.equipment.slot)) {
+                        basePenalty = 1; // 特殊アイテム
+                    } else {
+                        basePenalty = 1; // アクセサリーなど
+                    }
+                    
+                    // 累積的にペナルティを加算（時間減衰なし）
+                    priorityAdjustment += basePenalty;
+                });
+            }
+            
+            // プレイヤーの動的優先度を保存
+            const finalPriority = basePriority + priorityAdjustment;
+            if (player.dynamicPriority !== priorityAdjustment) {
+                player.dynamicPriority = priorityAdjustment;
+                saveData(data);
+            }
+            
+            return finalPriority;
+        }
+
         function getCurrentWeekString() {
             const now = new Date();
             const startOfWeek = new Date(now);
@@ -2729,14 +2832,14 @@
                 // テスト用メンバーデータ
                 if (!data.players) data.players = {};
                 data.players[testTier.id] = {
-                    MT: { name: 'テストMT', characterName: 'サンプルタンク', job: 'ナイト', position: 'MT', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {} },
-                    ST: { name: 'テストST', characterName: 'サンプル戦士', job: '戦士', position: 'ST', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {} },
-                    H1: { name: 'テストH1', characterName: 'サンプル白', job: '白魔道士', position: 'H1', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {} },
-                    H2: { name: 'テストH2', characterName: 'サンプル学者', job: '学者', position: 'H2', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {} },
-                    D1: { name: 'テストD1', characterName: 'サンプル竜騎士', job: '竜騎士', position: 'D1', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {} },
-                    D2: { name: 'テストD2', characterName: 'サンプル忍者', job: '忍者', position: 'D2', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {} },
-                    D3: { name: 'テストD3', characterName: 'サンプル黒魔', job: '黒魔道士', position: 'D3', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {} },
-                    D4: { name: 'テストD4', characterName: 'サンプル詩人', job: '吟遊詩人', position: 'D4', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {} }
+                    MT: { name: 'テストMT', characterName: 'サンプルタンク', job: 'ナイト', position: 'MT', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {}, dynamicPriority: 0, allocationHistory: [] },
+                    ST: { name: 'テストST', characterName: 'サンプル戦士', job: '戦士', position: 'ST', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {}, dynamicPriority: 0, allocationHistory: [] },
+                    H1: { name: 'テストH1', characterName: 'サンプル白', job: '白魔道士', position: 'H1', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {}, dynamicPriority: 0, allocationHistory: [] },
+                    H2: { name: 'テストH2', characterName: 'サンプル学者', job: '学者', position: 'H2', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {}, dynamicPriority: 0, allocationHistory: [] },
+                    D1: { name: 'テストD1', characterName: 'サンプル竜騎士', job: '竜騎士', position: 'D1', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {}, dynamicPriority: 0, allocationHistory: [] },
+                    D2: { name: 'テストD2', characterName: 'サンプル忍者', job: '忍者', position: 'D2', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {}, dynamicPriority: 0, allocationHistory: [] },
+                    D3: { name: 'テストD3', characterName: 'サンプル黒魔', job: '黒魔道士', position: 'D3', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {}, dynamicPriority: 0, allocationHistory: [] },
+                    D4: { name: 'テストD4', characterName: 'サンプル詩人', job: '吟遊詩人', position: 'D4', equipmentPolicy: {}, weaponWishes: [], currentEquipment: {}, dynamicPriority: 0, allocationHistory: [] }
                 };
                 
                 saveData(data);

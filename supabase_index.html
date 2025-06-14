@@ -48,6 +48,41 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
+        /* ダッシュボード用スタイル */
+        .navigation-top-left {
+            display: flex;
+            justify-content: flex-start;
+            margin: 10px 0 20px 0;
+        }
+        
+        .dashboard-layer-button {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 10px;
+            min-width: 120px;
+        }
+        
+        .dashboard-layer-button:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #1f618d 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .dashboard-layer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
         .supabase-status {
             display: flex;
             align-items: center;
@@ -509,6 +544,37 @@
             gap: 15px;
             margin: 20px 0;
             flex-wrap: wrap;
+        }
+        
+        .navigation-top-left {
+            display: flex;
+            justify-content: flex-start;
+            margin: 10px 0 20px 0;
+        }
+        
+        .dashboard-layer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .dashboard-layer-button {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .dashboard-layer-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(52, 152, 219, 0.3);
         }
         .nav-button {
             background-color: #5a9fd4;
@@ -1533,7 +1599,7 @@
                 <h2>チーム: ${currentTeamId}</h2>
                 
                 <div class="section">
-                    <h3>🎮 レイドティア選択</h3>
+                    <h3>レイドティア選択</h3>
                     <div class="tier-list" id="tierList">
                         <!-- レイドティア一覧がここに表示されます -->
                     </div>
@@ -1544,7 +1610,7 @@
                 </div>
                 
                 <div class="section">
-                    <h3>🔧 管理機能</h3>
+                    <h3>管理機能</h3>
                     <div class="navigation">
                         <button class="nav-button" onclick="showSystemSettings()">システム設定</button>
                         <button class="nav-button" onclick="exportAllData()">データエクスポート</button>
@@ -1553,13 +1619,13 @@
                 </div>
                 
                 <div class="section" style="background-color: #e8f5e8; border-color: #27ae60;">
-                    <h3>✅ 実装完了機能</h3>
+                    <h3>実装完了機能</h3>
                     <ul style="margin: 10px 0; padding-left: 20px;">
-                        <li>✅ Supabase連携・認証システム</li>
-                        <li>✅ チーム別データ管理</li>
-                        <li>✅ リアルタイムデータ同期</li>
-                        <li>🔄 レイドティア管理（実装中）</li>
-                        <li>🔄 プレイヤー・装備管理（実装中）</li>
+                        <li>Supabase連携・認証システム</li>
+                        <li>チーム別データ管理</li>
+                        <li>リアルタイムデータ同期</li>
+                        <li>レイドティア管理</li>
+                        <li>プレイヤー・装備管理</li>
                     </ul>
                 </div>
             `;
@@ -1617,30 +1683,37 @@
             const content = document.getElementById('content');
             
             content.innerHTML = `
+                <div class="navigation-top-left">
+                    <button class="nav-button" onclick="showMainDashboard()">ダッシュボードに戻る</button>
+                </div>
+                
                 <h1>${currentRaidTier.name}</h1>
                 <h2>チーム: ${currentTeamId}</h2>
                 
                 <div class="section">
+                    <h3>装備分配</h3>
+                    <div class="dashboard-layer-grid">
+                        <button class="dashboard-layer-button" onclick="showLayerAllocation(1)">1層</button>
+                        <button class="dashboard-layer-button" onclick="showLayerAllocation(2)">2層</button>
+                        <button class="dashboard-layer-button" onclick="showLayerAllocation(3)">3層</button>
+                        <button class="dashboard-layer-button" onclick="showLayerAllocation(4)">4層</button>
+                    </div>
+                </div>
+                
+                <div class="section">
                     <div class="navigation">
-                        <button class="nav-button" onclick="showMainDashboard()">ダッシュボードに戻る</button>
                         <button class="nav-button" onclick="showPlayerManagement()">メンバー管理</button>
-                        <button class="nav-button" onclick="showEquipmentAllocation()">装備分配</button>
                         <button class="nav-button" onclick="showStatistics()">統計情報</button>
                         <button class="nav-button" onclick="showAllocationHistory()">配布履歴</button>
                     </div>
                 </div>
                 
                 <div class="section">
-                    <h3>📊 ティア情報</h3>
+                    <h3>ティア情報</h3>
                     <p><strong>レイドティア:</strong> ${currentRaidTier.name}</p>
                     <p><strong>説明:</strong> ${currentRaidTier.description || '零式レイド'}</p>
                     <p><strong>登録メンバー:</strong> ${Object.keys(appData.players[currentRaidTier.id] || {}).length}人</p>
                     <p><strong>配布履歴:</strong> ${(appData.allocations[currentRaidTier.id] || []).length}件</p>
-                </div>
-                
-                <div class="section">
-                    <h3>🎯 次のステップ</h3>
-                    <p>まずは「メンバー管理」から8人のメンバー情報を登録してください。</p>
                 </div>
             `;
         }
@@ -2460,20 +2533,18 @@
             }
             
             content.innerHTML = `
+                <div class="navigation-top-left">
+                    <button class="nav-button" onclick="showTierDashboard()">レイドダッシュボードに戻る</button>
+                </div>
+                
                 <h1>装備分配システム</h1>
                 <h2>${currentRaidTier.name}</h2>
-                
-                <div class="section">
-                    <div class="navigation">
-                        <button class="nav-button" onclick="showTierDashboard()">レイドダッシュボードに戻る</button>
-                    </div>
-                </div>
                 
                 <div class="section">
                     <h3>層を選択して装備分配を実行</h3>
                     <div class="layer-grid">
                         <div class="layer-card" onclick="processLayerAllocation(1)">
-                            <h4>1層: 邂逅編</h4>
+                            <h4>1層</h4>
                             <p>アクセサリー（耳・首・腕・指）</p>
                             <div class="layer-stats">
                                 登録プレイヤー: ${playerCount}人
@@ -2481,7 +2552,7 @@
                         </div>
                         
                         <div class="layer-card" onclick="processLayerAllocation(2)">
-                            <h4>2層: 邂逅編</h4>
+                            <h4>2層</h4>
                             <p>防具（頭・手・足）+ 武器石・硬化薬</p>
                             <div class="layer-stats">
                                 登録プレイヤー: ${playerCount}人
@@ -2489,7 +2560,7 @@
                         </div>
                         
                         <div class="layer-card" onclick="processLayerAllocation(3)">
-                            <h4>3層: 邂逅編</h4>
+                            <h4>3層</h4>
                             <p>防具（胴・脚）+ 強化薬・強化繊維</p>
                             <div class="layer-stats">
                                 登録プレイヤー: ${playerCount}人
@@ -2497,7 +2568,7 @@
                         </div>
                         
                         <div class="layer-card" onclick="processLayerAllocation(4)">
-                            <h4>4層: 邂逅編</h4>
+                            <h4>4層</h4>
                             <p>胴装備 + 武器箱・直ドロップ武器</p>
                             <div class="layer-stats">
                                 登録プレイヤー: ${playerCount}人
@@ -2537,28 +2608,28 @@
         function getLayerDrops(layer) {
             const drops = {
                 1: [
-                    { name: '耳装備', slot: '耳', type: 'equipment', itemLevel: 'i730' },
-                    { name: '首装備', slot: '首', type: 'equipment', itemLevel: 'i730' },
-                    { name: '腕装備', slot: '腕', type: 'equipment', itemLevel: 'i730' },
-                    { name: '指装備', slot: '指', type: 'equipment', itemLevel: 'i730' }
+                    { name: '耳装備', slot: '耳', type: 'equipment', itemLevel: '' },
+                    { name: '首装備', slot: '首', type: 'equipment', itemLevel: '' },
+                    { name: '腕装備', slot: '腕', type: 'equipment', itemLevel: '' },
+                    { name: '指装備', slot: '指', type: 'equipment', itemLevel: '' }
                 ],
                 2: [
-                    { name: '頭装備', slot: '頭', type: 'equipment', itemLevel: 'i730' },
-                    { name: '手装備', slot: '手', type: 'equipment', itemLevel: 'i730' },
-                    { name: '足装備', slot: '足', type: 'equipment', itemLevel: 'i730' },
+                    { name: '頭装備', slot: '頭', type: 'equipment', itemLevel: '' },
+                    { name: '手装備', slot: '手', type: 'equipment', itemLevel: '' },
+                    { name: '足装備', slot: '足', type: 'equipment', itemLevel: '' },
                     { name: '武器石', slot: '武器石', type: 'material', itemLevel: '' },
                     { name: '硬化薬', slot: '硬化薬', type: 'material', itemLevel: '' }
                 ],
                 3: [
-                    { name: '胴装備', slot: '胴', type: 'equipment', itemLevel: 'i730' },
-                    { name: '脚装備', slot: '脚', type: 'equipment', itemLevel: 'i730' },
+                    { name: '胴装備', slot: '胴', type: 'equipment', itemLevel: '' },
+                    { name: '脚装備', slot: '脚', type: 'equipment', itemLevel: '' },
                     { name: '強化薬', slot: '強化薬', type: 'material', itemLevel: '' },
                     { name: '強化繊維', slot: '強化繊維', type: 'material', itemLevel: '' }
                 ],
                 4: [
-                    { name: '胴装備', slot: '胴', type: 'equipment', itemLevel: 'i730' },
-                    { name: '武器箱', slot: '武器箱', type: 'weapon_box', itemLevel: 'i730' },
-                    { name: '直ドロップ武器', slot: '武器', type: 'direct_weapon', itemLevel: 'i730', weapon: null }
+                    { name: '胴装備', slot: '胴', type: 'equipment', itemLevel: '' },
+                    { name: '武器箱', slot: '武器箱', type: 'weapon_box', itemLevel: '' },
+                    { name: '直ドロップ武器', slot: '武器', type: 'direct_weapon', itemLevel: '', weapon: null }
                 ]
             };
             
@@ -2780,7 +2851,7 @@
                                 <div id="judgment-${itemKey}" class="judgment-content" style="display: none;">
                                     ${needCandidates.length > 0 ? `
                                         <div class="need-section">
-                                            <h6>🔥 Need (${needCandidates.length}人)</h6>
+                                            <h6>Need (${needCandidates.length}人)</h6>
                                             ${needCandidates.map(candidate => `
                                                 <div class="candidate-item need">
                                                     ${candidate.player.name} (${candidate.position}): ${candidate.reason} (${candidate.priority})
@@ -2791,7 +2862,7 @@
                                     
                                     ${greedCandidates.length > 0 ? `
                                         <div class="greed-section">
-                                            <h6>⭐ Greed (${greedCandidates.length}人)</h6>
+                                            <h6>Greed (${greedCandidates.length}人)</h6>
                                             ${greedCandidates.map(candidate => `
                                                 <div class="candidate-item greed">
                                                     ${candidate.player.name} (${candidate.position}): ${candidate.reason} (${candidate.priority})
@@ -2802,7 +2873,7 @@
                                     
                                     ${passCandidates.length > 0 ? `
                                         <div class="pass-section">
-                                            <h6>❌ Pass (${passCandidates.length}人)</h6>
+                                            <h6>Pass (${passCandidates.length}人)</h6>
                                             ${passCandidates.map(candidate => `
                                                 <div class="candidate-item pass">
                                                     ${candidate.player.name} (${candidate.position}): ${candidate.reason}
@@ -3168,7 +3239,7 @@
                 </div>
                 
                 <div class="section">
-                    <h3>🔍 フィルター</h3>
+                    <h3>フィルター</h3>
                     <div class="filter-controls">
                         <div class="filter-group">
                             <label>層:</label>
@@ -3219,7 +3290,7 @@
                 </div>
                 
                 <div class="section">
-                    <h3>📋 分配履歴 (${allocations.length}件)</h3>
+                    <h3>分配履歴 (${allocations.length}件)</h3>
                     <div id="historyTable">
                         ${generateHistoryTable(allocations, players)}
                     </div>
@@ -3243,7 +3314,6 @@
                         <div class="history-cell">層</div>
                         <div class="history-cell">装備部位</div>
                         <div class="history-cell">取得者</div>
-                        <div class="history-cell">週</div>
                     </div>
                     ${sortedAllocations.map(allocation => {
                         const player = players[allocation.position];
@@ -3254,7 +3324,6 @@
                                 <div class="history-cell">${allocation.layer}層</div>
                                 <div class="history-cell">${allocation.slot}</div>
                                 <div class="history-cell">${player ? player.name : allocation.playerName} (${allocation.position})</div>
-                                <div class="history-cell">第${allocation.week}週</div>
                             </div>
                         `;
                     }).join('')}
@@ -3283,7 +3352,7 @@
             
             // フィルター結果の件数を更新
             const sectionTitle = document.querySelector('h3');
-            sectionTitle.textContent = `📋 分配履歴 (${filteredAllocations.length}件)`;
+            sectionTitle.textContent = `分配履歴 (${filteredAllocations.length}件)`;
         }
         
         // 全フィルタークリア

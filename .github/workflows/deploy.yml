@@ -26,16 +26,27 @@ jobs:
       uses: actions/configure-pages@v4
       
     - name: Replace Supabase credentials
+      env:
+        SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
       run: |
-        # HTMLファイル内のプレースホルダーを環境変数で置換
-        sed -i "s|SUPABASE_ANON_KEY: null|SUPABASE_ANON_KEY: '${{ secrets.SUPABASE_ANON_KEY }}'|g" supabase_index.html
+        # デバッグ: Secretsが設定されているか確認
+        if [ -z "$SUPABASE_ANON_KEY" ]; then
+          echo "❌ GitHub Secret SUPABASE_ANON_KEY が設定されていません"
+          echo "リポジトリ Settings → Secrets and variables → Actions で設定してください"
+          exit 1
+        fi
         
-        # 置換確認（実際のキーは表示せず、置換されたかのみ確認）
+        echo "✅ GitHub Secret が確認されました"
+        
+        # HTMLファイル内のプレースホルダーを置換
+        sed -i "s|SUPABASE_ANON_KEY: null|SUPABASE_ANON_KEY: '${SUPABASE_ANON_KEY}'|g" supabase_index.html
+        
+        # 置換確認
         if grep -q "SUPABASE_ANON_KEY: 'eyJ" supabase_index.html; then
           echo "✅ Supabase credentials replacement successful"
         else
           echo "❌ Supabase credentials replacement failed"
-          echo "Current content around SUPABASE_ANON_KEY:"
+          echo "置換後の内容:"
           grep -A 2 -B 2 "SUPABASE_ANON_KEY" supabase_index.html
           exit 1
         fi

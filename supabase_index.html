@@ -2584,6 +2584,32 @@
             `;
         }
         
+        // 直接層別分配を実行（ダッシュボードから呼び出し）
+        async function showLayerAllocation(layer) {
+            // プレイヤーデータの確認
+            const players = appData.players[currentRaidTier.id] || {};
+            const playerCount = Object.keys(players).length;
+            
+            if (playerCount === 0) {
+                showError('メンバー情報が登録されていません。まずメンバー管理から設定してください。');
+                return;
+            }
+            
+            if (playerCount < 8) {
+                if (!confirm(`メンバーが${playerCount}人しか登録されていません。分配を続行しますか？`)) {
+                    return;
+                }
+            }
+            
+            // 装備分配画面を表示してから該当層の処理を実行
+            showEquipmentAllocation();
+            
+            // 少し待ってから分配処理を実行（DOM更新のため）
+            setTimeout(() => {
+                processLayerAllocation(layer);
+            }, 100);
+        }
+        
         // 層別装備分配処理
         async function processLayerAllocation(layer) {
             try {

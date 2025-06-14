@@ -763,19 +763,39 @@
         
         .priority-item {
             background-color: white;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            margin: 8px 0;
-            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            margin: 10px 0;
+            padding: 15px;
             display: flex;
             align-items: center;
-            cursor: move;
+            cursor: grab;
             transition: all 0.3s ease;
+            user-select: none;
+            position: relative;
         }
         
         .priority-item:hover {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+            border-color: #007bff;
+        }
+        
+        .priority-item:active {
+            cursor: grabbing;
+        }
+        
+        .priority-item.dragging {
+            opacity: 0.7;
+            transform: rotate(5deg);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+            z-index: 1000;
+        }
+        
+        .priority-item.drag-over {
+            border-color: #28a745;
+            background-color: #f8fff8;
+            transform: scale(1.02);
         }
         
         .priority-rank {
@@ -819,13 +839,23 @@
         }
         
         .drag-handle {
-            color: #adb5bd;
-            font-size: 18px;
+            color: #007bff;
+            font-size: 24px;
             cursor: grab;
+            transition: all 0.2s ease;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        
+        .drag-handle:hover {
+            color: #0056b3;
+            background-color: rgba(0, 123, 255, 0.1);
+            transform: scale(1.1);
         }
         
         .drag-handle:active {
             cursor: grabbing;
+            transform: scale(0.95);
         }
         
         .priority-actions {
@@ -2104,13 +2134,13 @@
                 return;
             }
             
-            // 現在の優先順位を取得（デフォルト: D1→MT→ST→H1→H2→D2→D3→D4）
-            const defaultPriority = ['D1', 'MT', 'ST', 'H1', 'H2', 'D2', 'D3', 'D4'];
+            // 現在の優先順位を取得（デフォルト: D1→D2→D3→D4→MT→ST→H1→H2）
+            const defaultPriority = ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
             const currentPriority = appData.settings?.positionPriority || defaultPriority;
             
             content.innerHTML = `
                 <div class="navigation-top-left">
-                    <button class="nav-button" onclick="showMainDashboard()">メインダッシュボードに戻る</button>
+                    <button class="nav-button" onclick="showTierDashboard()">ティアダッシュボードに戻る</button>
                 </div>
                 
                 <h1>ポジション間優先順位設定</h1>
@@ -2158,7 +2188,7 @@
                         <li><strong>強化薬：</strong> アクセサリーの強化に使用</li>
                         <li><strong>強化繊維：</strong> 防具の追加強化に使用</li>
                     </ul>
-                    <p><strong>注意：</strong> 装備の分配には影響しません。装備は各プレイヤーの装備方針（零式/トームストーン）に基づいて判定されます。</p>
+                    <p><strong>注意：</strong> この優先順位は装備分配と強化素材の両方に影響します。装備は装備方針（零式/トームストーン）とポジション優先順位の組み合わせで判定されます。</p>
                 </div>
             `;
             
@@ -2176,32 +2206,69 @@
             priorityList.addEventListener('dragstart', function(e) {
                 if (e.target.classList.contains('priority-item')) {
                     draggedElement = e.target;
-                    e.target.style.opacity = '0.5';
+                    e.target.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
                 }
             });
             
             priorityList.addEventListener('dragend', function(e) {
                 if (e.target.classList.contains('priority-item')) {
-                    e.target.style.opacity = '';
+                    e.target.classList.remove('dragging');
                     draggedElement = null;
+                    // 全ての drag-over クラスを削除
+                    document.querySelectorAll('.priority-item').forEach(item => {
+                        item.classList.remove('drag-over');
+                    });
                 }
             });
             
             priorityList.addEventListener('dragover', function(e) {
                 e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                
+                // ドラッグされている要素以外にホバー効果を適用
+                const closestItem = e.target.closest('.priority-item');
+                if (closestItem && closestItem !== draggedElement) {
+                    // 全ての drag-over クラスを削除
+                    document.querySelectorAll('.priority-item').forEach(item => {
+                        item.classList.remove('drag-over');
+                    });
+                    // 現在の要素に drag-over クラスを追加
+                    closestItem.classList.add('drag-over');
+                }
+            });
+            
+            priorityList.addEventListener('dragleave', function(e) {
+                const closestItem = e.target.closest('.priority-item');
+                if (closestItem && !priorityList.contains(e.relatedTarget)) {
+                    closestItem.classList.remove('drag-over');
+                }
             });
             
             priorityList.addEventListener('drop', function(e) {
                 e.preventDefault();
                 
-                if (draggedElement && e.target.classList.contains('priority-item')) {
-                    const afterElement = e.target;
+                const closestItem = e.target.closest('.priority-item');
+                if (draggedElement && closestItem && draggedElement !== closestItem) {
+                    // ドロップ位置を計算
+                    const rect = closestItem.getBoundingClientRect();
+                    const midpoint = rect.top + rect.height / 2;
                     
-                    if (draggedElement !== afterElement) {
-                        priorityList.insertBefore(draggedElement, afterElement.nextSibling);
-                        updatePriorityNumbers();
+                    if (e.clientY < midpoint) {
+                        // 上半分にドロップ - 前に挿入
+                        priorityList.insertBefore(draggedElement, closestItem);
+                    } else {
+                        // 下半分にドロップ - 後に挿入
+                        priorityList.insertBefore(draggedElement, closestItem.nextSibling);
                     }
+                    
+                    updatePriorityNumbers();
                 }
+                
+                // 全ての drag-over クラスを削除
+                document.querySelectorAll('.priority-item').forEach(item => {
+                    item.classList.remove('drag-over');
+                });
             });
         }
         
@@ -2275,7 +2342,7 @@
                 
                 <div class="section">
                     <div class="navigation">
-                        <button class="nav-button" onclick="showMainDashboard()">メインダッシュボードに戻る</button>
+                        <button class="nav-button" onclick="showTierDashboard()">ティアダッシュボードに戻る</button>
                     </div>
                 </div>
                 
@@ -2895,7 +2962,7 @@
             
             content.innerHTML = `
                 <div class="navigation-top-left">
-                    <button class="nav-button" onclick="showMainDashboard()">メインダッシュボードに戻る</button>
+                    <button class="nav-button" onclick="showTierDashboard()">ティアダッシュボードに戻る</button>
                 </div>
                 
                 <h1>装備分配システム</h1>
@@ -3037,12 +3104,12 @@
                 if (policy === '零式' && !hasEquipment) {
                     canReceive = true;
                     type = 'need';
-                    score = 1000 - (player.dynamicPriority || 0);
+                    score = 1000 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
                     reason = 'Need (零式)';
                 } else if (!hasEquipment) {
                     canReceive = true;
                     type = 'greed';
-                    score = 500 - (player.dynamicPriority || 0);
+                    score = 500 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
                     reason = 'Greed (トーム可)';
                 } else {
                     type = 'pass';
@@ -3058,7 +3125,7 @@
                 if (!hasThisMaterial) {
                     canReceive = true;
                     type = 'need';
-                    score = getMaterialPriority(player.position, drop.slot) - (player.dynamicPriority || 0);
+                    score = getPositionPriority(player.position) - (player.dynamicPriority || 0);
                     reason = 'Need (素材)';
                 } else {
                     type = 'pass';
@@ -3070,7 +3137,7 @@
                 if (!hasWeapon) {
                     canReceive = true;
                     type = 'need';
-                    score = 2000 - (player.dynamicPriority || 0);
+                    score = 2000 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
                     reason = 'Need (武器箱)';
                 } else {
                     type = 'pass';
@@ -3086,12 +3153,12 @@
                     canReceive = true;
                     type = 'need';
                     const wishIndex = weaponWishes.indexOf(weaponType);
-                    score = 3000 - (wishIndex * 100) - (player.dynamicPriority || 0);
+                    score = 3000 + getPositionPriority(player.position) - (wishIndex * 100) - (player.dynamicPriority || 0);
                     reason = `Need (第${wishIndex + 1}希望)`;
                 } else if (!hasWeapon) {
                     canReceive = true;
                     type = 'greed';
-                    score = 100 - (player.dynamicPriority || 0);
+                    score = 100 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
                     reason = 'Greed (武器)';
                 } else {
                     type = 'pass';
@@ -3102,12 +3169,17 @@
             return { canReceive, score, reason, type };
         }
         
-        // 強化素材の分配優先度取得
-        function getMaterialPriority(position, materialType) {
-            // デフォルトの分配優先度順序（設定可能にする予定）
-            const defaultOrder = ['D1', 'D2', 'D3', 'D4', 'H1', 'H2', 'MT', 'ST'];
-            const positionIndex = defaultOrder.indexOf(position);
+        // ポジション間優先順位取得（装備・素材共通）
+        function getPositionPriority(position) {
+            // 設定された優先順位を取得（デフォルト: D1D2D3D4MTSTH1H2）
+            const savedPriority = appData.settings?.positionPriority || ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
+            const positionIndex = savedPriority.indexOf(position);
             return 800 - (positionIndex * 50); // 高い順位ほど高スコア
+        }
+        
+        // 強化素材の分配優先度取得（互換性のため残す）
+        function getMaterialPriority(position, materialType) {
+            return getPositionPriority(position);
         }
         
         // 分配結果表示
@@ -3445,7 +3517,7 @@
             
             content.innerHTML = `
                 <div class="navigation-top-left">
-                    <button class="nav-button" onclick="showMainDashboard()">メインダッシュボードに戻る</button>
+                    <button class="nav-button" onclick="showTierDashboard()">ティアダッシュボードに戻る</button>
                 </div>
                 
                 <h1>統計情報</h1>
@@ -3580,7 +3652,7 @@
             
             content.innerHTML = `
                 <div class="navigation-top-left">
-                    <button class="nav-button" onclick="showMainDashboard()">メインダッシュボードに戻る</button>
+                    <button class="nav-button" onclick="showTierDashboard()">ティアダッシュボードに戻る</button>
                     <button class="nav-button" onclick="showStatistics()">編集終了</button>
                 </div>
                 
@@ -3697,7 +3769,7 @@
         }
         
         // 統計情報の変更を保存
-        function saveStatisticsChanges() {
+        async function saveStatisticsChanges() {
             const checkboxes = document.querySelectorAll('input[type="checkbox"][data-position][data-slot]');
             const currentAllocations = appData.allocations[currentRaidTier.id] || [];
             const newAllocations = [];
@@ -3742,14 +3814,19 @@
             
             // データを保存
             appData.allocations[currentRaidTier.id] = newAllocations;
-            saveToSupabase();
             
-            showSuccess('統計情報の変更を保存しました。');
-            
-            // 統計画面に戻る
-            setTimeout(() => {
-                showStatistics();
-            }, 1500);
+            try {
+                await saveDataToSupabase('allocations', appData.allocations[currentRaidTier.id]);
+                showSuccess('統計情報の変更を保存しました。');
+                
+                // 統計画面に戻る
+                setTimeout(() => {
+                    showStatistics();
+                }, 1500);
+            } catch (error) {
+                console.error('統計情報保存エラー:', error);
+                showError('統計情報の保存に失敗しました: ' + error.message);
+            }
         }
         
         // 分配履歴表示
@@ -3760,7 +3837,7 @@
             
             content.innerHTML = `
                 <div class="navigation-top-left">
-                    <button class="nav-button" onclick="showMainDashboard()">メインダッシュボードに戻る</button>
+                    <button class="nav-button" onclick="showTierDashboard()">ティアダッシュボードに戻る</button>
                 </div>
                 
                 <h1>分配履歴</h1>

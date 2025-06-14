@@ -630,6 +630,308 @@
             border-left-color: #28a745;
         }
         
+        /* 装備分配関連のスタイル */
+        .layer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .layer-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .layer-card:hover {
+            border-color: #3498db;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.2);
+        }
+        
+        .layer-card h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .layer-stats {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        
+        .allocation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .allocation-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .item-type {
+            background: #3498db;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+        
+        .allocation-choice {
+            margin: 15px 0;
+        }
+        
+        .allocation-choice select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .candidates-detail {
+            background: #e8f4fd;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .candidate-item {
+            margin: 5px 0;
+            padding: 5px;
+            background: white;
+            border-radius: 3px;
+        }
+        
+        .no-candidates {
+            color: #666;
+            font-style: italic;
+        }
+        
+        .allocation-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        
+        .confirm-btn {
+            background: #27ae60;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .confirm-btn:hover {
+            background: #2ecc71;
+        }
+        
+        .cancel-btn {
+            background: #95a5a6;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .cancel-btn:hover {
+            background: #7f8c8d;
+        }
+        
+        /* 統計関連のスタイル */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        .stat-details {
+            margin-top: 10px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+        }
+        
+        .stat-label {
+            color: #666;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .slot-stats, .week-stats {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .slot-stat-item, .week-stat-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        
+        .slot-name, .week-number {
+            width: 100px;
+            font-weight: 600;
+        }
+        
+        .slot-count, .week-count {
+            width: 60px;
+            text-align: right;
+            margin-right: 10px;
+        }
+        
+        .slot-bar {
+            flex: 1;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .slot-progress {
+            height: 100%;
+            background: linear-gradient(135deg, #3498db, #2ecc71);
+            transition: width 0.3s ease;
+        }
+        
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .summary-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .summary-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #3498db;
+            margin-top: 10px;
+        }
+        
+        /* 履歴関連のスタイル */
+        .filter-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            align-items: end;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .filter-group label {
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .filter-group select {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .clear-filters-btn {
+            background: #e74c3c;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .clear-filters-btn:hover {
+            background: #c0392b;
+        }
+        
+        .history-table {
+            background: #f8f9fa;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .history-header {
+            background: #3498db;
+            color: white;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 2fr 1fr;
+            gap: 1px;
+        }
+        
+        .history-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 2fr 1fr;
+            gap: 1px;
+            background: white;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .history-row:hover {
+            background: #e8f4fd;
+        }
+        
+        .history-cell {
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .no-data {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 40px;
+        }
+        
         @media (max-width: 768px) {
             .csv-container {
                 grid-template-columns: 1fr;
@@ -642,6 +944,36 @@
             .file-input-container {
                 flex-direction: column;
                 align-items: stretch;
+            }
+            
+            .layer-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .allocation-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .summary-stats {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            }
+            
+            .filter-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .history-header, .history-row {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+            
+            .history-cell {
+                border-bottom: 1px solid #e9ecef;
+                text-align: left;
             }
         }
     </style>
@@ -2014,16 +2346,657 @@
             }
         }
         
+        // 装備分配システム
         function showEquipmentAllocation() {
-            showMessage('装備分配機能は実装中です', 'info');
+            const content = document.getElementById('content');
+            
+            // プレイヤーデータの確認
+            const players = appData.players[currentRaidTier.id] || {};
+            const playerCount = Object.keys(players).length;
+            
+            if (playerCount === 0) {
+                showError('プレイヤー情報が設定されていません。メンバー設定を完了してください。');
+                return;
+            }
+            
+            content.innerHTML = `
+                <h1>装備分配システム</h1>
+                <h2>${currentRaidTier.name}</h2>
+                
+                <div class="section">
+                    <div class="navigation">
+                        <button class="nav-button" onclick="showTierDashboard()">レイドダッシュボードに戻る</button>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>層を選択して装備分配を実行</h3>
+                    <div class="layer-grid">
+                        <div class="layer-card" onclick="processLayerAllocation(1)">
+                            <h4>1層: 邂逅編</h4>
+                            <p>アクセサリー（耳・首・腕・指）</p>
+                            <div class="layer-stats">
+                                登録プレイヤー: ${playerCount}人
+                            </div>
+                        </div>
+                        
+                        <div class="layer-card" onclick="processLayerAllocation(2)">
+                            <h4>2層: 邂逅編</h4>
+                            <p>防具（頭・手・足）+ 武器石・硬化薬</p>
+                            <div class="layer-stats">
+                                登録プレイヤー: ${playerCount}人
+                            </div>
+                        </div>
+                        
+                        <div class="layer-card" onclick="processLayerAllocation(3)">
+                            <h4>3層: 邂逅編</h4>
+                            <p>防具（胴・脚）+ 強化薬・強化繊維</p>
+                            <div class="layer-stats">
+                                登録プレイヤー: ${playerCount}人
+                            </div>
+                        </div>
+                        
+                        <div class="layer-card" onclick="processLayerAllocation(4)">
+                            <h4>4層: 邂逅編</h4>
+                            <p>胴装備 + 武器箱・直ドロップ武器</p>
+                            <div class="layer-stats">
+                                登録プレイヤー: ${playerCount}人
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section" id="allocationResults" style="display: none;">
+                    <h3>分配結果</h3>
+                    <div id="allocationContent"></div>
+                </div>
+            `;
         }
         
+        // 層別装備分配処理
+        async function processLayerAllocation(layer) {
+            try {
+                showMessage('分配処理中...', 'info');
+                
+                // 層別ドロップアイテムを取得
+                const drops = getLayerDrops(layer);
+                
+                // 分配優先度を計算
+                const allocationResults = calculateAllocation(layer, drops);
+                
+                // 結果を表示
+                displayAllocationResults(layer, allocationResults);
+                
+            } catch (error) {
+                console.error('分配処理エラー:', error);
+                showError('分配処理に失敗しました: ' + error.message);
+            }
+        }
+        
+        // 層別ドロップアイテム定義
+        function getLayerDrops(layer) {
+            const drops = {
+                1: [
+                    { slot: '耳', type: 'equipment' },
+                    { slot: '首', type: 'equipment' },
+                    { slot: '腕', type: 'equipment' },
+                    { slot: '指', type: 'equipment' }
+                ],
+                2: [
+                    { slot: '頭', type: 'equipment' },
+                    { slot: '手', type: 'equipment' },
+                    { slot: '足', type: 'equipment' },
+                    { slot: '武器石', type: 'material' },
+                    { slot: '硬化薬', type: 'material' }
+                ],
+                3: [
+                    { slot: '胴', type: 'equipment' },
+                    { slot: '脚', type: 'equipment' },
+                    { slot: '強化薬', type: 'material' },
+                    { slot: '強化繊維', type: 'material' }
+                ],
+                4: [
+                    { slot: '胴', type: 'equipment' },
+                    { slot: '武器箱', type: 'weapon_box' },
+                    { slot: '直ドロップ武器', type: 'direct_weapon' }
+                ]
+            };
+            
+            return drops[layer] || [];
+        }
+        
+        // 分配優先度計算
+        function calculateAllocation(layer, drops) {
+            const players = appData.players[currentRaidTier.id] || {};
+            const results = {};
+            
+            drops.forEach(drop => {
+                const candidates = [];
+                
+                Object.entries(players).forEach(([position, player]) => {
+                    const priority = calculatePlayerPriority(player, drop);
+                    if (priority.canReceive) {
+                        candidates.push({
+                            position,
+                            player,
+                            priority: priority.score,
+                            reason: priority.reason
+                        });
+                    }
+                });
+                
+                // 優先度順でソート
+                candidates.sort((a, b) => b.priority - a.priority);
+                
+                results[drop.slot] = {
+                    drop,
+                    candidates,
+                    recommended: candidates[0] || null
+                };
+            });
+            
+            return results;
+        }
+        
+        // プレイヤー優先度計算
+        function calculatePlayerPriority(player, drop) {
+            let score = 0;
+            let canReceive = false;
+            let reason = '';
+            
+            if (drop.type === 'equipment') {
+                // 装備の場合
+                const policy = player.equipmentPolicy[drop.slot];
+                const hasEquipment = player.currentEquipment[drop.slot];
+                
+                if (policy === '零式' && !hasEquipment) {
+                    canReceive = true;
+                    score = 100;
+                    reason = 'Need (零式優先)';
+                } else if (policy === 'トームストーン' && !hasEquipment) {
+                    canReceive = true;
+                    score = 50;
+                    reason = 'Greed (トームストーン可)';
+                } else {
+                    reason = 'Pass (不要)';
+                }
+            } else if (drop.type === 'material') {
+                // 強化素材の場合
+                canReceive = true;
+                score = 75 - (player.dynamicPriority || 0);
+                reason = 'Need (強化素材)';
+            } else if (drop.type === 'weapon_box' || drop.type === 'direct_weapon') {
+                // 武器の場合
+                const needsWeapon = !player.currentEquipment['武器'];
+                if (needsWeapon) {
+                    canReceive = true;
+                    score = 90;
+                    reason = 'Need (武器)';
+                } else {
+                    reason = 'Pass (武器所持済み)';
+                }
+            }
+            
+            return { canReceive, score, reason };
+        }
+        
+        // 分配結果表示
+        function displayAllocationResults(layer, results) {
+            const allocationResults = document.getElementById('allocationResults');
+            const allocationContent = document.getElementById('allocationContent');
+            
+            let html = `
+                <div class="allocation-header">
+                    <h4>${layer}層 装備分配結果</h4>
+                    <p>推奨分配者が自動計算されました。必要に応じて変更してください。</p>
+                </div>
+                
+                <div class="allocation-grid">
+            `;
+            
+            Object.entries(results).forEach(([slot, result]) => {
+                html += `
+                    <div class="allocation-item">
+                        <div class="item-header">
+                            <h5>${slot}</h5>
+                            <span class="item-type">${getItemTypeLabel(result.drop.type)}</span>
+                        </div>
+                        
+                        <div class="allocation-choice">
+                            <label>取得者:</label>
+                            <select id="allocation-${slot}" onchange="updateAllocationChoice('${slot}')">
+                                <option value="">選択してください</option>
+                                ${result.candidates.map(candidate => `
+                                    <option value="${candidate.position}" 
+                                            ${result.recommended?.position === candidate.position ? 'selected' : ''}>
+                                        ${candidate.player.name} (${candidate.position}) - ${candidate.reason}
+                                    </option>
+                                `).join('')}
+                                <option value="discard">破棄/ロット無し</option>
+                            </select>
+                        </div>
+                        
+                        <div class="candidates-detail">
+                            <strong>候補者詳細:</strong>
+                            ${result.candidates.length > 0 ? result.candidates.map(candidate => `
+                                <div class="candidate-item">
+                                    ${candidate.player.name} (${candidate.position}): ${candidate.reason} (優先度: ${candidate.priority})
+                                </div>
+                            `).join('') : '<div class="no-candidates">該当者なし</div>'}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                </div>
+                
+                <div class="allocation-actions">
+                    <button onclick="confirmAllocation(${layer})" class="confirm-btn">
+                        分配を確定
+                    </button>
+                    <button onclick="showEquipmentAllocation()" class="cancel-btn">
+                        キャンセル
+                    </button>
+                </div>
+            `;
+            
+            allocationContent.innerHTML = html;
+            allocationResults.style.display = 'block';
+            
+            // 結果表示エリアまでスクロール
+            allocationResults.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // アイテムタイプラベル
+        function getItemTypeLabel(type) {
+            const labels = {
+                'equipment': '装備',
+                'material': '強化素材',
+                'weapon_box': '武器箱',
+                'direct_weapon': '直ドロップ武器'
+            };
+            return labels[type] || type;
+        }
+        
+        // 分配選択更新
+        function updateAllocationChoice(slot) {
+            // 選択変更時の処理（必要に応じて実装）
+            console.log(`${slot}の分配選択が変更されました`);
+        }
+        
+        // 分配確定
+        async function confirmAllocation(layer) {
+            try {
+                const allocations = [];
+                const selects = document.querySelectorAll('[id^="allocation-"]');
+                
+                selects.forEach(select => {
+                    const slot = select.id.replace('allocation-', '');
+                    const position = select.value;
+                    
+                    if (position && position !== 'discard') {
+                        const player = appData.players[currentRaidTier.id][position];
+                        allocations.push({
+                            slot,
+                            position,
+                            playerName: player.name,
+                            timestamp: new Date().toISOString(),
+                            layer,
+                            week: getCurrentWeek()
+                        });
+                    }
+                });
+                
+                if (allocations.length === 0) {
+                    showError('分配する装備が選択されていません。');
+                    return;
+                }
+                
+                // 分配履歴に記録
+                if (!appData.allocations[currentRaidTier.id]) {
+                    appData.allocations[currentRaidTier.id] = [];
+                }
+                
+                allocations.forEach(allocation => {
+                    appData.allocations[currentRaidTier.id].push(allocation);
+                    
+                    // プレイヤーの装備状況更新
+                    const player = appData.players[currentRaidTier.id][allocation.position];
+                    player.currentEquipment[allocation.slot] = allocation.layer;
+                    player.allocationHistory = player.allocationHistory || [];
+                    player.allocationHistory.push(allocation);
+                    
+                    // 動的優先度更新
+                    player.dynamicPriority = (player.dynamicPriority || 0) + getItemPriority(allocation.slot);
+                });
+                
+                // Supabaseに保存
+                await saveDataToSupabase('allocations', appData.allocations[currentRaidTier.id]);
+                await saveDataToSupabase('players', appData.players[currentRaidTier.id]);
+                
+                showSuccess(`${layer}層の装備分配を確定しました。${allocations.length}件の装備が分配されました。`);
+                showEquipmentAllocation(); // 装備分配画面に戻る
+                
+            } catch (error) {
+                console.error('分配確定エラー:', error);
+                showError('分配の確定に失敗しました: ' + error.message);
+            }
+        }
+        
+        // 現在の週番号取得
+        function getCurrentWeek() {
+            const now = new Date();
+            const yearStart = new Date(now.getFullYear(), 0, 1);
+            const weekNumber = Math.ceil(((now - yearStart) / 86400000 + yearStart.getDay() + 1) / 7);
+            return weekNumber;
+        }
+        
+        // アイテム優先度取得
+        function getItemPriority(slot) {
+            const priorities = {
+                '武器': 3,
+                '胴': 2,
+                '脚': 2,
+                '頭': 1,
+                '手': 1,
+                '足': 1,
+                '耳': 1,
+                '首': 1,
+                '腕': 1,
+                '指': 1,
+                '武器石': 1,
+                '硬化薬': 1,
+                '強化薬': 1,
+                '強化繊維': 1
+            };
+            return priorities[slot] || 1;
+        }
+        
+        // 統計情報表示
         function showStatistics() {
-            showMessage('統計情報機能は実装中です', 'info');
+            const content = document.getElementById('content');
+            const players = appData.players[currentRaidTier.id] || {};
+            const allocations = appData.allocations[currentRaidTier.id] || [];
+            
+            if (Object.keys(players).length === 0) {
+                showError('プレイヤー情報が設定されていません。');
+                return;
+            }
+            
+            // 統計データ計算
+            const stats = calculateStatistics(players, allocations);
+            
+            content.innerHTML = `
+                <h1>統計情報</h1>
+                <h2>${currentRaidTier.name}</h2>
+                
+                <div class="section">
+                    <div class="navigation">
+                        <button class="nav-button" onclick="showTierDashboard()">レイドダッシュボードに戻る</button>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>📊 プレイヤー別取得状況</h3>
+                    <div class="stats-grid">
+                        ${Object.entries(stats.playerStats).map(([position, stat]) => `
+                            <div class="stat-card">
+                                <h4>${stat.name} (${position})</h4>
+                                <div class="stat-details">
+                                    <div class="stat-item">
+                                        <span class="stat-label">装備取得数:</span>
+                                        <span class="stat-value">${stat.equipmentCount}件</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">素材取得数:</span>
+                                        <span class="stat-value">${stat.materialCount}件</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">総取得数:</span>
+                                        <span class="stat-value">${stat.totalCount}件</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">動的優先度:</span>
+                                        <span class="stat-value">${stat.dynamicPriority}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>📈 部位別分配状況</h3>
+                    <div class="slot-stats">
+                        ${Object.entries(stats.slotStats).map(([slot, count]) => `
+                            <div class="slot-stat-item">
+                                <span class="slot-name">${slot}:</span>
+                                <span class="slot-count">${count}件</span>
+                                <div class="slot-bar">
+                                    <div class="slot-progress" style="width: ${(count / Math.max(...Object.values(stats.slotStats))) * 100}%"></div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>📅 週別分配履歴</h3>
+                    <div class="week-stats">
+                        ${Object.entries(stats.weekStats).map(([week, count]) => `
+                            <div class="week-stat-item">
+                                <span class="week-number">第${week}週:</span>
+                                <span class="week-count">${count}件</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>🏆 分配サマリー</h3>
+                    <div class="summary-stats">
+                        <div class="summary-item">
+                            <h4>総分配数</h4>
+                            <div class="summary-value">${allocations.length}件</div>
+                        </div>
+                        <div class="summary-item">
+                            <h4>平均取得数</h4>
+                            <div class="summary-value">${(allocations.length / Object.keys(players).length).toFixed(1)}件/人</div>
+                        </div>
+                        <div class="summary-item">
+                            <h4>活動週数</h4>
+                            <div class="summary-value">${Object.keys(stats.weekStats).length}週</div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
         
+        // 統計データ計算
+        function calculateStatistics(players, allocations) {
+            const playerStats = {};
+            const slotStats = {};
+            const weekStats = {};
+            
+            // プレイヤー統計初期化
+            Object.entries(players).forEach(([position, player]) => {
+                playerStats[position] = {
+                    name: player.name,
+                    equipmentCount: 0,
+                    materialCount: 0,
+                    totalCount: 0,
+                    dynamicPriority: player.dynamicPriority || 0
+                };
+            });
+            
+            // 分配履歴から統計計算
+            allocations.forEach(allocation => {
+                const position = allocation.position;
+                const slot = allocation.slot;
+                const week = allocation.week;
+                
+                // プレイヤー統計更新
+                if (playerStats[position]) {
+                    if (['武器石', '硬化薬', '強化薬', '強化繊維'].includes(slot)) {
+                        playerStats[position].materialCount++;
+                    } else {
+                        playerStats[position].equipmentCount++;
+                    }
+                    playerStats[position].totalCount++;
+                }
+                
+                // 部位統計更新
+                slotStats[slot] = (slotStats[slot] || 0) + 1;
+                
+                // 週統計更新
+                weekStats[week] = (weekStats[week] || 0) + 1;
+            });
+            
+            return { playerStats, slotStats, weekStats };
+        }
+        
+        // 分配履歴表示
         function showAllocationHistory() {
-            showMessage('配布履歴機能は実装中です', 'info');
+            const content = document.getElementById('content');
+            const allocations = appData.allocations[currentRaidTier.id] || [];
+            const players = appData.players[currentRaidTier.id] || {};
+            
+            content.innerHTML = `
+                <h1>分配履歴</h1>
+                <h2>${currentRaidTier.name}</h2>
+                
+                <div class="section">
+                    <div class="navigation">
+                        <button class="nav-button" onclick="showTierDashboard()">レイドダッシュボードに戻る</button>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>🔍 フィルター</h3>
+                    <div class="filter-controls">
+                        <div class="filter-group">
+                            <label>層:</label>
+                            <select id="layerFilter" onchange="filterAllocationHistory()">
+                                <option value="">全て</option>
+                                <option value="1">1層</option>
+                                <option value="2">2層</option>
+                                <option value="3">3層</option>
+                                <option value="4">4層</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label>取得者:</label>
+                            <select id="playerFilter" onchange="filterAllocationHistory()">
+                                <option value="">全て</option>
+                                ${Object.entries(players).map(([position, player]) => `
+                                    <option value="${position}">${player.name} (${position})</option>
+                                `).join('')}
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label>装備部位:</label>
+                            <select id="slotFilter" onchange="filterAllocationHistory()">
+                                <option value="">全て</option>
+                                <option value="武器">武器</option>
+                                <option value="頭">頭</option>
+                                <option value="胴">胴</option>
+                                <option value="手">手</option>
+                                <option value="脚">脚</option>
+                                <option value="足">足</option>
+                                <option value="耳">耳</option>
+                                <option value="首">首</option>
+                                <option value="腕">腕</option>
+                                <option value="指">指</option>
+                                <option value="武器石">武器石</option>
+                                <option value="硬化薬">硬化薬</option>
+                                <option value="強化薬">強化薬</option>
+                                <option value="強化繊維">強化繊維</option>
+                            </select>
+                        </div>
+                        
+                        <button onclick="clearAllFilters()" class="clear-filters-btn">
+                            フィルタークリア
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>📋 分配履歴 (${allocations.length}件)</h3>
+                    <div id="historyTable">
+                        ${generateHistoryTable(allocations, players)}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 履歴テーブル生成
+        function generateHistoryTable(allocations, players) {
+            if (allocations.length === 0) {
+                return '<p class="no-data">分配履歴がありません。</p>';
+            }
+            
+            // 日付順で降順ソート
+            const sortedAllocations = allocations.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            return `
+                <div class="history-table">
+                    <div class="history-header">
+                        <div class="history-cell">日時</div>
+                        <div class="history-cell">層</div>
+                        <div class="history-cell">装備部位</div>
+                        <div class="history-cell">取得者</div>
+                        <div class="history-cell">週</div>
+                    </div>
+                    ${sortedAllocations.map(allocation => {
+                        const player = players[allocation.position];
+                        const date = new Date(allocation.timestamp);
+                        return `
+                            <div class="history-row">
+                                <div class="history-cell">${date.toLocaleDateString('ja-JP')} ${date.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'})}</div>
+                                <div class="history-cell">${allocation.layer}層</div>
+                                <div class="history-cell">${allocation.slot}</div>
+                                <div class="history-cell">${player ? player.name : allocation.playerName} (${allocation.position})</div>
+                                <div class="history-cell">第${allocation.week}週</div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+        
+        // 履歴フィルタリング
+        function filterAllocationHistory() {
+            const layerFilter = document.getElementById('layerFilter').value;
+            const playerFilter = document.getElementById('playerFilter').value;
+            const slotFilter = document.getElementById('slotFilter').value;
+            
+            const allocations = appData.allocations[currentRaidTier.id] || [];
+            const players = appData.players[currentRaidTier.id] || {};
+            
+            let filteredAllocations = allocations.filter(allocation => {
+                if (layerFilter && allocation.layer.toString() !== layerFilter) return false;
+                if (playerFilter && allocation.position !== playerFilter) return false;
+                if (slotFilter && allocation.slot !== slotFilter) return false;
+                return true;
+            });
+            
+            const historyTable = document.getElementById('historyTable');
+            historyTable.innerHTML = generateHistoryTable(filteredAllocations, players);
+            
+            // フィルター結果の件数を更新
+            const sectionTitle = document.querySelector('h3');
+            sectionTitle.textContent = `📋 分配履歴 (${filteredAllocations.length}件)`;
+        }
+        
+        // 全フィルタークリア
+        function clearAllFilters() {
+            document.getElementById('layerFilter').value = '';
+            document.getElementById('playerFilter').value = '';
+            document.getElementById('slotFilter').value = '';
+            filterAllocationHistory();
         }
         
         function showSystemSettings() {

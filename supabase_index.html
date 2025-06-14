@@ -750,23 +750,23 @@
         
         /* 優先順位設定用スタイル */
         .priority-container {
-            max-width: 600px;
-            margin: 20px 0;
+            max-width: 500px;
+            margin: 15px 0;
         }
         
         .priority-list {
             background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            min-height: 400px;
+            border-radius: 6px;
+            padding: 10px;
+            min-height: 320px;
         }
         
         .priority-item {
             background-color: white;
             border: 2px solid #dee2e6;
-            border-radius: 8px;
-            margin: 10px 0;
-            padding: 15px;
+            border-radius: 6px;
+            margin: 6px 0;
+            padding: 10px;
             display: flex;
             align-items: center;
             cursor: grab;
@@ -802,14 +802,14 @@
             background-color: #007bff;
             color: white;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            width: 25px;
+            height: 25px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            margin-right: 15px;
-            font-size: 14px;
+            margin-right: 12px;
+            font-size: 12px;
         }
         
         .priority-info {
@@ -822,29 +822,30 @@
         .priority-info .position-badge {
             background-color: #28a745;
             color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 3px 6px;
+            border-radius: 3px;
             font-weight: bold;
-            font-size: 12px;
+            font-size: 11px;
         }
         
         .priority-info .player-name {
             font-weight: 600;
             color: #2c3e50;
+            font-size: 13px;
         }
         
         .priority-info .player-job {
             color: #6c757d;
-            font-size: 14px;
+            font-size: 12px;
         }
         
         .drag-handle {
             color: #007bff;
-            font-size: 24px;
+            font-size: 20px;
             cursor: grab;
             transition: all 0.2s ease;
-            padding: 5px;
-            border-radius: 4px;
+            padding: 4px;
+            border-radius: 3px;
         }
         
         .drag-handle:hover {
@@ -2140,7 +2141,7 @@
             
             content.innerHTML = `
                 <div class="navigation-top-left">
-                    <button class="nav-button" onclick="showTierDashboard()">ティアダッシュボードに戻る</button>
+                    <button class="nav-button" onclick="showTierDashboard()">レイドダッシュボードに戻る</button>
                 </div>
                 
                 <h1>ポジション間優先順位設定</h1>
@@ -2181,14 +2182,10 @@
                 </div>
                 
                 <div class="section" style="background-color: #f8f9fa; border-left: 4px solid #17a2b8;">
-                    <h4>💡 優先順位の使用場面</h4>
-                    <ul style="margin: 10px 0; padding-left: 20px;">
-                        <li><strong>武器石：</strong> 武器の性能向上に使用される重要な素材</li>
-                        <li><strong>硬化薬：</strong> 防具の強化に必要な素材</li>
-                        <li><strong>強化薬：</strong> アクセサリーの強化に使用</li>
-                        <li><strong>強化繊維：</strong> 防具の追加強化に使用</li>
-                    </ul>
-                    <p><strong>注意：</strong> この優先順位は装備分配と強化素材の両方に影響します。装備は装備方針（零式/トームストーン）とポジション優先順位の組み合わせで判定されます。</p>
+                    <h4>💡 優先順位の仕組み</h4>
+                    <p><strong>装備分配：</strong> 装備方針（零式/トームストーン）とポジション優先順位の組み合わせで取得者を決定</p>
+                    <p><strong>素材分配：</strong> ポジション優先順位に基づいて武器石、硬化薬、強化薬、強化繊維の取得者を決定</p>
+                    <p><strong>Note：</strong> 同じ条件の場合、上位のポジションが優先されます。ドラッグ&ドロップで順序を調整できます。</p>
                 </div>
             `;
             
@@ -2342,7 +2339,7 @@
                 
                 <div class="section">
                     <div class="navigation">
-                        <button class="nav-button" onclick="showTierDashboard()">ティアダッシュボードに戻る</button>
+                        <button class="nav-button" onclick="showTierDashboard()">レイドダッシュボードに戻る</button>
                     </div>
                 </div>
                 
@@ -2962,7 +2959,7 @@
             
             content.innerHTML = `
                 <div class="navigation-top-left">
-                    <button class="nav-button" onclick="showTierDashboard()">ティアダッシュボードに戻る</button>
+                    <button class="nav-button" onclick="showTierDashboard()">レイドダッシュボードに戻る</button>
                 </div>
                 
                 <h1>装備分配システム</h1>
@@ -3317,7 +3314,7 @@
                     <button onclick="confirmAllocation(${layer})" class="confirm-btn">
                         分配を確定
                     </button>
-                    <button onclick="showMainDashboard()" class="cancel-btn">
+                    <button onclick="showTierDashboard()" class="cancel-btn">
                         キャンセル
                     </button>
                 </div>
@@ -3517,7 +3514,7 @@
             
             content.innerHTML = `
                 <div class="navigation-top-left">
-                    <button class="nav-button" onclick="showTierDashboard()">ティアダッシュボードに戻る</button>
+                    <button class="nav-button" onclick="showTierDashboard()">レイドダッシュボードに戻る</button>
                 </div>
                 
                 <h1>統計情報</h1>
@@ -3652,7 +3649,7 @@
             
             content.innerHTML = `
                 <div class="navigation-top-left">
-                    <button class="nav-button" onclick="showTierDashboard()">ティアダッシュボードに戻る</button>
+                    <button class="nav-button" onclick="showTierDashboard()">レイドダッシュボードに戻る</button>
                     <button class="nav-button" onclick="showStatistics()">編集終了</button>
                 </div>
                 
@@ -3837,7 +3834,7 @@
             
             content.innerHTML = `
                 <div class="navigation-top-left">
-                    <button class="nav-button" onclick="showTierDashboard()">ティアダッシュボードに戻る</button>
+                    <button class="nav-button" onclick="showTierDashboard()">レイドダッシュボードに戻る</button>
                 </div>
                 
                 <h1>分配履歴</h1>

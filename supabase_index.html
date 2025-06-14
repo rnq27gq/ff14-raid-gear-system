@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://*.supabase.co https://supabase.com https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline';">
+    <title>FF14 零式装備分配システム (Supabase版)</title>
+    
+    <!-- Supabase JavaScript SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <script>
+        // Supabaseライブラリの読み込み確認
+        window.addEventListener('load', function() {
+            console.log('Supabase library loaded:', typeof window.supabase !== 'undefined');
+            if (typeof window.supabase !== 'undefined') {
+                console.log('Supabase version:', window.supabase.createClient ? 'OK' : 'No createClient method');
+            }
+        });
+    </script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #ffffff;
+            color: #333333;
+            line-height: 1.4;
+            height: 100vh;
+            overflow-x: auto;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            height: calc(100vh - 20px);
+            overflow-y: auto;
+        }
+        
+        /* Supabase認証用のヘッダー */
+        .supabase-header {
+            background: linear-gradient(135deg, #16a085 0%, #27ae60 100%);
+            color: white;
+            padding: 10px 20px;
+            margin: -10px -10px 15px -10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .supabase-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 14px;
+        }
+        
+        .connection-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            background-color: rgba(255,255,255,0.1);
+            font-size: 12px;
+        }
+        
+        .connection-indicator.online {
+            background-color: rgba(39, 174, 96, 0.2);
+            color: #2ecc71;
+        }
+        
+        .connection-indicator.offline {
+            background-color: rgba(149, 165, 166, 0.2);
+            color: #95a5a6;
+        }
+        
+        .auth-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .auth-input {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            width: 120px;
+        }
+        
+        .auth-btn {
+            padding: 5px 12px;
+            border: none;
+            border-radius: 4px;
+            background-color: #4a9d6b;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+        
+        .auth-btn:hover {
+            background-color: #3e8a57;
+        }
+        
+        .auth-btn.logout {
+            background-color: #d86a5a;
+        }
+        
+        .auth-btn.logout:hover {
+            background-color: #b85a4a;
+        }
+        
+        /* 認証画面 */
+        .auth-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 60vh;
+            flex-direction: column;
+        }
+        
+        .auth-card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .auth-card h2 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .auth-form input {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .auth-form button {
+            padding: 12px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .auth-form button:hover {
+            background-color: #219a52;
+        }
+        
+        .demo-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        /* メインコンテンツエリア */
+        .main-content {
+            display: none;
+        }
+        
+        .main-content.authenticated {
+            display: block;
+        }
+        
+        /* 既存のcollaborative_index.htmlのスタイルを統合 */
+        .player-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .player-card {
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .player-name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+        .position-badge {
+            background-color: #3498db;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .job-select {
+            width: 100%;
+            margin: 5px 0;
+        }
+        .equipment-policy {
+            margin: 10px 0;
+        }
+        .policy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+            margin: 8px 0;
+        }
+        .policy-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .policy-item label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .policy-item select {
+            width: 100%;
+            padding: 6px;
+            font-size: 0.8rem;
+            margin: 0;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        /* 装備方針の背景色 */
+        .policy-item select option[value="零式"] {
+            background-color: #e8f5e8;
+            color: #2d5b2d;
+        }
+        .policy-item select option[value="トームストーン"] {
+            background-color: #fff3e0;
+            color: #8b4513;
+        }
+        .policy-item select[value="零式"] {
+            background-color: #e8f5e8;
+            color: #2d5b2d;
+        }
+        .policy-item select[value="トームストーン"] {
+            background-color: #fff3e0;
+            color: #8b4513;
+        }
+        
+        /* タブ関連スタイル */
+        .tab-container {
+            margin: 20px 0;
+        }
+        .tab-nav {
+            display: flex;
+            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            padding: 12px 24px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.2s ease;
+        }
+        .tab-button.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+            background-color: #f8f9fa;
+        }
+        .tab-button:hover {
+            background-color: #f8f9fa;
+            color: #3498db;
+        }
+        .tab-content {
+            min-height: 400px;
+        }
+        
+        /* 層選択関連 */
+        .layer-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .layer-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            border: 2px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+        .layer-card:hover {
+            border-color: #3498db;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+            transform: translateY(-2px);
+        }
+        .layer-header {
+            background-color: #3498db;
+            color: white;
+            padding: 15px;
+            border-radius: 10px 10px 0 0;
+            font-weight: 600;
+            text-align: center;
+        }
+        .layer-content {
+            padding: 15px;
+        }
+        
+        /* 優先度設定関連 */
+        .priority-container {
+            max-width: 600px;
+            margin: 20px auto;
+        }
+        .priority-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .priority-item {
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            cursor: move;
+            transition: all 0.2s ease;
+        }
+        .priority-item:hover {
+            border-color: #3498db;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+        }
+        .priority-number {
+            background-color: #3498db;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        .priority-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .position-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .player-details {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .drag-handle {
+            color: #999;
+            font-size: 20px;
+            cursor: move;
+        }
+        
+        /* 武器希望関連 */
+        .weapon-wishes {
+            margin: 10px 0;
+        }
+        .wish-priority {
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .wish-priority label {
+            min-width: 120px;
+            font-size: 0.9rem;
+            color: #555;
+        }
+        .wish-priority select,
+        .wish-priority input {
+            flex: 1;
+            min-width: 150px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 1.8rem;
+        }
+        h2 {
+            color: #2c3e50;
+            font-weight: 500;
+            margin-bottom: 12px;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+        h3 {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        .section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #5a9fd4;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 4px;
+            font-weight: 500;
+            font-size: 13px;
+        }
+        button:hover {
+            background-color: #4a8bb8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        input, select {
+            padding: 12px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #ffffff;
+            color: #333;
+            width: 200px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        .tier-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin: 12px 0;
+        }
+        .tier-item {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .tier-item:hover {
+            border-color: #3498db;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+            transform: translateY(-2px);
+        }
+        .tier-item.active {
+            border-color: #27ae60;
+            background-color: #d5f4e6;
+        }
+        .tier-item h3 {
+            margin: 0 0 8px 0;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+        .tier-item p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .nav-button {
+            background-color: #5a9fd4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .nav-button:hover {
+            background-color: #4a8bb8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        /* エラーメッセージ */
+        .error-message {
+            background-color: #fee;
+            color: #c33;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .success-message {
+            background-color: #efe;
+            color: #3c3;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Supabase認証ヘッダー -->
+        <div class="supabase-header">
+            <div class="supabase-status">
+                <h1 style="margin: 0; font-size: 18px;">FF14 零式装備分配システム (Supabase版)</h1>
+                <div id="connectionStatus" class="connection-indicator offline">
+                    <span>⚫</span>
+                    <span>オフライン</span>
+                </div>
+                <div id="teamInfo" style="display: none;">
+                    <span id="currentTeamName">チーム名</span>
+                </div>
+            </div>
+            
+            <div class="auth-controls" id="authControls">
+                <input type="text" id="teamIdInput" class="auth-input" placeholder="チームID" maxlength="20">
+                <input type="password" id="passwordInput" class="auth-input" placeholder="パスワード" maxlength="20">
+                <button class="auth-btn" onclick="authenticateTeam()">ログイン</button>
+            </div>
+            
+            <div class="auth-controls" id="loggedInControls" style="display: none;">
+                <span id="loggedInTeam">demo-team</span>
+                <button class="auth-btn logout" onclick="logout()">ログアウト</button>
+            </div>
+        </div>
+        
+        <!-- エラー・成功メッセージ -->
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+        
+        <!-- 認証画面 -->
+        <div id="authScreen" class="auth-screen">
+            <div class="auth-card">
+                <h2>🛡️ チーム認証</h2>
+                <p>8人での共同利用には<br>チームIDとパスワードが必要です</p>
+                
+                <div class="auth-form">
+                    <input type="text" id="mainTeamIdInput" placeholder="チームID (例: my-raid-team)" maxlength="20">
+                    <input type="password" id="mainPasswordInput" placeholder="パスワード" maxlength="20">
+                    <button onclick="authenticateTeam()">ログイン</button>
+                </div>
+                
+                <div class="demo-info">
+                    <strong>🎮 デモ用アカウント</strong><br>
+                    チームID: <code>demo-team</code><br>
+                    パスワード: <code>demo123</code>
+                </div>
+                
+                <div style="margin-top: 20px; font-size: 12px; color: #888;">
+                    <p>新しいチームの作成をご希望の場合は<br>管理者にお問い合わせください</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- メインコンテンツ（認証後に表示） -->
+        <div id="mainContent" class="main-content">
+            <div id="content">
+                <!-- 初期表示はダッシュボード -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase設定とメイン機能 -->
+    <script src="supabase_config.js"></script>
+    <script>
+        // グローバル変数
+        let isAuthenticated = false;
+        let currentTeamId = null;
+        
+        // 初期化 - ライブラリ読み込み完了を待つ
+        window.addEventListener('load', async function() {
+            // 少し待ってからアプリ初期化
+            setTimeout(async () => {
+                await initializeApp();
+            }, 100);
+        });
+        
+        // アプリ初期化
+        async function initializeApp() {
+            try {
+                console.log('アプリ初期化開始');
+                
+                // Supabaseライブラリの確認
+                if (typeof window.supabase === 'undefined') {
+                    throw new Error('Supabase JavaScriptライブラリが読み込まれていません');
+                }
+                
+                console.log('Supabaseライブラリ確認完了');
+                
+                // Supabaseクライアント作成
+                window.supabaseClient = window.supabase.createClient(
+                    'https://bpzvuwhnjvbfohopeoxr.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwenZ1d2huanZiZm9ob3Blb3hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk4NzE3MDMsImV4cCI6MjA2NTQ0NzcwM30.pYiMUoptXLpWyFAlUkCE973ipObCEQgOUyILEpodVC8'
+                );
+                
+                if (!window.supabaseClient) {
+                    throw new Error('Supabaseクライアントの作成に失敗しました');
+                }
+                
+                console.log('Supabaseクライアント作成完了');
+                
+                // 接続状態更新
+                updateConnectionStatus(true);
+                
+                // 自動ログイン試行
+                await tryAutoLogin();
+                
+                console.log('アプリ初期化完了');
+                
+            } catch (error) {
+                console.error('アプリ初期化エラー:', error);
+                showError('システムの初期化に失敗しました: ' + error.message);
+                updateConnectionStatus(false);
+            }
+        }
+        
+        // 自動ログイン試行
+        async function tryAutoLogin() {
+            const savedTeamId = localStorage.getItem('ff14_team_id');
+            if (savedTeamId) {
+                currentTeamId = savedTeamId;
+                supabaseConfig.currentTeamId = savedTeamId;
+                await showAuthenticatedState();
+            }
+        }
+        
+        // チーム認証
+        async function authenticateTeam() {
+            const teamId = document.getElementById('teamIdInput')?.value || 
+                          document.getElementById('mainTeamIdInput')?.value;
+            const password = document.getElementById('passwordInput')?.value || 
+                           document.getElementById('mainPasswordInput')?.value;
+            
+            if (!teamId || !password) {
+                showError('チームIDとパスワードを入力してください');
+                return;
+            }
+            
+            try {
+                showMessage('認証中...', 'info');
+                
+                // Supabaseクライアント確認
+                if (!window.supabaseClient) {
+                    throw new Error('Supabaseクライアントが初期化されていません');
+                }
+                
+                console.log('認証試行:', teamId);
+                
+                // Supabase認証
+                const { data, error } = await window.supabaseClient.rpc('authenticate_team', {
+                    p_team_id: teamId,
+                    p_password: password
+                });
+                
+                console.log('認証結果:', { data, error });
+                
+                if (error) {
+                    throw new Error(`認証エラー: ${error.message}`);
+                }
+                
+                if (!data) {
+                    throw new Error('チームIDまたはパスワードが正しくありません');
+                }
+                
+                // 認証成功
+                currentTeamId = teamId;
+                localStorage.setItem('ff14_team_id', teamId);
+                
+                // チームコンテキスト設定
+                console.log('チームコンテキスト設定中...');
+                const { data: contextData, error: contextError } = await window.supabaseClient.rpc('set_team_context', {
+                    team_id: teamId
+                });
+                
+                if (contextError) {
+                    console.error('コンテキスト設定エラー:', contextError);
+                } else {
+                    console.log('チームコンテキスト設定完了');
+                }
+                
+                await showAuthenticatedState();
+                showSuccess('ログインしました');
+                
+                // メイン機能の初期化
+                await initializeMainFeatures();
+                
+            } catch (error) {
+                console.error('認証エラー:', error);
+                showError('認証に失敗しました: ' + error.message);
+            }
+        }
+        
+        // 認証後の状態表示
+        async function showAuthenticatedState() {
+            isAuthenticated = true;
+            
+            // UI切り替え
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('mainContent').classList.add('authenticated');
+            document.getElementById('authControls').style.display = 'none';
+            document.getElementById('loggedInControls').style.display = 'flex';
+            document.getElementById('loggedInTeam').textContent = currentTeamId;
+            
+            // チーム情報表示
+            document.getElementById('teamInfo').style.display = 'block';
+            document.getElementById('currentTeamName').textContent = `チーム: ${currentTeamId}`;
+        }
+        
+        // ログアウト
+        function logout() {
+            isAuthenticated = false;
+            currentTeamId = null;
+            
+            // ローカルストレージクリア
+            localStorage.removeItem('ff14_team_id');
+            supabaseConfig.currentTeamId = null;
+            
+            // UI切り替え
+            document.getElementById('authScreen').style.display = 'flex';
+            document.getElementById('mainContent').classList.remove('authenticated');
+            document.getElementById('authControls').style.display = 'flex';
+            document.getElementById('loggedInControls').style.display = 'none';
+            document.getElementById('teamInfo').style.display = 'none';
+            
+            // 入力欄クリア
+            document.getElementById('teamIdInput').value = '';
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('mainTeamIdInput').value = '';
+            document.getElementById('mainPasswordInput').value = '';
+            
+            showSuccess('ログアウトしました');
+        }
+        
+        // データベース接続テスト
+        async function testDatabaseConnection() {
+            if (!isAuthenticated) {
+                showError('先にログインしてください');
+                return;
+            }
+            
+            try {
+                showMessage('データベースに接続中...', 'info');
+                
+                // Supabaseクライアント確認
+                if (!window.supabaseClient) {
+                    throw new Error('Supabaseクライアントが初期化されていません');
+                }
+                
+                // テストデータの保存
+                const testData = {
+                    test: true,
+                    timestamp: new Date().toISOString(),
+                    message: 'データベース接続テスト成功'
+                };
+                
+                console.log('テストデータ保存中...');
+                
+                const { data: saveData, error: saveError } = await window.supabaseClient
+                    .from('raid_data')
+                    .upsert({
+                        team_id: currentTeamId,
+                        tier_id: 'test-tier',
+                        data_type: 'settings',
+                        content: testData
+                    });
+                
+                if (saveError) {
+                    throw new Error(`保存エラー: ${saveError.message}`);
+                }
+                
+                console.log('テストデータ読み込み中...');
+                
+                // テストデータの読み込み
+                const { data: loadData, error: loadError } = await window.supabaseClient
+                    .from('raid_data')
+                    .select('*')
+                    .eq('team_id', currentTeamId)
+                    .eq('tier_id', 'test-tier')
+                    .eq('data_type', 'settings');
+                
+                if (loadError) {
+                    throw new Error(`読み込みエラー: ${loadError.message}`);
+                }
+                
+                console.log('読み込み結果:', loadData);
+                
+                if (loadData && loadData.length > 0) {
+                    showSuccess('データベース接続テスト成功！データの保存・読み込みが正常に動作しています。');
+                } else {
+                    throw new Error('データの読み込みに失敗しました');
+                }
+                
+            } catch (error) {
+                console.error('データベーステストエラー:', error);
+                showError('データベーステストに失敗しました: ' + error.message);
+            }
+        }
+        
+        // 接続状態更新
+        function updateConnectionStatus(isOnline) {
+            const indicator = document.getElementById('connectionStatus');
+            if (isOnline) {
+                indicator.className = 'connection-indicator online';
+                indicator.innerHTML = '<span>🟢</span><span>オンライン</span>';
+            } else {
+                indicator.className = 'connection-indicator offline';
+                indicator.innerHTML = '<span>⚫</span><span>オフライン</span>';
+            }
+        }
+        
+        // メッセージ表示関数
+        function showError(message) {
+            showMessage(message, 'error');
+        }
+        
+        function showSuccess(message) {
+            showMessage(message, 'success');
+        }
+        
+        function showMessage(message, type) {
+            const errorEl = document.getElementById('errorMessage');
+            const successEl = document.getElementById('successMessage');
+            
+            // 全メッセージを隠す
+            errorEl.style.display = 'none';
+            successEl.style.display = 'none';
+            
+            if (type === 'error') {
+                errorEl.textContent = message;
+                errorEl.style.display = 'block';
+                setTimeout(() => errorEl.style.display = 'none', 5000);
+            } else if (type === 'success') {
+                successEl.textContent = message;
+                successEl.style.display = 'block';
+                setTimeout(() => successEl.style.display = 'none', 3000);
+            }
+        }
+        
+        // エラーハンドリング
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('未処理のエラー:', event.reason);
+            showError('予期しないエラーが発生しました');
+        });
+        
+        // ======================
+        // メイン機能の実装
+        // ======================
+        
+        // グローバル変数
+        let currentRaidTier = null;
+        let appData = {
+            raidTiers: {},
+            players: {},
+            allocations: {},
+            settings: {}
+        };
+        
+        // メイン機能初期化
+        async function initializeMainFeatures() {
+            try {
+                console.log('メイン機能初期化開始');
+                
+                // データ読み込み
+                await loadAllData();
+                
+                // ダッシュボード表示
+                showMainDashboard();
+                
+                console.log('メイン機能初期化完了');
+            } catch (error) {
+                console.error('メイン機能初期化エラー:', error);
+                showError('メイン機能の初期化に失敗しました: ' + error.message);
+            }
+        }
+        
+        // 全データ読み込み
+        async function loadAllData() {
+            try {
+                // Supabaseからデータ読み込み
+                const { data: allData, error } = await window.supabaseClient
+                    .from('raid_data')
+                    .select('*')
+                    .eq('team_id', currentTeamId);
+                
+                if (error) {
+                    throw new Error(`データ読み込みエラー: ${error.message}`);
+                }
+                
+                console.log('読み込みデータ:', allData);
+                
+                // データ種別ごとに分類
+                if (allData && allData.length > 0) {
+                    allData.forEach(item => {
+                        const { tier_id, data_type, content } = item;
+                        
+                        if (data_type === 'settings') {
+                            // 設定データの特殊処理
+                            if (content.raidTier) {
+                                // レイドティアデータ
+                                if (!appData.raidTiers) appData.raidTiers = {};
+                                appData.raidTiers[tier_id] = content.raidTier;
+                            } else {
+                                // その他の設定
+                                if (!appData.settings) appData.settings = {};
+                                appData.settings = { ...appData.settings, ...content };
+                            }
+                        } else {
+                            // その他のデータタイプ
+                            if (!appData[data_type]) {
+                                appData[data_type] = {};
+                            }
+                            appData[data_type][tier_id] = content;
+                        }
+                    });
+                }
+                
+                console.log('整理済みデータ:', appData);
+                
+            } catch (error) {
+                console.error('データ読み込みエラー:', error);
+                // 初期データで継続
+                appData = {
+                    raidTiers: {},
+                    players: {},
+                    allocations: {},
+                    settings: {}
+                };
+            }
+        }
+        
+        // メインダッシュボード表示
+        function showMainDashboard() {
+            const content = document.getElementById('content');
+            
+            content.innerHTML = `
+                <h1>FF14 零式装備分配システム</h1>
+                <h2>チーム: ${currentTeamId}</h2>
+                
+                <div class="section">
+                    <h3>🎮 レイドティア選択</h3>
+                    <div class="tier-list" id="tierList">
+                        <!-- レイドティア一覧がここに表示されます -->
+                    </div>
+                    
+                    <div class="navigation">
+                        <button class="nav-button" onclick="createNewTier()">新しいレイドティアを作成</button>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>🔧 管理機能</h3>
+                    <div class="navigation">
+                        <button class="nav-button" onclick="showSystemSettings()">システム設定</button>
+                        <button class="nav-button" onclick="exportAllData()">データエクスポート</button>
+                        <button class="nav-button" onclick="testDatabaseConnection()">接続テスト</button>
+                    </div>
+                </div>
+                
+                <div class="section" style="background-color: #e8f5e8; border-color: #27ae60;">
+                    <h3>✅ 実装完了機能</h3>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>✅ Supabase連携・認証システム</li>
+                        <li>✅ チーム別データ管理</li>
+                        <li>✅ リアルタイムデータ同期</li>
+                        <li>🔄 レイドティア管理（実装中）</li>
+                        <li>🔄 プレイヤー・装備管理（実装中）</li>
+                    </ul>
+                </div>
+            `;
+            
+            // レイドティア一覧を表示
+            displayRaidTiers();
+        }
+        
+        // レイドティア一覧表示
+        function displayRaidTiers() {
+            const tierList = document.getElementById('tierList');
+            const tiers = appData.raidTiers || {};
+            
+            if (Object.keys(tiers).length === 0) {
+                tierList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <p>まだレイドティアが作成されていません。</p>
+                        <p>「新しいレイドティアを作成」ボタンから始めてください。</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            tierList.innerHTML = Object.entries(tiers).map(([tierId, tier]) => `
+                <div class="tier-item ${currentRaidTier?.id === tierId ? 'active' : ''}" 
+                     onclick="selectRaidTier('${tierId}')">
+                    <h3>${tier.name}</h3>
+                    <p>${tier.description || '零式レイド'}</p>
+                    <p style="font-size: 0.8rem; color: #888;">
+                        プレイヤー: ${Object.keys(appData.players[tierId] || {}).length}人
+                    </p>
+                </div>
+            `).join('');
+        }
+        
+        // レイドティア選択
+        async function selectRaidTier(tierId) {
+            const tier = appData.raidTiers[tierId];
+            if (!tier) {
+                showError('レイドティアが見つかりません');
+                return;
+            }
+            
+            currentRaidTier = { id: tierId, ...tier };
+            showSuccess(`レイドティア「${tier.name}」を選択しました`);
+            
+            // ティア固有のダッシュボードを表示
+            showTierDashboard();
+        }
+        
+        // ティア固有ダッシュボード
+        function showTierDashboard() {
+            if (!currentRaidTier) return;
+            
+            const content = document.getElementById('content');
+            
+            content.innerHTML = `
+                <h1>${currentRaidTier.name}</h1>
+                <h2>チーム: ${currentTeamId}</h2>
+                
+                <div class="section">
+                    <div class="navigation">
+                        <button class="nav-button" onclick="showMainDashboard()">ダッシュボードに戻る</button>
+                        <button class="nav-button" onclick="showPlayerManagement()">メンバー管理</button>
+                        <button class="nav-button" onclick="showEquipmentAllocation()">装備分配</button>
+                        <button class="nav-button" onclick="showStatistics()">統計情報</button>
+                        <button class="nav-button" onclick="showAllocationHistory()">配布履歴</button>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>📊 ティア情報</h3>
+                    <p><strong>レイドティア:</strong> ${currentRaidTier.name}</p>
+                    <p><strong>説明:</strong> ${currentRaidTier.description || '零式レイド'}</p>
+                    <p><strong>登録メンバー:</strong> ${Object.keys(appData.players[currentRaidTier.id] || {}).length}人</p>
+                    <p><strong>配布履歴:</strong> ${(appData.allocations[currentRaidTier.id] || []).length}件</p>
+                </div>
+                
+                <div class="section">
+                    <h3>🎯 次のステップ</h3>
+                    <p>まずは「メンバー管理」から8人のメンバー情報を登録してください。</p>
+                </div>
+            `;
+        }
+        
+        // 新しいレイドティア作成
+        async function createNewTier() {
+            const name = prompt('レイドティア名を入力してください（例：7.1 アークガーディアン零式）:');
+            if (!name) return;
+            
+            const description = prompt('説明を入力してください（省略可）:') || '零式レイド';
+            
+            try {
+                const tierId = 'tier_' + Date.now();
+                const tierData = {
+                    name: name.trim(),
+                    description: description.trim(),
+                    createdAt: new Date().toISOString()
+                };
+                
+                // Supabaseに保存
+                const { error } = await window.supabaseClient
+                    .from('raid_data')
+                    .insert({
+                        team_id: currentTeamId,
+                        tier_id: tierId,
+                        data_type: 'settings',
+                        content: { raidTier: tierData }
+                    });
+                
+                if (error) {
+                    throw new Error(`保存エラー: ${error.message}`);
+                }
+                
+                // ローカルデータ更新
+                if (!appData.raidTiers) appData.raidTiers = {};
+                appData.raidTiers[tierId] = tierData;
+                
+                showSuccess(`レイドティア「${name}」を作成しました`);
+                
+                // 表示更新
+                displayRaidTiers();
+                
+            } catch (error) {
+                console.error('ティア作成エラー:', error);
+                showError('レイドティアの作成に失敗しました: ' + error.message);
+            }
+        }
+        
+        // プレイヤー管理機能
+        function showPlayerManagement() {
+            showPlayerSetup();
+        }
+        
+        // プレイヤー設定画面（タブ形式）
+        function showPlayerSetup() {
+            showTabbedSetup('players');
+        }
+        
+        // タブ形式のセットアップ画面
+        function showTabbedSetup(activeTab = 'players') {
+            const content = document.getElementById('content');
+            
+            content.innerHTML = `
+                <h1>メンバー・装備設定</h1>
+                <h2>${currentRaidTier.name}</h2>
+                
+                <div class="section">
+                    <div class="navigation">
+                        <button class="nav-button" onclick="showTierDashboard()">レイドダッシュボードに戻る</button>
+                    </div>
+                </div>
+                
+                <div class="tab-container">
+                    <div class="tab-nav">
+                        <button class="tab-button ${activeTab === 'players' ? 'active' : ''}" onclick="showTabbedSetup('players')">
+                            メンバー情報
+                        </button>
+                        <button class="tab-button ${activeTab === 'policy' ? 'active' : ''}" onclick="showTabbedSetup('policy')">
+                            装備方針
+                        </button>
+                        <button class="tab-button ${activeTab === 'weapons' ? 'active' : ''}" onclick="showTabbedSetup('weapons')">
+                            武器希望
+                        </button>
+                    </div>
+                    
+                    <div class="tab-content">
+                        ${getTabContent(activeTab)}
+                    </div>
+                    
+                    <div class="navigation">
+                        <button class="nav-button" onclick="saveCurrentTabAndContinue('${activeTab}')">
+                            設定完了
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // タブコンテンツ生成
+        function getTabContent(tabName) {
+            const players = appData.players[currentRaidTier.id] || {};
+            const positions = ['MT', 'ST', 'H1', 'H2', 'D1', 'D2', 'D3', 'D4'];
+            
+            if (tabName === 'players') {
+                return `
+                    <h3>8人のメンバー情報を入力してください</h3>
+                    <div class="player-grid">
+                        ${positions.map(position => {
+                            const player = players[position] || {};
+                            const roleJobs = {
+                                'MT': ['ナイト', '戦士', '暗黒騎士', 'ガンブレイカー'],
+                                'ST': ['ナイト', '戦士', '暗黒騎士', 'ガンブレイカー'],
+                                'H1': ['白魔道士', '占星術士', '学者', '賢者'],
+                                'H2': ['白魔道士', '占星術士', '学者', '賢者'],
+                                'D1': ['モンク', '竜騎士', '忍者', '侍', 'リーパー', 'ヴァイパー'],
+                                'D2': ['モンク', '竜騎士', '忍者', '侍', 'リーパー', 'ヴァイパー'],
+                                'D3': ['黒魔道士', '召喚士', '赤魔道士', 'ピクトマンサー', '吟遊詩人', '機工士', '踊り子'],
+                                'D4': ['黒魔道士', '召喚士', '赤魔道士', 'ピクトマンサー', '吟遊詩人', '機工士', '踊り子']
+                            };
+                            
+                            return `
+                                <div class="player-card">
+                                    <div class="player-header">
+                                        <span class="position-badge">${position}</span>
+                                    </div>
+                                    
+                                    <div style="margin: 10px 0;">
+                                        <label>プレイヤー名（必須）:</label>
+                                        <input type="text" id="${position}-name" value="${player.name || ''}" 
+                                               placeholder="プレイヤー名を入力" style="width: 100%;">
+                                    </div>
+                                    
+                                    <div style="margin: 10px 0;">
+                                        <label>キャラクター名:</label>
+                                        <input type="text" id="${position}-character" value="${player.characterName || ''}" 
+                                               placeholder="キャラクター名（省略可）" style="width: 100%;">
+                                    </div>
+                                    
+                                    <div style="margin: 10px 0;">
+                                        <label>ジョブ（必須）:</label>
+                                        <select id="${position}-job" class="job-select">
+                                            <option value="">ジョブを選択</option>
+                                            ${roleJobs[position].map(job => `
+                                                <option value="${job}" ${player.job === job ? 'selected' : ''}>${job}</option>
+                                            `).join('')}
+                                        </select>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            } else if (tabName === 'policy') {
+                if (Object.keys(players).length === 0) {
+                    return `
+                        <div style="text-align: center; padding: 40px; color: #666;">
+                            <p>まずメンバー情報タブでプレイヤー情報を設定してください。</p>
+                        </div>
+                    `;
+                }
+                
+                const slots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+                
+                return `
+                    <h3>各プレイヤーの装備方針を設定</h3>
+                    <p>零式：零式装備を優先取得、トームストーン：トームストーン装備で十分</p>
+                    <div class="player-grid">
+                        ${positions.map(position => {
+                            const player = players[position];
+                            if (!player) return '';
+                            
+                            return `
+                                <div class="player-card">
+                                    <div class="player-header">
+                                        <span class="player-name">${player.name}</span>
+                                        <span class="position-badge">${position} - ${player.job}</span>
+                                    </div>
+                                    <div class="equipment-policy">
+                                        <div class="policy-grid">
+                                            ${slots.map(slot => `
+                                                <div class="policy-item">
+                                                    <label>${slot}</label>
+                                                    <select id="${position}-${slot}-policy">
+                                                        <option value="零式" ${(player.equipmentPolicy && player.equipmentPolicy[slot] === '零式') ? 'selected' : ''}>零式</option>
+                                                        <option value="トームストーン" ${(player.equipmentPolicy && player.equipmentPolicy[slot] === 'トームストーン') ? 'selected' : ''}>トームストーン</option>
+                                                    </select>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            } else if (tabName === 'weapons') {
+                if (Object.keys(players).length === 0) {
+                    return `
+                        <div style="text-align: center; padding: 40px; color: #666;">
+                            <p>まずメンバー情報タブでプレイヤー情報を設定してください。</p>
+                        </div>
+                    `;
+                }
+                
+                const allWeapons = [
+                    'ナイト', '戦士', '暗黒騎士', 'ガンブレイカー',
+                    '白魔道士', '占星術士', '学者', '賢者',
+                    'モンク', '竜騎士', '忍者', '侍', 'リーパー', 'ヴァイパー',
+                    '黒魔道士', '召喚士', '赤魔道士', 'ピクトマンサー',
+                    '吟遊詩人', '機工士', '踊り子'
+                ];
+                
+                return `
+                    <h3>4層直ドロップ武器の希望順位を設定</h3>
+                    <p>第一希望は自動的にメインジョブになります。第二〜第四希望を選択してください。</p>
+                    <div class="player-grid">
+                        ${positions.map(position => {
+                            const player = players[position];
+                            if (!player) return '';
+                            
+                            const weaponWishes = player.weaponWishes || [];
+                            const mainWeapon = player.job;
+                            
+                            return `
+                                <div class="player-card">
+                                    <div class="player-header">
+                                        <span class="player-name">${player.name}</span>
+                                        <span class="position-badge">${position} - ${player.job}</span>
+                                    </div>
+                                    <div class="weapon-wishes">
+                                        <div class="wish-priority">
+                                            <label>第一希望 (メインジョブ):</label>
+                                            <input type="text" value="${mainWeapon}" readonly style="background-color: #e9ecef;">
+                                        </div>
+                                        <div class="wish-priority">
+                                            <label>第二希望:</label>
+                                            <select id="${position}-weapon-wish-2">
+                                                <option value="">選択してください</option>
+                                                ${allWeapons.filter(w => w !== mainWeapon).map(job => `
+                                                    <option value="${job}" ${weaponWishes[1] === job ? 'selected' : ''}>${job}</option>
+                                                `).join('')}
+                                            </select>
+                                        </div>
+                                        <div class="wish-priority">
+                                            <label>第三希望:</label>
+                                            <select id="${position}-weapon-wish-3">
+                                                <option value="">選択してください</option>
+                                                ${allWeapons.filter(w => w !== mainWeapon).map(job => `
+                                                    <option value="${job}" ${weaponWishes[2] === job ? 'selected' : ''}>${job}</option>
+                                                `).join('')}
+                                            </select>
+                                        </div>
+                                        <div class="wish-priority">
+                                            <label>第四希望:</label>
+                                            <select id="${position}-weapon-wish-4">
+                                                <option value="">選択してください</option>
+                                                ${allWeapons.filter(w => w !== mainWeapon).map(job => `
+                                                    <option value="${job}" ${weaponWishes[3] === job ? 'selected' : ''}>${job}</option>
+                                                `).join('')}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            }
+        }
+        
+        // 現在のタブを保存して次へ進む
+        async function saveCurrentTabAndContinue(currentTab) {
+            try {
+                if (currentTab === 'players') {
+                    await savePlayersData();
+                } else if (currentTab === 'policy') {
+                    await saveEquipmentPolicyData();
+                } else if (currentTab === 'weapons') {
+                    await saveWeaponWishesData();
+                }
+                
+                showSuccess('設定を保存しました');
+                
+                // 全て設定済みかチェックしてダッシュボードへ
+                if (Object.keys(appData.players[currentRaidTier.id] || {}).length > 0) {
+                    showTierDashboard();
+                } else {
+                    showError('メンバー情報が設定されていません。');
+                }
+            } catch (error) {
+                console.error('設定保存エラー:', error);
+                showError('設定の保存に失敗しました: ' + error.message);
+            }
+        }
+        
+        // プレイヤー情報保存
+        async function savePlayersData() {
+            const positions = ['MT', 'ST', 'H1', 'H2', 'D1', 'D2', 'D3', 'D4'];
+            
+            if (!appData.players[currentRaidTier.id]) {
+                appData.players[currentRaidTier.id] = {};
+            }
+            
+            for (const position of positions) {
+                const nameInput = document.getElementById(`${position}-name`);
+                const characterInput = document.getElementById(`${position}-character`);
+                const jobSelect = document.getElementById(`${position}-job`);
+                
+                if (!nameInput || !jobSelect) continue;
+                
+                const name = nameInput.value.trim();
+                const characterName = characterInput.value.trim();
+                const job = jobSelect.value;
+                
+                if (!name || !job) {
+                    throw new Error(`${position}のプレイヤー名とジョブを入力してください。`);
+                }
+                
+                // 既存データがある場合は保持
+                const existingPlayer = appData.players[currentRaidTier.id][position] || {};
+                
+                appData.players[currentRaidTier.id][position] = {
+                    name: name,
+                    characterName: characterName,
+                    job: job,
+                    position: position,
+                    equipmentPolicy: existingPlayer.equipmentPolicy || {},
+                    weaponWishes: existingPlayer.weaponWishes || [],
+                    currentEquipment: existingPlayer.currentEquipment || {},
+                    dynamicPriority: existingPlayer.dynamicPriority || 0,
+                    allocationHistory: existingPlayer.allocationHistory || []
+                };
+            }
+            
+            // Supabaseに保存
+            await saveDataToSupabase('players', appData.players[currentRaidTier.id]);
+        }
+        
+        // 装備方針保存
+        async function saveEquipmentPolicyData() {
+            const players = appData.players[currentRaidTier.id];
+            const slots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+            
+            for (const [position, player] of Object.entries(players)) {
+                for (const slot of slots) {
+                    const policyElement = document.getElementById(`${position}-${slot}-policy`);
+                    if (policyElement) {
+                        const policy = policyElement.value;
+                        player.equipmentPolicy[slot] = policy;
+                    }
+                }
+            }
+            
+            // Supabaseに保存
+            await saveDataToSupabase('players', appData.players[currentRaidTier.id]);
+        }
+        
+        // 武器希望保存
+        async function saveWeaponWishesData() {
+            const players = appData.players[currentRaidTier.id];
+            
+            for (const [position, player] of Object.entries(players)) {
+                const mainJob = player.job;
+                const wish2Element = document.getElementById(`${position}-weapon-wish-2`);
+                const wish3Element = document.getElementById(`${position}-weapon-wish-3`);
+                const wish4Element = document.getElementById(`${position}-weapon-wish-4`);
+                
+                // 第一希望はメインジョブ、第二〜第四希望は選択された値
+                player.weaponWishes = [
+                    mainJob,
+                    wish2Element ? wish2Element.value : '',
+                    wish3Element ? wish3Element.value : '',
+                    wish4Element ? wish4Element.value : ''
+                ].filter(wish => wish !== ''); // 空の値を除外
+            }
+            
+            // Supabaseに保存
+            await saveDataToSupabase('players', appData.players[currentRaidTier.id]);
+        }
+        
+        // Supabaseデータ保存ヘルパー
+        async function saveDataToSupabase(dataType, content) {
+            const { error } = await window.supabaseClient
+                .from('raid_data')
+                .upsert({
+                    team_id: currentTeamId,
+                    tier_id: currentRaidTier.id,
+                    data_type: dataType,
+                    content: content
+                });
+                
+            if (error) {
+                throw new Error(`保存エラー: ${error.message}`);
+            }
+        }
+        
+        function showEquipmentAllocation() {
+            showMessage('装備分配機能は実装中です', 'info');
+        }
+        
+        function showStatistics() {
+            showMessage('統計情報機能は実装中です', 'info');
+        }
+        
+        function showAllocationHistory() {
+            showMessage('配布履歴機能は実装中です', 'info');
+        }
+        
+        function showSystemSettings() {
+            showMessage('システム設定機能は実装中です', 'info');
+        }
+        
+        function exportAllData() {
+            const dataStr = JSON.stringify(appData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `ff14_raid_data_${currentTeamId}_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+            showSuccess('データをエクスポートしました');
+        }
+    </script>
+</body>
+</html>

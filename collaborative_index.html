@@ -2131,8 +2131,8 @@
                         const hasEquipment = currentEquipment && currentEquipment.itemLevel;
                         
                         // 装備方針と現在装備状況に基づく判定
-                        if (policy === '零式' && !hasEquipment) {
-                            // 零式方針で未取得の場合はNeed
+                        if ((policy === '零式' || !policy) && !hasEquipment) {
+                            // 零式方針または未設定で未取得の場合はNeed
                             needPlayers.push({
                                 position: position,
                                 name: player.name,
@@ -2239,7 +2239,6 @@
                                         <h5>実際の取得者</h5>
                                         <select id="actual-winner-${index}" class="actual-winner-select">
                                             <option value="">取得者を選択してください</option>
-                                            <option value="フリロ" ${!result.winner ? 'selected' : ''}>フリロ</option>
                                             ${allPlayers.map(player => `
                                                 <option value="${player.position}" ${result.winner && result.winner.position === player.position ? 'selected' : ''}>
                                                     ${player.name} (${player.position} - ${player.job})
@@ -2320,23 +2319,15 @@
                 const actualWinnerPosition = actualWinnerSelect ? actualWinnerSelect.value : '';
                 
                 if (actualWinnerPosition) {
+                    const actualWinner = players[actualWinnerPosition];
                     let winner = null;
                     
-                    if (actualWinnerPosition === 'フリロ') {
+                    if (actualWinner) {
                         winner = {
-                            position: 'フリロ',
-                            name: 'フリロ',
-                            job: 'フリロ'
+                            position: actualWinnerPosition,
+                            name: actualWinner.name,
+                            job: actualWinner.job
                         };
-                    } else {
-                        const actualWinner = players[actualWinnerPosition];
-                        if (actualWinner) {
-                            winner = {
-                                position: actualWinnerPosition,
-                                name: actualWinner.name,
-                                job: actualWinner.job
-                            };
-                        }
                     }
                     
                     if (winner) {
@@ -2357,7 +2348,7 @@
             
             // 装備取得者のプレイヤー履歴を更新
             data.allocations[currentRaidTier.id].forEach(allocation => {
-                if (allocation.winner && allocation.winner.position !== 'フリロ') {
+                if (allocation.winner) {
                     const winnerPlayer = players[allocation.winner.position];
                     if (winnerPlayer) {
                         // プレイヤーの装備履歴に追加
@@ -2489,8 +2480,8 @@
                             const hasEquipment = currentEquipment && currentEquipment.itemLevel;
                             
                             // 装備方針と現在装備状況に基づく判定
-                            if (policy === '零式' && !hasEquipment) {
-                                // 零式方針で未取得の場合はNeed
+                            if ((policy === '零式' || !policy) && !hasEquipment) {
+                                // 零式方針または未設定で未取得の場合はNeed
                                 needPlayers.push({
                                     position: position,
                                     name: player.name,
@@ -2764,10 +2755,6 @@
             if (player.allocationHistory && player.allocationHistory.length > 0) {
                 // 各取得アイテムに対して累積的にペナルティを加算
                 player.allocationHistory.forEach(allocation => {
-                    // フリロは優先度調整に影響しない
-                    if (allocation.winner && allocation.winner.position === 'フリロ') {
-                        return;
-                    }
                     
                     // 装備の重要度による基本ペナルティ
                     let basePenalty = 2;

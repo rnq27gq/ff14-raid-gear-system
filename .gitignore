@@ -1,0 +1,23 @@
+# 機密情報フォルダ
+config/
+
+# Supabase認証情報
+supabase_credentials.js
+*_credentials.js
+*.env
+.env.*
+
+# 開発用ファイル
+temp/
+debug/
+*.log
+
+# OS生成ファイル
+.DS_Store
+Thumbs.db
+
+# エディタ設定
+.vscode/
+.idea/
+*.swp
+*.swo

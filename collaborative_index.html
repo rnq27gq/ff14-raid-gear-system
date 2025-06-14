@@ -2126,21 +2126,29 @@
                     Object.entries(players).forEach(([position, player]) => {
                         const policy = player.equipmentPolicy[item.slot];
                         
-                        if (policy === '零式') {
+                        // 現在装備状況を確認
+                        const currentEquipment = player.currentEquipment && player.currentEquipment[item.slot];
+                        const hasEquipment = currentEquipment && currentEquipment.itemLevel;
+                        
+                        // 装備方針と現在装備状況に基づく判定
+                        if (policy === '零式' && !hasEquipment) {
+                            // 零式方針で未取得の場合はNeed
                             needPlayers.push({
                                 position: position,
                                 name: player.name,
                                 job: player.job,
-                                priority: getDynamicPriority(position, player.job)
+                                priority: getPositionPriority(position)
                             });
-                        } else if (policy === 'トームストーン' && item.type !== 'material' && item.type !== 'mount') {
+                        } else if (policy === 'トームストーン' && !hasEquipment && item.type !== 'material' && item.type !== 'mount') {
+                            // トームストーン方針で未取得の場合はGreed
                             greedPlayers.push({
                                 position: position,
                                 name: player.name,
                                 job: player.job,
-                                priority: getDynamicPriority(position, player.job)
+                                priority: getPositionPriority(position)
                             });
                         } else {
+                            // それ以外はPass（取得済み、方針なし、等）
                             passPlayers.push({
                                 position: position,
                                 name: player.name,
@@ -2476,21 +2484,29 @@
                         Object.entries(players).forEach(([position, player]) => {
                             const policy = player.equipmentPolicy[item.slot];
                             
-                            if (policy === '零式') {
+                            // 現在装備状況を確認
+                            const currentEquipment = player.currentEquipment && player.currentEquipment[item.slot];
+                            const hasEquipment = currentEquipment && currentEquipment.itemLevel;
+                            
+                            // 装備方針と現在装備状況に基づく判定
+                            if (policy === '零式' && !hasEquipment) {
+                                // 零式方針で未取得の場合はNeed
                                 needPlayers.push({
                                     position: position,
                                     name: player.name,
                                     job: player.job,
-                                    priority: getDynamicPriority(position, player.job)
+                                    priority: getPositionPriority(position)
                                 });
-                            } else if (policy === 'トームストーン' && item.type !== 'material' && item.type !== 'mount') {
+                            } else if (policy === 'トームストーン' && !hasEquipment && item.type !== 'material' && item.type !== 'mount') {
+                                // トームストーン方針で未取得の場合はGreed
                                 greedPlayers.push({
                                     position: position,
                                     name: player.name,
                                     job: player.job,
-                                    priority: getDynamicPriority(position, player.job)
+                                    priority: getPositionPriority(position)
                                 });
                             } else {
+                                // それ以外はPass（取得済み、方針なし、等）
                                 passPlayers.push({
                                     position: position,
                                     name: player.name,
@@ -2714,7 +2730,23 @@
             return priorities[job] || 5;
         }
 
-        // 動的優先度計算（装備取得履歴を考慮）
+        // 分配優先度設定に基づくポジション優先度取得
+        function getPositionPriority(playerPosition) {
+            const data = getData();
+            
+            // 分配優先度設定を取得
+            const allocationPriority = data.allocationPriority && data.allocationPriority[currentRaidTier.id] 
+                ? data.allocationPriority[currentRaidTier.id] 
+                : ['D1', 'D2', 'D3', 'D4', 'H1', 'H2', 'MT', 'ST'];
+            
+            // 分配優先度設定での順位を取得（0が最高優先度）
+            const positionIndex = allocationPriority.indexOf(playerPosition);
+            
+            // 見つからない場合は最低優先度
+            return positionIndex !== -1 ? positionIndex : allocationPriority.length;
+        }
+
+        // 動的優先度計算（装備取得履歴を考慮）- 強化薬・武器石用
         function getDynamicPriority(playerPosition, job) {
             const data = getData();
             const players = data.players[currentRaidTier.id] || {};

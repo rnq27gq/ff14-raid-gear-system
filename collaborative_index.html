@@ -461,7 +461,7 @@
         }
         .allocation-history-header {
             display: grid;
-            grid-template-columns: 1fr 0.8fr 2fr 1fr 1.5fr 1fr;
+            grid-template-columns: 1fr 0.8fr 2fr 1fr 1.5fr;
             gap: 10px;
             padding: 12px 15px;
             background-color: #3498db;
@@ -472,7 +472,7 @@
         }
         .allocation-history-row {
             display: grid;
-            grid-template-columns: 1fr 0.8fr 2fr 1fr 1.5fr 1fr;
+            grid-template-columns: 1fr 0.8fr 2fr 1fr 1.5fr;
             gap: 10px;
             padding: 10px 15px;
             border-bottom: 1px solid #eee;
@@ -951,6 +951,13 @@
             .allocation-history-row {
                 grid-template-columns: 1fr;
                 gap: 5px;
+            }
+            
+            .allocation-history-header span:before,
+            .allocation-history-row span:before {
+                content: attr(data-label) ': ';
+                font-weight: bold;
+                margin-right: 5px;
             }
             
             .filter-controls {
@@ -2094,20 +2101,40 @@
                         });
                     });
                 } else if (item.type === 'material') {
-                    // 強化薬・武器石の場合は優先度設定で判定
+                    // 強化薬・武器石の場合は優先度設定で判定（取得済み確認も行う）
                     const allocationPriority = data.allocationPriority && data.allocationPriority[currentRaidTier.id] 
                         ? data.allocationPriority[currentRaidTier.id] 
                         : ['D1', 'D2', 'D3', 'D4', 'H1', 'H2', 'MT', 'ST'];
                     
+                    // 分配履歴を取得
+                    const allocations = data.allocations[currentRaidTier.id] || [];
+                    
                     allocationPriority.forEach((position, index) => {
                         const player = players[position];
                         if (player) {
-                            needPlayers.push({
-                                position: position,
-                                name: player.name,
-                                job: player.job,
-                                priority: index // 優先度設定順
-                            });
+                            // 該当する強化素材を既に取得しているかチェック
+                            const hasAlreadyReceived = allocations.some(allocation => 
+                                allocation.winner && 
+                                allocation.winner.position === position && 
+                                allocation.equipment.slot === item.slot &&
+                                allocation.equipment.name === item.name
+                            );
+                            
+                            if (!hasAlreadyReceived) {
+                                needPlayers.push({
+                                    position: position,
+                                    name: player.name,
+                                    job: player.job,
+                                    priority: index // 優先度設定順
+                                });
+                            } else {
+                                // 既に取得済みの場合はPass
+                                passPlayers.push({
+                                    position: position,
+                                    name: player.name,
+                                    job: player.job
+                                });
+                            }
                         }
                     });
                     
@@ -2464,20 +2491,40 @@
                         
                         needPlayers.sort((a, b) => a.priority - b.priority);
                     } else if (item.type === 'material') {
-                        // 強化薬・武器石の場合は優先度設定で判定
+                        // 強化薬・武器石の場合は優先度設定で判定（取得済み確認も行う）
                         const allocationPriority = data.allocationPriority && data.allocationPriority[currentRaidTier.id] 
                             ? data.allocationPriority[currentRaidTier.id] 
                             : ['D1', 'D2', 'D3', 'D4', 'H1', 'H2', 'MT', 'ST'];
                         
+                        // 分配履歴を取得
+                        const allocations = data.allocations[currentRaidTier.id] || [];
+                        
                         allocationPriority.forEach((position, index) => {
                             const player = players[position];
                             if (player) {
-                                needPlayers.push({
-                                    position: position,
-                                    name: player.name,
-                                    job: player.job,
-                                    priority: index
-                                });
+                                // 該当する強化素材を既に取得しているかチェック
+                                const hasAlreadyReceived = allocations.some(allocation => 
+                                    allocation.winner && 
+                                    allocation.winner.position === position && 
+                                    allocation.equipment.slot === item.slot &&
+                                    allocation.equipment.name === item.name
+                                );
+                                
+                                if (!hasAlreadyReceived) {
+                                    needPlayers.push({
+                                        position: position,
+                                        name: player.name,
+                                        job: player.job,
+                                        priority: index
+                                    });
+                                } else {
+                                    // 既に取得済みの場合はPass
+                                    passPlayers.push({
+                                        position: position,
+                                        name: player.name,
+                                        job: player.job
+                                    });
+                                }
                             }
                         });
                         
@@ -2593,34 +2640,124 @@
                         <button class="export-button" onclick="exportData()">データエクスポート</button>
                     </div>
                     
+                    <div class="filter-controls">
+                        <label for="layerFilter">層フィルタ:</label>
+                        <select id="layerFilter" onchange="filterAllocationHistory()">
+                            <option value="all">全て</option>
+                            <option value="1">1層</option>
+                            <option value="2">2層</option>
+                            <option value="3">3層</option>
+                            <option value="4">4層</option>
+                        </select>
+                        
+                        <label for="slotFilter">部位フィルタ:</label>
+                        <select id="slotFilter" onchange="filterAllocationHistory()">
+                            <option value="all">全て</option>
+                            <option value="武器">武器</option>
+                            <option value="頭">頭</option>
+                            <option value="胴">胴</option>
+                            <option value="手">手</option>
+                            <option value="脚">脚</option>
+                            <option value="足">足</option>
+                            <option value="耳">耳</option>
+                            <option value="首">首</option>
+                            <option value="腕">腕</option>
+                            <option value="指">指</option>
+                            <option value="硬化薬">硬化薬</option>
+                            <option value="強化繊維">強化繊維</option>
+                            <option value="武器石">武器石</option>
+                        </select>
+                        
+                        <label for="playerFilter">取得者フィルタ:</label>
+                        <select id="playerFilter" onchange="filterAllocationHistory()">
+                            <option value="all">全て</option>
+                        </select>
+                    </div>
+                    
                     <div class="allocation-history-header">
                         <span>日付</span>
                         <span>層</span>
                         <span>アイテム</span>
                         <span>部位</span>
                         <span>取得者</span>
-                        <span>週</span>
                     </div>
-                    ${sortedAllocations.map(allocation => {
-                        const timestamp = new Date(allocation.timestamp);
-                        const formattedDate = timestamp.toLocaleDateString('ja-JP');
-                        const winnerText = allocation.winner ? 
-                            `${allocation.winner.name} (${allocation.winner.position})` : 
-                            'なし';
-                        
-                        return `
-                            <div class="allocation-history-row">
-                                <span>${formattedDate}</span>
-                                <span>${allocation.layer}層</span>
-                                <span>${allocation.equipment.name}</span>
-                                <span>${allocation.equipment.slot}</span>
-                                <span>${winnerText}</span>
-                                <span>${allocation.week || '不明'}</span>
-                            </div>
-                        `;
-                    }).join('')}
+                    <div id="historyRows">
+                        ${sortedAllocations.map(allocation => {
+                            const timestamp = new Date(allocation.timestamp);
+                            const formattedDate = timestamp.toLocaleDateString('ja-JP');
+                            const winnerText = allocation.winner ? 
+                                `${allocation.winner.name} (${allocation.winner.position})` : 
+                                'なし';
+                            
+                            return `
+                                <div class="allocation-history-row" data-layer="${allocation.layer}" data-slot="${allocation.equipment.slot}" data-player="${allocation.winner?.name || 'なし'}">
+                                    <span>${formattedDate}</span>
+                                    <span>${allocation.layer}層</span>
+                                    <span>${allocation.equipment.name}</span>
+                                    <span>${allocation.equipment.slot}</span>
+                                    <span>${winnerText}</span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
                 </div>
             `;
+            
+            // プレイヤーフィルターオプション初期化
+            initializePlayerFilter();
+        }
+        
+        // プレイヤーフィルターオプション初期化
+        function initializePlayerFilter() {
+            const data = getData();
+            const players = data.players[currentRaidTier.id] || {};
+            const playerFilter = document.getElementById('playerFilter');
+            
+            // 既存オプションを削除（全て以外）
+            while (playerFilter.children.length > 1) {
+                playerFilter.removeChild(playerFilter.lastChild);
+            }
+            
+            // プレイヤーオプション追加
+            Object.values(players).forEach(player => {
+                if (player.name) {
+                    const option = document.createElement('option');
+                    option.value = player.name;
+                    option.textContent = `${player.name} (${player.position})`;
+                    playerFilter.appendChild(option);
+                }
+            });
+        }
+        
+        // 配布履歴フィルタ機能
+        function filterAllocationHistory() {
+            const layerFilter = document.getElementById('layerFilter').value;
+            const slotFilter = document.getElementById('slotFilter').value;
+            const playerFilter = document.getElementById('playerFilter').value;
+            
+            const rows = document.querySelectorAll('.allocation-history-row');
+            
+            rows.forEach(row => {
+                const layer = row.dataset.layer;
+                const slot = row.dataset.slot;
+                const player = row.dataset.player;
+                
+                let show = true;
+                
+                if (layerFilter !== 'all' && layer !== layerFilter) {
+                    show = false;
+                }
+                
+                if (slotFilter !== 'all' && slot !== slotFilter) {
+                    show = false;
+                }
+                
+                if (playerFilter !== 'all' && player !== playerFilter) {
+                    show = false;
+                }
+                
+                row.style.display = show ? 'grid' : 'none';
+            });
         }
 
         // 統計情報表示
@@ -2663,12 +2800,15 @@
                 }
             });
             
-            const weeks = Object.keys(weeklyStats).sort();
+            const weeks = Object.keys(weeklyStats).sort().reverse();
+            const latestWeek = weeks.length > 0 ? weeks[0] : null;
+            const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD形式
             
             const content = document.getElementById('content');
             content.innerHTML = `
-                <h1>週別統計</h1>
+                <h1>装備取得状況</h1>
                 <h2>${currentRaidTier.name}</h2>
+                <h3>${currentDate}時点</h3>
                 
                 <div class="section">
                     <div class="navigation">
@@ -2676,14 +2816,13 @@
                         <button class="nav-button" onclick="showAllocationHistory()">配布履歴</button>
                     </div>
                     
-                    ${weeks.length === 0 ? `
-                        <p>まだ週別統計データがありません。レイドをクリアして装備を分配すると、ここに統計が表示されます。</p>
-                    ` : weeks.map(week => `
+                    ${!latestWeek ? `
+                        <p>まだ装備取得データがありません。レイドをクリアして装備を分配すると、ここに統計が表示されます。</p>
+                    ` : `
                         <div class="weekly-stats-section">
-                            <h3>${week === '不明' ? '不明な週' : week + '週'}</h3>
                             <div class="weekly-stats-grid">
                                 ${fixedOrder.map(position => {
-                                    const stats = weeklyStats[week][position];
+                                    const stats = weeklyStats[latestWeek][position];
                                     const player = stats.player;
                                     
                                     if (!player) {
@@ -2734,7 +2873,7 @@
                                 }).join('')}
                             </div>
                         </div>
-                    `).join('')}
+                    `}
                 </div>
             `;
         }

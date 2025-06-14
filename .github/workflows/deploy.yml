@@ -28,10 +28,17 @@ jobs:
     - name: Replace Supabase credentials
       run: |
         # HTMLファイル内のプレースホルダーを環境変数で置換
-        sed -i 's/SUPABASE_ANON_KEY: null/SUPABASE_ANON_KEY: '\''${{ secrets.SUPABASE_ANON_KEY }}'\''/' supabase_index.html
+        sed -i "s|SUPABASE_ANON_KEY: null|SUPABASE_ANON_KEY: '${{ secrets.SUPABASE_ANON_KEY }}'|g" supabase_index.html
         
-        # 置換確認（セキュリティ上、実際のキーは表示しない）
-        echo "Supabase credentials replacement completed"
+        # 置換確認（実際のキーは表示せず、置換されたかのみ確認）
+        if grep -q "SUPABASE_ANON_KEY: 'eyJ" supabase_index.html; then
+          echo "✅ Supabase credentials replacement successful"
+        else
+          echo "❌ Supabase credentials replacement failed"
+          echo "Current content around SUPABASE_ANON_KEY:"
+          grep -A 2 -B 2 "SUPABASE_ANON_KEY" supabase_index.html
+          exit 1
+        fi
         
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3

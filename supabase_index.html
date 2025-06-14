@@ -1651,7 +1651,7 @@
                 <h2>チーム: ${currentTeamId}</h2>
                 
                 <div class="section">
-                    <h3>レイドティア選択</h3>
+                    <h3>レイド選択</h3>
                     <div class="tier-list" id="tierList">
                         <!-- レイドティア一覧がここに表示されます -->
                     </div>
@@ -1736,7 +1736,7 @@
             
             content.innerHTML = `
                 <div class="navigation-top-left">
-                    <button class="nav-button" onclick="showMainDashboard()">ダッシュボードに戻る</button>
+                    <button class="nav-button" onclick="showMainDashboard()">レイド選択画面に戻る</button>
                 </div>
                 
                 <h1>${currentRaidTier.name}</h1>
@@ -1834,7 +1834,7 @@
                 
                 <div class="section">
                     <div class="navigation">
-                        <button class="nav-button" onclick="showTierDashboard()">レイドダッシュボードに戻る</button>
+                        <button class="nav-button" onclick="showTierDashboard()">レイド選択画面に戻る</button>
                     </div>
                 </div>
                 
@@ -1848,9 +1848,6 @@
                         </button>
                         <button class="tab-button ${activeTab === 'weapons' ? 'active' : ''}" onclick="showTabbedSetup('weapons')">
                             武器希望
-                        </button>
-                        <button class="tab-button ${activeTab === 'migration' ? 'active' : ''}" onclick="showTabbedSetup('migration')">
-                            データ移行
                         </button>
                     </div>
                     
@@ -1901,11 +1898,6 @@
                                                placeholder="プレイヤー名を入力" style="width: 100%;">
                                     </div>
                                     
-                                    <div style="margin: 10px 0;">
-                                        <label>キャラクター名:</label>
-                                        <input type="text" id="${position}-character" value="${player.characterName || ''}" 
-                                               placeholder="キャラクター名（省略可）" style="width: 100%;">
-                                    </div>
                                     
                                     <div style="margin: 10px 0;">
                                         <label>ジョブ（必須）:</label>
@@ -2036,126 +2028,6 @@
                         }).join('')}
                     </div>
                 `;
-            } else if (tabName === 'migration') {
-                return `
-                    <h3>既存データからの移行</h3>
-                    <p>他のシステムやファイルからデータを移行する場合は、以下の機能をご利用ください。</p>
-                    
-                    <div class="section" style="background-color: #f8f9fa; border: 2px solid #e9ecef;">
-                        <h4>📄 JSONファイルからのインポート</h4>
-                        <div style="margin: 15px 0;">
-                            <div style="display: flex; align-items: center; gap: 15px; margin: 10px 0;">
-                                <input type="file" id="jsonFileInput" accept=".json" 
-                                       style="flex: 1; padding: 12px; border: 2px dashed #3498db; border-radius: 8px; background-color: white;">
-                                <button onclick="importFromJSON()" 
-                                        style="padding: 12px 24px; background-color: #3498db; border-radius: 8px; font-weight: 600;">
-                                    📂 JSONファイルをインポート
-                                </button>
-                            </div>
-                            <div id="jsonFileInfo" style="display: none; padding: 10px; background-color: #d4edda; border-left: 4px solid #28a745; margin: 10px 0;">
-                                <strong>ファイル選択済み:</strong> <span id="selectedFileName"></span><br>
-                                <small id="fileDetails"></small>
-                            </div>
-                        </div>
-                        <div style="background-color: #e8f5e8; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #27ae60;">
-                            <strong>📋 対応形式:</strong><br>
-                            • collaborative_index.htmlで作成されたデータ<br>
-                            • 従来のFF14装備分配システムのエクスポートデータ<br>
-                            • プレイヤー情報、装備方針、武器希望を含むJSONファイル<br>
-                            • カスタムJSONフォーマット（自動判別）
-                        </div>
-                    </div>
-                    
-                    <div class="section" style="background-color: #fff9e6; border: 2px solid #f39c12;">
-                        <h4>📋 CSV形式での一括登録</h4>
-                        <div style="margin: 15px 0;">
-                            <div style="display: grid; grid-template-columns: 1fr auto; gap: 15px; align-items: start;">
-                                <div style="display: flex; flex-direction: column;">
-                                    <label for="csvTextArea" style="font-weight: 600; margin-bottom: 8px; color: #8b4513;">
-                                        CSVデータを入力してください（ヘッダー行含む）:
-                                    </label>
-                                    <textarea id="csvTextArea" 
-                                             placeholder="ポジション,プレイヤー名,ジョブ,キャラクター名&#10;MT,田中太郎,ナイト,Taro Tanaka&#10;ST,佐藤次郎,戦士,Jiro Sato&#10;H1,佐藤花子,白魔道士,Hanako Sato&#10;H2,田中美咲,学者,Misaki Tanaka&#10;D1,山田一郎,竜騎士,Ichiro Yamada&#10;D2,鈴木三郎,忍者,Saburo Suzuki&#10;D3,高橋美里,黒魔道士,Misato Takahashi&#10;D4,渡辺健太,吟遊詩人,Kenta Watanabe" 
-                                             style="width: 100%; height: 160px; font-family: 'Courier New', monospace; font-size: 12px; padding: 12px; border: 2px solid #f39c12; border-radius: 8px; resize: vertical;"></textarea>
-                                    <div style="display: flex; gap: 10px; margin-top: 10px;">
-                                        <button onclick="importFromCSV()" 
-                                                style="flex: 1; padding: 12px 24px; background-color: #f39c12; color: white; border-radius: 8px; font-weight: 600;">
-                                            📊 CSVデータをインポート
-                                        </button>
-                                        <button onclick="clearCSVData()" 
-                                                style="padding: 12px 20px; background-color: #95a5a6; color: white; border-radius: 8px;">
-                                            🗑️ クリア
-                                        </button>
-                                    </div>
-                                </div>
-                                <div style="min-width: 200px;">
-                                    <div style="background-color: #fff3e0; padding: 15px; border-radius: 8px; border-left: 4px solid #f39c12;">
-                                        <strong>CSV形式例:</strong><br>
-                                        <code style="font-size: 11px; display: block; margin: 5px 0;">
-                                        ポジション,プレイヤー名,ジョブ,キャラクター名<br>
-                                        MT,田中太郎,ナイト,Taro Tanaka<br>
-                                        ST,佐藤次郎,戦士,Jiro Sato
-                                        </code><br>
-                                        <strong>ポジション:</strong><br>
-                                        MT, ST, H1, H2, D1, D2, D3, D4<br><br>
-                                        <strong>⚠️ 注意:</strong><br>
-                                        既存データは上書きされます
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="section" style="background-color: #fdf2f2; border: 2px solid #e74c3c;">
-                        <h4>🔄 データのリセット</h4>
-                        <div style="margin: 15px 0;">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                                <div>
-                                    <button onclick="resetCurrentTierData()" 
-                                            style="width: 100%; padding: 15px; background-color: #e74c3c; color: white; border-radius: 8px; font-weight: 600; margin-bottom: 10px;">
-                                        🗑️ 現在のレイドティアデータをリセット
-                                    </button>
-                                    <button onclick="resetAllPlayersData()" 
-                                            style="width: 100%; padding: 15px; background-color: #d86a5a; color: white; border-radius: 8px; font-weight: 600;">
-                                        👥 プレイヤーデータのみリセット
-                                    </button>
-                                </div>
-                                <div style="background-color: #fee; padding: 15px; border-radius: 8px; border-left: 4px solid #e74c3c; color: #721c24;">
-                                    <strong>⚠️ 重要な注意事項:</strong><br><br>
-                                    <strong>全データリセット:</strong><br>
-                                    • プレイヤー情報<br>
-                                    • 装備方針設定<br>
-                                    • 武器希望リスト<br>
-                                    • 分配履歴<br><br>
-                                    <strong>プレイヤーデータのみ:</strong><br>
-                                    • プレイヤー情報のみ削除<br>
-                                    • 設定とログは保持<br><br>
-                                    <strong>🚨 この操作は取り消せません</strong>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="section" style="background-color: #f0f8ff; border: 2px solid #3498db;">
-                        <h4>💡 データ移行のヒント</h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin: 15px 0;">
-                            <div style="background-color: #e8f4fd; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db;">
-                                <strong>📋 CSVファイルから貼り付ける場合:</strong><br>
-                                1. Excelやスプレッドシートでファイルを開く<br>
-                                2. データ範囲を選択してコピー<br>
-                                3. CSVテキストエリアに貼り付け<br>
-                                4. インポートボタンをクリック
-                            </div>
-                            <div style="background-color: #e8f4fd; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db;">
-                                <strong>📄 JSONデータの準備:</strong><br>
-                                1. 既存システムからエクスポート<br>
-                                2. ファイル形式が.jsonであることを確認<br>
-                                3. ファイルサイズが適切であることを確認<br>
-                                4. アップロード前にバックアップを作成
-                            </div>
-                        </div>
-                    </div>
-                `;
             }
             
             return '';
@@ -2196,13 +2068,11 @@
             
             for (const position of positions) {
                 const nameInput = document.getElementById(`${position}-name`);
-                const characterInput = document.getElementById(`${position}-character`);
                 const jobSelect = document.getElementById(`${position}-job`);
                 
                 if (!nameInput || !jobSelect) continue;
                 
                 const name = nameInput.value.trim();
-                const characterName = characterInput.value.trim();
                 const job = jobSelect.value;
                 
                 if (!name || !job) {
@@ -2214,7 +2084,6 @@
                 
                 appData.players[currentRaidTier.id][position] = {
                     name: name,
-                    characterName: characterName,
                     job: job,
                     position: position,
                     equipmentPolicy: existingPlayer.equipmentPolicy || {},
@@ -2379,11 +2248,10 @@
                     
                     if (columns.length < 4) continue;
                     
-                    const [position, name, job, characterName] = columns;
+                    const [position, name, job] = columns;
                     
                     players[position] = {
                         name: name,
-                        characterName: characterName || '',
                         job: job,
                         position: position,
                         equipmentPolicy: {},
@@ -2586,48 +2454,11 @@
             
             content.innerHTML = `
                 <div class="navigation-top-left">
-                    <button class="nav-button" onclick="showTierDashboard()">レイドダッシュボードに戻る</button>
+                    <button class="nav-button" onclick="showTierDashboard()">レイド選択画面に戻る</button>
                 </div>
                 
                 <h1>装備分配システム</h1>
                 <h2>${currentRaidTier.name}</h2>
-                
-                <div class="section">
-                    <h3>層を選択して装備分配を実行</h3>
-                    <div class="layer-grid">
-                        <div class="layer-card" onclick="processLayerAllocation(1)">
-                            <h4>1層</h4>
-                            <p>アクセサリー（耳・首・腕・指）</p>
-                            <div class="layer-stats">
-                                登録プレイヤー: ${playerCount}人
-                            </div>
-                        </div>
-                        
-                        <div class="layer-card" onclick="processLayerAllocation(2)">
-                            <h4>2層</h4>
-                            <p>防具（頭・手・足）+ 武器石・硬化薬</p>
-                            <div class="layer-stats">
-                                登録プレイヤー: ${playerCount}人
-                            </div>
-                        </div>
-                        
-                        <div class="layer-card" onclick="processLayerAllocation(3)">
-                            <h4>3層</h4>
-                            <p>防具（胴・脚）+ 強化薬・強化繊維</p>
-                            <div class="layer-stats">
-                                登録プレイヤー: ${playerCount}人
-                            </div>
-                        </div>
-                        
-                        <div class="layer-card" onclick="processLayerAllocation(4)">
-                            <h4>4層</h4>
-                            <p>胴装備 + 武器箱・直ドロップ武器</p>
-                            <div class="layer-stats">
-                                登録プレイヤー: ${playerCount}人
-                            </div>
-                        </div>
-                    </div>
-                </div>
                 
                 <div class="section" id="allocationResults" style="display: none;">
                     <h3>分配結果</h3>
@@ -2901,7 +2732,7 @@
                         <div class="predicted-winner">
                             <strong>予測取得者:</strong> 
                             ${result.recommended ? 
-                                `${result.recommended.player.name} (${result.recommended.position})` : 
+                                `${result.recommended.player.name} (${result.recommended.position}) [${result.recommended.player.job}]` : 
                                 '該当者なし'
                             }
                         </div>
@@ -2913,7 +2744,7 @@
                                 ${result.candidates.map(candidate => `
                                     <option value="${candidate.position}" 
                                             ${result.recommended?.position === candidate.position ? 'selected' : ''}>
-                                        ${candidate.player.name} (${candidate.position})
+                                        ${candidate.player.name} (${candidate.position}) [${candidate.player.job}]
                                     </option>
                                 `).join('')}
                                 <option value="フリロ">フリロ</option>
@@ -3173,7 +3004,7 @@
             
             content.innerHTML = `
                 <div class="navigation-top-left">
-                    <button class="nav-button" onclick="showTierDashboard()">レイドダッシュボードに戻る</button>
+                    <button class="nav-button" onclick="showTierDashboard()">レイド選択画面に戻る</button>
                 </div>
                 
                 <h1>統計情報</h1>
@@ -3301,7 +3132,7 @@
             
             content.innerHTML = `
                 <div class="navigation-top-left">
-                    <button class="nav-button" onclick="showTierDashboard()">レイドダッシュボードに戻る</button>
+                    <button class="nav-button" onclick="showTierDashboard()">レイド選択画面に戻る</button>
                 </div>
                 
                 <h1>分配履歴</h1>

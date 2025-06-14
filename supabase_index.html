@@ -637,6 +637,62 @@
             color: #6c757d;
         }
         
+        /* 編集モード用スタイル */
+        .editable-slot {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .editable-slot:hover {
+            opacity: 0.8;
+        }
+        
+        .checkbox-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .checkbox-container input[type="checkbox"] {
+            margin: 0 0 4px 0;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+        
+        .checkbox-container .status-text {
+            font-size: 0.7rem;
+            text-align: center;
+        }
+        
+        .checkmark {
+            display: none;
+        }
+        
+        .edit-button, .save-button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s ease;
+        }
+        
+        .edit-button:hover, .save-button:hover {
+            background-color: #218838;
+        }
+        
+        .save-button {
+            background-color: #007bff;
+        }
+        
+        .save-button:hover {
+            background-color: #0056b3;
+        }
+        
         /* フォーム用スタイル */
         .form-group {
             margin-bottom: 25px;
@@ -690,6 +746,92 @@
             background-color: #7f8c8d;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(149, 165, 166, 0.3);
+        }
+        
+        /* 優先順位設定用スタイル */
+        .priority-container {
+            max-width: 600px;
+            margin: 20px 0;
+        }
+        
+        .priority-list {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 400px;
+        }
+        
+        .priority-item {
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            margin: 8px 0;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            cursor: move;
+            transition: all 0.3s ease;
+        }
+        
+        .priority-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+        
+        .priority-rank {
+            background-color: #007bff;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            font-size: 14px;
+        }
+        
+        .priority-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .priority-info .position-badge {
+            background-color: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .priority-info .player-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .priority-info .player-job {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .drag-handle {
+            color: #adb5bd;
+            font-size: 18px;
+            cursor: grab;
+        }
+        
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+        
+        .priority-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
         }
         .nav-button {
             background-color: #5a9fd4;
@@ -1769,9 +1911,6 @@
                      onclick="selectRaidTier('${tierId}')">
                     <h3>${tier.name}</h3>
                     <p>${tier.description || '零式レイド'}</p>
-                    <p style="font-size: 0.8rem; color: #888;">
-                        プレイヤー: ${Object.keys(appData.players[tierId] || {}).length}人
-                    </p>
                 </div>
             `).join('');
         }
@@ -1798,6 +1937,10 @@
             const content = document.getElementById('content');
             
             content.innerHTML = `
+                <div class="navigation-top-left">
+                    <button class="nav-button" onclick="showMainDashboard()">レイド選択画面に戻る</button>
+                </div>
+                
                 <h1>${currentRaidTier.name}</h1>
                 <h2>チーム: ${currentTeamId}</h2>
                 
@@ -1814,6 +1957,7 @@
                 <div class="section">
                     <div class="navigation">
                         <button class="nav-button" onclick="showPlayerManagement()">メンバー管理</button>
+                        <button class="nav-button" onclick="showPriorityManagement()">優先順位設定</button>
                         <button class="nav-button" onclick="showStatistics()">統計情報</button>
                         <button class="nav-button" onclick="showAllocationHistory()">配布履歴</button>
                     </div>
@@ -1823,8 +1967,6 @@
                     <h3>レイド情報</h3>
                     <p><strong>レイド名:</strong> ${currentRaidTier.name}</p>
                     <p><strong>説明:</strong> ${currentRaidTier.description || '零式レイド'}</p>
-                    <p><strong>登録メンバー:</strong> ${Object.keys(appData.players[currentRaidTier.id] || {}).length}人</p>
-                    <p><strong>配布履歴:</strong> ${(appData.allocations[currentRaidTier.id] || []).length}件</p>
                 </div>
             `;
         }
@@ -1952,6 +2094,167 @@
             }
         }
         
+        // 優先順位管理画面
+        function showPriorityManagement() {
+            const content = document.getElementById('content');
+            const players = appData.players[currentRaidTier.id] || {};
+            
+            if (Object.keys(players).length === 0) {
+                showError('プレイヤー情報が設定されていません。まずメンバー管理から設定してください。');
+                return;
+            }
+            
+            // 現在の優先順位を取得（デフォルト: D1→MT→ST→H1→H2→D2→D3→D4）
+            const defaultPriority = ['D1', 'MT', 'ST', 'H1', 'H2', 'D2', 'D3', 'D4'];
+            const currentPriority = appData.settings?.positionPriority || defaultPriority;
+            
+            content.innerHTML = `
+                <div class="navigation-top-left">
+                    <button class="nav-button" onclick="showMainDashboard()">メインダッシュボードに戻る</button>
+                </div>
+                
+                <h1>ポジション間優先順位設定</h1>
+                <h2>${currentRaidTier.name}</h2>
+                
+                <div class="section">
+                    <h3>強化素材の分配優先順位</h3>
+                    <p>武器石、硬化薬、強化薬、強化繊維の分配で使用される優先順位です。ドラッグ&ドロップで順序を変更できます。</p>
+                    
+                    <div class="priority-container">
+                        <div class="priority-list" id="priorityList">
+                            ${currentPriority.map((position, index) => {
+                                const player = players[position];
+                                if (!player) return '';
+                                return `
+                                    <div class="priority-item" data-position="${position}" draggable="true">
+                                        <div class="priority-rank">${index + 1}</div>
+                                        <div class="priority-info">
+                                            <span class="position-badge">${position}</span>
+                                            <span class="player-name">${player.name}</span>
+                                            <span class="player-job">[${player.job}]</span>
+                                        </div>
+                                        <div class="drag-handle">⋮⋮</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="priority-actions">
+                        <button onclick="savePrioritySettings()" class="primary-btn">
+                            優先順位を保存
+                        </button>
+                        <button onclick="resetPrioritySettings()" class="secondary-btn">
+                            デフォルトに戻す
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="section" style="background-color: #f8f9fa; border-left: 4px solid #17a2b8;">
+                    <h4>💡 優先順位の使用場面</h4>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li><strong>武器石：</strong> 武器の性能向上に使用される重要な素材</li>
+                        <li><strong>硬化薬：</strong> 防具の強化に必要な素材</li>
+                        <li><strong>強化薬：</strong> アクセサリーの強化に使用</li>
+                        <li><strong>強化繊維：</strong> 防具の追加強化に使用</li>
+                    </ul>
+                    <p><strong>注意：</strong> 装備の分配には影響しません。装備は各プレイヤーの装備方針（零式/トームストーン）に基づいて判定されます。</p>
+                </div>
+            `;
+            
+            // ドラッグ&ドロップ機能を初期化
+            initializeDragAndDrop();
+        }
+        
+        // ドラッグ&ドロップ機能初期化
+        function initializeDragAndDrop() {
+            const priorityList = document.getElementById('priorityList');
+            if (!priorityList) return;
+            
+            let draggedElement = null;
+            
+            priorityList.addEventListener('dragstart', function(e) {
+                if (e.target.classList.contains('priority-item')) {
+                    draggedElement = e.target;
+                    e.target.style.opacity = '0.5';
+                }
+            });
+            
+            priorityList.addEventListener('dragend', function(e) {
+                if (e.target.classList.contains('priority-item')) {
+                    e.target.style.opacity = '';
+                    draggedElement = null;
+                }
+            });
+            
+            priorityList.addEventListener('dragover', function(e) {
+                e.preventDefault();
+            });
+            
+            priorityList.addEventListener('drop', function(e) {
+                e.preventDefault();
+                
+                if (draggedElement && e.target.classList.contains('priority-item')) {
+                    const afterElement = e.target;
+                    
+                    if (draggedElement !== afterElement) {
+                        priorityList.insertBefore(draggedElement, afterElement.nextSibling);
+                        updatePriorityNumbers();
+                    }
+                }
+            });
+        }
+        
+        // 優先順位番号更新
+        function updatePriorityNumbers() {
+            const items = document.querySelectorAll('.priority-item');
+            items.forEach((item, index) => {
+                const rankElement = item.querySelector('.priority-rank');
+                if (rankElement) {
+                    rankElement.textContent = index + 1;
+                }
+            });
+        }
+        
+        // 優先順位設定保存
+        async function savePrioritySettings() {
+            try {
+                const items = document.querySelectorAll('.priority-item');
+                const newPriority = Array.from(items).map(item => item.dataset.position);
+                
+                // 設定を保存
+                if (!appData.settings) appData.settings = {};
+                appData.settings.positionPriority = newPriority;
+                
+                // Supabaseに保存
+                const { error } = await window.supabaseClient
+                    .from('raid_data')
+                    .upsert({
+                        team_id: currentTeamId,
+                        tier_id: currentRaidTier.id,
+                        data_type: 'settings',
+                        content: { positionPriority: newPriority }
+                    });
+                
+                if (error) {
+                    throw new Error(`保存エラー: ${error.message}`);
+                }
+                
+                showSuccess('優先順位設定を保存しました');
+                
+            } catch (error) {
+                console.error('優先順位保存エラー:', error);
+                showError('優先順位設定の保存に失敗しました: ' + error.message);
+            }
+        }
+        
+        // 優先順位設定リセット
+        function resetPrioritySettings() {
+            if (confirm('優先順位をデフォルト（D1→MT→ST→H1→H2→D2→D3→D4）に戻しますか？')) {
+                showPriorityManagement();
+            }
+        }
+        
         // プレイヤー管理機能
         function showPlayerManagement() {
             showPlayerSetup();
@@ -1972,7 +2275,7 @@
                 
                 <div class="section">
                     <div class="navigation">
-                        <button class="nav-button" onclick="showTierDashboard()">レイド選択画面に戻る</button>
+                        <button class="nav-button" onclick="showMainDashboard()">メインダッシュボードに戻る</button>
                     </div>
                 </div>
                 
@@ -2592,7 +2895,7 @@
             
             content.innerHTML = `
                 <div class="navigation-top-left">
-                    <button class="nav-button" onclick="showTierDashboard()">レイド選択画面に戻る</button>
+                    <button class="nav-button" onclick="showMainDashboard()">メインダッシュボードに戻る</button>
                 </div>
                 
                 <h1>装備分配システム</h1>
@@ -2942,7 +3245,7 @@
                     <button onclick="confirmAllocation(${layer})" class="confirm-btn">
                         分配を確定
                     </button>
-                    <button onclick="showTierDashboard()" class="cancel-btn">
+                    <button onclick="showMainDashboard()" class="cancel-btn">
                         キャンセル
                     </button>
                 </div>
@@ -3142,14 +3445,16 @@
             
             content.innerHTML = `
                 <div class="navigation-top-left">
-                    <button class="nav-button" onclick="showTierDashboard()">レイド選択画面に戻る</button>
+                    <button class="nav-button" onclick="showMainDashboard()">メインダッシュボードに戻る</button>
                 </div>
                 
                 <h1>統計情報</h1>
                 <h2>${currentRaidTier.name}</h2>
                 
                 <div class="section">
-                    <h3>プレイヤー別取得状況</h3>
+                    <h3>プレイヤー別取得状況
+                        <button class="edit-button" onclick="showStatisticsEditMode()" style="margin-left: 20px;">編集開始</button>
+                    </h3>
                     ${generatePlayerStatistics(players, allocations)}
                 </div>
             `;
@@ -3262,6 +3567,191 @@
             return { playerStats, slotStats, weekStats };
         }
         
+        // 統計情報編集モード表示
+        function showStatisticsEditMode() {
+            const content = document.getElementById('content');
+            const players = appData.players[currentRaidTier.id] || {};
+            const allocations = appData.allocations[currentRaidTier.id] || [];
+            
+            if (Object.keys(players).length === 0) {
+                showError('プレイヤー情報が設定されていません。');
+                return;
+            }
+            
+            content.innerHTML = `
+                <div class="navigation-top-left">
+                    <button class="nav-button" onclick="showMainDashboard()">メインダッシュボードに戻る</button>
+                    <button class="nav-button" onclick="showStatistics()">編集終了</button>
+                </div>
+                
+                <h1>統計情報編集</h1>
+                <h2>${currentRaidTier.name}</h2>
+                
+                <div class="section">
+                    <h3>プレイヤー別取得状況編集
+                        <button class="save-button" onclick="saveStatisticsChanges()" style="margin-left: 20px;">変更を保存</button>
+                    </h3>
+                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">
+                        チェックボックスをクリックして取得状況を変更できます。変更後は「変更を保存」ボタンを押してください。
+                    </p>
+                    ${generateEditablePlayerStatistics(players, allocations)}
+                </div>
+            `;
+        }
+        
+        // 編集可能なプレイヤー別統計情報生成
+        function generateEditablePlayerStatistics(players, allocations) {
+            const positions = ['MT', 'ST', 'H1', 'H2', 'D1', 'D2', 'D3', 'D4'];
+            const equipmentSlots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+            const materialSlots = ['武器石', '硬化薬', '強化薬', '強化繊維'];
+            
+            let html = '<div class="player-stats-table">';
+            
+            // ヘッダー
+            html += `
+                <div class="stats-header">
+                    <div class="player-name-col">プレイヤー</div>
+                    ${equipmentSlots.map(slot => `<div class="slot-col">${slot}</div>`).join('')}
+                    ${materialSlots.map(slot => `<div class="slot-col">${slot}</div>`).join('')}
+                </div>
+            `;
+            
+            // 各プレイヤーの行
+            positions.forEach(position => {
+                const player = players[position];
+                if (!player) return;
+                
+                // 該当プレイヤーの取得履歴を取得
+                const playerAllocations = allocations.filter(alloc => alloc.position === position);
+                const acquiredSlots = new Set(playerAllocations.map(alloc => alloc.slot));
+                
+                html += `
+                    <div class="stats-row">
+                        <div class="player-name-col">
+                            <strong>${player.name}</strong><br>
+                            <small>(${position})</small>
+                        </div>
+                `;
+                
+                // 装備部位の取得状況（編集可能）
+                equipmentSlots.forEach(slot => {
+                    const acquired = acquiredSlots.has(slot);
+                    html += `
+                        <div class="slot-col editable-slot ${acquired ? 'acquired' : 'not-acquired'}">
+                            <label class="checkbox-container">
+                                <input type="checkbox" 
+                                       data-position="${position}" 
+                                       data-slot="${slot}" 
+                                       ${acquired ? 'checked' : ''}
+                                       onchange="toggleAcquisitionStatus(this)">
+                                <span class="checkmark"></span>
+                                <span class="status-text">${acquired ? '取得済' : '未取得'}</span>
+                            </label>
+                        </div>
+                    `;
+                });
+                
+                // 素材の取得状況（編集可能）
+                materialSlots.forEach(slot => {
+                    const acquired = acquiredSlots.has(slot);
+                    html += `
+                        <div class="slot-col editable-slot ${acquired ? 'acquired' : 'not-acquired'}">
+                            <label class="checkbox-container">
+                                <input type="checkbox" 
+                                       data-position="${position}" 
+                                       data-slot="${slot}" 
+                                       ${acquired ? 'checked' : ''}
+                                       onchange="toggleAcquisitionStatus(this)">
+                                <span class="checkmark"></span>
+                                <span class="status-text">${acquired ? '取得済' : '未取得'}</span>
+                            </label>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            });
+            
+            html += '</div>';
+            return html;
+        }
+        
+        // 取得状況の切り替え
+        function toggleAcquisitionStatus(checkbox) {
+            const position = checkbox.dataset.position;
+            const slot = checkbox.dataset.slot;
+            const isChecked = checkbox.checked;
+            const slotDiv = checkbox.closest('.slot-col');
+            const statusText = slotDiv.querySelector('.status-text');
+            
+            // 見た目を即座に更新
+            if (isChecked) {
+                slotDiv.classList.remove('not-acquired');
+                slotDiv.classList.add('acquired');
+                statusText.textContent = '取得済';
+            } else {
+                slotDiv.classList.remove('acquired');
+                slotDiv.classList.add('not-acquired');
+                statusText.textContent = '未取得';
+            }
+        }
+        
+        // 統計情報の変更を保存
+        function saveStatisticsChanges() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][data-position][data-slot]');
+            const currentAllocations = appData.allocations[currentRaidTier.id] || [];
+            const newAllocations = [];
+            
+            // 既存の分配データから編集対象以外のデータを保持
+            const editedSlots = new Set();
+            checkboxes.forEach(checkbox => {
+                const key = `${checkbox.dataset.position}-${checkbox.dataset.slot}`;
+                editedSlots.add(key);
+            });
+            
+            // 編集対象外の分配データを保持
+            currentAllocations.forEach(allocation => {
+                const key = `${allocation.position}-${allocation.slot}`;
+                if (!editedSlots.has(key)) {
+                    newAllocations.push(allocation);
+                }
+            });
+            
+            // チェックされた項目を分配データとして追加
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    const position = checkbox.dataset.position;
+                    const slot = checkbox.dataset.slot;
+                    
+                    // 既存の分配データがない場合のみ追加
+                    const existingAllocation = newAllocations.find(alloc => 
+                        alloc.position === position && alloc.slot === slot
+                    );
+                    
+                    if (!existingAllocation) {
+                        newAllocations.push({
+                            position: position,
+                            slot: slot,
+                            week: 'Manual', // 手動編集であることを示す
+                            layer: 'Manual', // 手動編集であることを示す
+                            timestamp: new Date().toISOString()
+                        });
+                    }
+                }
+            });
+            
+            // データを保存
+            appData.allocations[currentRaidTier.id] = newAllocations;
+            saveToSupabase();
+            
+            showSuccess('統計情報の変更を保存しました。');
+            
+            // 統計画面に戻る
+            setTimeout(() => {
+                showStatistics();
+            }, 1500);
+        }
+        
         // 分配履歴表示
         function showAllocationHistory() {
             const content = document.getElementById('content');
@@ -3270,7 +3760,7 @@
             
             content.innerHTML = `
                 <div class="navigation-top-left">
-                    <button class="nav-button" onclick="showTierDashboard()">レイド選択画面に戻る</button>
+                    <button class="nav-button" onclick="showMainDashboard()">メインダッシュボードに戻る</button>
                 </div>
                 
                 <h1>分配履歴</h1>

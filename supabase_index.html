@@ -1368,6 +1368,29 @@
             background: #5a6268;
         }
         
+        /* タブ保存ボタン */
+        .tab-save-button {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        
+        .save-btn {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .save-btn:hover {
+            background: #218838;
+        }
+        
         .history-table {
             background: #f8f9fa;
             border-radius: 10px;
@@ -2496,6 +2519,12 @@
                             `;
                         }).join('')}
                     </div>
+                    
+                    <div class="tab-save-button">
+                        <button class="save-btn" onclick="savePlayersDataTab()">
+                            メンバー情報を保存
+                        </button>
+                    </div>
                 `;
             } else if (tabName === 'policy') {
                 if (Object.keys(players).length === 0) {
@@ -2538,6 +2567,12 @@
                                 </div>
                             `;
                         }).join('')}
+                    </div>
+                    
+                    <div class="tab-save-button">
+                        <button class="save-btn" onclick="saveEquipmentPolicyDataTab()">
+                            装備方針を保存
+                        </button>
                     </div>
                 `;
             } else if (tabName === 'weapons') {
@@ -2610,6 +2645,12 @@
                                 </div>
                             `;
                         }).join('')}
+                    </div>
+                    
+                    <div class="tab-save-button">
+                        <button class="save-btn" onclick="saveWeaponWishesDataTab()">
+                            武器希望を保存
+                        </button>
                     </div>
                 `;
             }
@@ -2699,6 +2740,37 @@
             
             // Supabaseに保存
             await saveDataToSupabase('players', appData.players[currentRaidTier.id]);
+        }
+        
+        // タブ専用保存関数
+        async function savePlayersDataTab() {
+            try {
+                await savePlayersData();
+                showSuccess('メンバー情報を保存しました');
+            } catch (error) {
+                console.error('メンバー情報保存エラー:', error);
+                showError('メンバー情報の保存に失敗しました: ' + error.message);
+            }
+        }
+        
+        async function saveEquipmentPolicyDataTab() {
+            try {
+                await saveEquipmentPolicyData();
+                showSuccess('装備方針を保存しました');
+            } catch (error) {
+                console.error('装備方針保存エラー:', error);
+                showError('装備方針の保存に失敗しました: ' + error.message);
+            }
+        }
+        
+        async function saveWeaponWishesDataTab() {
+            try {
+                await saveWeaponWishesData();
+                showSuccess('武器希望を保存しました');
+            } catch (error) {
+                console.error('武器希望保存エラー:', error);
+                showError('武器希望の保存に失敗しました: ' + error.message);
+            }
         }
         
         // 武器希望保存
@@ -3275,7 +3347,7 @@
                 html += `
                     <div class="weapon-selection">
                         <h5>直ドロップ武器選択:</h5>
-                        <select id="directWeaponSelect" onchange="updateDirectWeapon()">
+                        <select id="directWeaponSelect" onchange="updateDirectWeapon()" style="width: 100%; padding: 5px;">
                             <option value="">武器を選択してください</option>
                             <option value="ナイト">ナイト武器</option>
                             <option value="戦士">戦士武器</option>
@@ -3408,27 +3480,44 @@
         
         // 直ドロップ武器更新
         function updateDirectWeapon() {
+            console.log('updateDirectWeapon関数が呼び出されました');
+            
             const weaponSelect = document.getElementById('directWeaponSelect');
             if (!weaponSelect) {
                 console.error('武器選択プルダウンが見つかりません');
+                showError('武器選択プルダウンが見つかりません');
                 return;
             }
             
             const selectedWeapon = weaponSelect.value;
             console.log('選択された武器:', selectedWeapon);
+            console.log('プルダウンの全選択肢:', weaponSelect.options.length);
             
             if (selectedWeapon) {
-                // 直ドロップ武器の分配を再計算
-                const drops = getLayerDrops(4);
-                const weaponDrop = drops.find(d => d.type === 'direct_weapon');
-                if (weaponDrop) {
-                    weaponDrop.weapon = selectedWeapon;
-                    const allocationResults = calculateAllocation(4, drops);
-                    displayAllocationResults(4, allocationResults);
-                    showSuccess(`${selectedWeapon}武器を選択しました`);
-                } else {
-                    console.error('直ドロップ武器アイテムが見つかりません');
+                try {
+                    // 直ドロップ武器の分配を再計算
+                    const drops = getLayerDrops(4);
+                    console.log('4層のドロップアイテム:', drops);
+                    
+                    const weaponDrop = drops.find(d => d.type === 'direct_weapon');
+                    if (weaponDrop) {
+                        weaponDrop.weapon = selectedWeapon;
+                        console.log('武器ドロップ更新:', weaponDrop);
+                        
+                        const allocationResults = calculateAllocation(4, drops);
+                        displayAllocationResults(4, allocationResults);
+                        showSuccess(`${selectedWeapon}を選択しました`);
+                    } else {
+                        console.error('直ドロップ武器アイテムが見つかりません');
+                        console.log('利用可能なドロップタイプ:', drops.map(d => d.type));
+                        showError('直ドロップ武器アイテムが見つかりません');
+                    }
+                } catch (error) {
+                    console.error('武器選択処理エラー:', error);
+                    showError('武器選択処理でエラーが発生しました: ' + error.message);
                 }
+            } else {
+                console.log('武器選択がクリアされました');
             }
         }
         

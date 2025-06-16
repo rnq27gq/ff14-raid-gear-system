@@ -1,24 +1,35 @@
-# 機密情報フォルダ
+# 機密情報とセットアップファイル
 config/
-
-# Supabase認証情報
+envdoc/
 supabase_credentials.js
 *_credentials.js
 *.env
 .env.*
 
-# 開発用ファイル
-envdoc/
+# 開発・デバッグファイル
 temp/
 debug/
 *.log
+*.backup
+*.sql.bak
+
+# 旧バージョンファイル
+*_old.*
+*_backup.*
+legacy/
+archive/
 
 # OS生成ファイル
 .DS_Store
 Thumbs.db
+*.tmp
 
 # エディタ設定
 .vscode/
 .idea/
 *.swp
 *.swo
+
+# Node.js（将来の拡張用）
+node_modules/
+package-lock.json

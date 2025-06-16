@@ -2372,7 +2372,7 @@
         // タブコンテンツ生成
         function getTabContent(tabName) {
             const players = appData.players[currentRaidTier.id] || {};
-            const positions = ['MT', 'ST', 'H1', 'H2', 'D1', 'D2', 'D3', 'D4'];
+            const positions = ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
             
             if (tabName === 'players') {
                 return `
@@ -2565,7 +2565,7 @@
         
         // プレイヤー情報保存
         async function savePlayersData() {
-            const positions = ['MT', 'ST', 'H1', 'H2', 'D1', 'D2', 'D3', 'D4'];
+            const positions = ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
             
             if (!appData.players[currentRaidTier.id]) {
                 appData.players[currentRaidTier.id] = {};
@@ -2882,7 +2882,7 @@
             if (Array.isArray(importData) && importData.length > 0 && importData[0].name) {
                 const players = {};
                 importData.forEach((player, index) => {
-                    const positions = ['MT', 'ST', 'H1', 'H2', 'D1', 'D2', 'D3', 'D4'];
+                    const positions = ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
                     const position = positions[index] || `D${index - 3}`;
                     
                     players[position] = {
@@ -3531,8 +3531,8 @@
         
         // プレイヤー別統計情報生成
         function generatePlayerStatistics(players, allocations) {
-            // ポジション順序を固定化 (MT→ST→H1→H2→D1→D2→D3→D4)
-            const positions = ['MT', 'ST', 'H1', 'H2', 'D1', 'D2', 'D3', 'D4'];
+            // ポジション順序を固定化 (D1→D2→D3→D4→MT→ST→H1→H2)
+            const positions = ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
             
             // 装備部位順序を固定化 (頭→胴→手→脚→足→耳→首→腕→指→武器)
             const equipmentSlots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
@@ -3670,7 +3670,7 @@
         
         // 編集可能なプレイヤー別統計情報生成
         function generateEditablePlayerStatistics(players, allocations) {
-            const positions = ['MT', 'ST', 'H1', 'H2', 'D1', 'D2', 'D3', 'D4'];
+            const positions = ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
             const equipmentSlots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
             const materialSlots = ['武器石', '硬化薬', '強化薬', '強化繊維'];
             

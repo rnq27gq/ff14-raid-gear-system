@@ -3984,6 +3984,9 @@
                     }
                 });
                 
+                // 断章交換者の自動ステータス更新
+                await updateTomeExchangeStatus(allocations);
+                
                 // Supabaseに保存
                 await saveDataToSupabase('allocations', appData.allocations[currentRaidTier.id]);
                 await saveDataToSupabase('players', appData.players[currentRaidTier.id]);
@@ -4024,6 +4027,59 @@
                 '強化繊維': 1
             };
             return priorities[slot] || 1;
+        }
+        
+        // 断章交換者の自動ステータス更新
+        async function updateTomeExchangeStatus(allocations) {
+            try {
+                const currentAllocations = appData.allocations[currentRaidTier.id] || [];
+                let hasUpdates = false;
+                
+                // 各装備スロットについて断章交換者をチェック
+                const equipmentSlots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+                
+                for (const slot of equipmentSlots) {
+                    // 今回のアロケーションでこのスロットの装備が分配されたかチェック
+                    const slotAllocations = allocations.filter(alloc => alloc.slot === slot);
+                    
+                    if (slotAllocations.length > 0) {
+                        // このスロットで断章交換ステータスの人をチェック
+                        const players = appData.players[currentRaidTier.id] || {};
+                        
+                        for (const [position, player] of Object.entries(players)) {
+                            const currentStatus = getPlayerEquipmentStatus(position, slot);
+                            
+                            // 断章交換ステータスの人が装備を取得した場合
+                            if (currentStatus === '断章交換') {
+                                const receivedAllocation = slotAllocations.find(alloc => alloc.position === position);
+                                
+                                if (receivedAllocation) {
+                                    // ステータスを「断章交換・箱取得済」に更新
+                                    const existingAllocation = currentAllocations.find(alloc => 
+                                        alloc.position === position && alloc.slot === slot
+                                    );
+                                    
+                                    if (existingAllocation) {
+                                        existingAllocation.status = '断章交換・箱取得済';
+                                        hasUpdates = true;
+                                        console.log(`${player.name}(${position})の${slot}ステータスを「断章交換・箱取得済」に更新`);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (hasUpdates) {
+                    // 更新があった場合は再保存
+                    await saveDataToSupabase('allocations', appData.allocations[currentRaidTier.id]);
+                    console.log('断章交換ステータスの自動更新が完了しました');
+                }
+                
+            } catch (error) {
+                console.error('断章交換ステータス更新エラー:', error);
+                // エラーが発生しても分配処理自体は続行
+            }
         }
         
         // 統計情報表示

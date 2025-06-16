@@ -2723,7 +2723,7 @@
                             return `
                                 <div class="player-card">
                                     <div class="player-header">
-                                        <span class="position-badge">${position}</span>
+                                        <span class="position-badge ${getPositionRoleClass(position)}">${position}</span>
                                     </div>
                                     
                                     <div style="margin: 10px 0;">
@@ -2770,7 +2770,7 @@
                                 <div class="player-card">
                                     <div class="player-header">
                                         <span class="player-name">${player.name}</span>
-                                        <span class="position-badge">${position} - ${player.job}</span>
+                                        <span class="position-badge ${getPositionRoleClass(position)}">${position} - ${player.job}</span>
                                     </div>
                                     <div class="equipment-policy">
                                         <div class="policy-grid">
@@ -2822,7 +2822,7 @@
                                 <div class="player-card">
                                     <div class="player-header">
                                         <span class="player-name">${player.name}</span>
-                                        <span class="position-badge">${position} - ${player.job}</span>
+                                        <span class="position-badge ${getPositionRoleClass(position)}">${position} - ${player.job}</span>
                                     </div>
                                     <div class="weapon-wishes">
                                         <div class="wish-priority">
@@ -3975,7 +3975,7 @@
                     <div class="stats-row">
                         <div class="player-name-col">
                             <strong>${player.name}</strong><br>
-                            <small>(${position})</small>
+                            <span class="position-badge ${getPositionRoleClass(position)}" style="font-size: 11px; padding: 2px 6px;">${position}</span>
                         </div>
                 `;
                 
@@ -4111,7 +4111,7 @@
                     <div class="stats-row">
                         <div class="player-name-col">
                             <strong>${player.name}</strong><br>
-                            <small>(${position})</small>
+                            <span class="position-badge ${getPositionRoleClass(position)}" style="font-size: 11px; padding: 2px 6px;">${position}</span>
                         </div>
                 `;
                 

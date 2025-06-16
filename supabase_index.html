@@ -750,29 +750,38 @@
         
         /* 優先順位設定用スタイル */
         .priority-container {
-            max-width: 500px;
+            max-width: 100%;
             margin: 15px 0;
         }
         
         .priority-list {
             background-color: #f8f9fa;
             border-radius: 6px;
-            padding: 10px;
-            min-height: 320px;
+            padding: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            min-height: auto;
         }
         
         .priority-item {
             background-color: white;
             border: 2px solid #dee2e6;
             border-radius: 6px;
-            margin: 6px 0;
-            padding: 10px;
+            margin: 0;
+            padding: 8px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             cursor: grab;
             transition: all 0.3s ease;
             user-select: none;
             position: relative;
+            width: 80px;
+            height: 80px;
+            text-align: center;
+            justify-content: center;
         }
         
         .priority-item:hover {
@@ -802,50 +811,60 @@
             background-color: #007bff;
             color: white;
             border-radius: 50%;
-            width: 25px;
-            height: 25px;
+            width: 18px;
+            height: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            margin-right: 12px;
-            font-size: 12px;
+            font-size: 10px;
+            position: absolute;
+            top: 2px;
+            left: 2px;
         }
         
         .priority-info {
-            flex: 1;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 10px;
+            gap: 2px;
+            margin-top: 15px;
         }
         
         .priority-info .position-badge {
             background-color: #28a745;
             color: white;
-            padding: 3px 6px;
+            padding: 2px 4px;
             border-radius: 3px;
             font-weight: bold;
-            font-size: 11px;
+            font-size: 10px;
         }
         
         .priority-info .player-name {
             font-weight: 600;
             color: #2c3e50;
-            font-size: 13px;
+            font-size: 10px;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         
         .priority-info .player-job {
             color: #6c757d;
-            font-size: 12px;
+            font-size: 9px;
         }
         
         .drag-handle {
             color: #007bff;
-            font-size: 20px;
+            font-size: 12px;
             cursor: grab;
             transition: all 0.2s ease;
-            padding: 4px;
+            padding: 2px;
             border-radius: 3px;
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
         }
         
         .drag-handle:hover {
@@ -1120,6 +1139,7 @@
             width: 100%;
             text-align: left;
             font-size: 0.9rem;
+            color: #000;
         }
         
         .judgment-toggle:hover {
@@ -1336,7 +1356,7 @@
         }
         
         .clear-filters-btn {
-            background: #e74c3c;
+            background: #6c757d;
             color: white;
             padding: 8px 15px;
             border: none;
@@ -1345,7 +1365,7 @@
         }
         
         .clear-filters-btn:hover {
-            background: #c0392b;
+            background: #5a6268;
         }
         
         .history-table {
@@ -1515,10 +1535,23 @@
         
         // 初期化 - ライブラリ読み込み完了を待つ
         window.addEventListener('load', async function() {
+            // ローディング表示
+            showMessage('システム初期化中...', 'info');
+            
             // 少し待ってからアプリ初期化
             setTimeout(async () => {
                 await initializeApp();
             }, 100);
+        });
+        
+        // DOMContentLoadedでも初期化を試行（ハードリロード対策）
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (!window.supabaseClient) {
+                showMessage('システム初期化中...', 'info');
+                setTimeout(async () => {
+                    await initializeApp();
+                }, 200);
+            }
         });
         
         // アプリ初期化
@@ -3348,7 +3381,13 @@
         // 直ドロップ武器更新
         function updateDirectWeapon() {
             const weaponSelect = document.getElementById('directWeaponSelect');
+            if (!weaponSelect) {
+                console.error('武器選択プルダウンが見つかりません');
+                return;
+            }
+            
             const selectedWeapon = weaponSelect.value;
+            console.log('選択された武器:', selectedWeapon);
             
             if (selectedWeapon) {
                 // 直ドロップ武器の分配を再計算
@@ -3358,6 +3397,9 @@
                     weaponDrop.weapon = selectedWeapon;
                     const allocationResults = calculateAllocation(4, drops);
                     displayAllocationResults(4, allocationResults);
+                    showSuccess(`${selectedWeapon}武器を選択しました`);
+                } else {
+                    console.error('直ドロップ武器アイテムが見つかりません');
                 }
             }
         }

@@ -1678,9 +1678,31 @@
         async function tryAutoLogin() {
             const savedTeamId = localStorage.getItem('ff14_team_id');
             if (savedTeamId) {
+                console.log('自動ログイン開始:', savedTeamId);
                 currentTeamId = savedTeamId;
                 supabaseConfig.currentTeamId = savedTeamId;
+                
+                // チームコンテキスト設定
+                try {
+                    const { data: contextData, error: contextError } = await window.supabaseClient.rpc('set_team_context', {
+                        team_id: savedTeamId
+                    });
+                    
+                    if (contextError) {
+                        console.error('コンテキスト設定エラー:', contextError);
+                    } else {
+                        console.log('チームコンテキスト設定完了');
+                    }
+                } catch (error) {
+                    console.error('自動ログイン中のコンテキスト設定エラー:', error);
+                }
+                
                 await showAuthenticatedState();
+                
+                // メイン機能の初期化
+                await initializeMainFeatures();
+                
+                console.log('自動ログイン完了');
             }
         }
         
@@ -2031,6 +2053,14 @@
             } catch (error) {
                 console.error('メイン機能初期化エラー:', error);
                 showError('メイン機能の初期化に失敗しました: ' + error.message);
+                
+                // エラーが発生してもダッシュボードを表示（空のデータで）
+                try {
+                    console.log('フォールバック: 空のデータでダッシュボード表示');
+                    showMainDashboard();
+                } catch (fallbackError) {
+                    console.error('フォールバック処理エラー:', fallbackError);
+                }
             }
         }
         

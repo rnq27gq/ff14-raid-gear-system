@@ -1493,11 +1493,6 @@
                 </div>
             </div>
             
-            <div class="auth-controls" id="authControls">
-                <input type="text" id="teamIdInput" class="auth-input" placeholder="チームID" maxlength="20">
-                <input type="password" id="passwordInput" class="auth-input" placeholder="パスワード" maxlength="20">
-                <button class="auth-btn" onclick="authenticateTeam()">ログイン</button>
-            </div>
             
             <div class="auth-controls" id="loggedInControls" style="display: none;">
                 <span id="loggedInTeam">demo-team</span>
@@ -1691,10 +1686,8 @@
         
         // チーム認証
         async function authenticateTeam() {
-            const teamId = document.getElementById('teamIdInput')?.value || 
-                          document.getElementById('mainTeamIdInput')?.value;
-            const password = document.getElementById('passwordInput')?.value || 
-                           document.getElementById('mainPasswordInput')?.value;
+            const teamId = document.getElementById('mainTeamIdInput')?.value;
+            const password = document.getElementById('mainPasswordInput')?.value;
             
             if (!teamId || !password) {
                 showError('チームIDとパスワードを入力してください');
@@ -1823,9 +1816,7 @@
                 // 少し待ってから自動ログイン
                 setTimeout(async () => {
                     // 入力フィールドに値を設定
-                    document.getElementById('teamIdInput').value = teamId;
                     document.getElementById('mainTeamIdInput').value = teamId;
-                    document.getElementById('passwordInput').value = password;
                     document.getElementById('mainPasswordInput').value = password;
                     
                     // ログイン画面に戻る

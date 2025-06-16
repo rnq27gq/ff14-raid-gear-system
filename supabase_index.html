@@ -2313,8 +2313,26 @@
         }
         
         // 優先順位設定リセット
-        function resetPrioritySettings() {
+        async function resetPrioritySettings() {
             if (confirm('優先順位をデフォルト（D1→D2→D3→D4→MT→ST→H1→H2）に戻しますか？')) {
+                const defaultPriority = ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
+                
+                // 設定をリセット
+                if (!appData.settings) {
+                    appData.settings = {};
+                }
+                appData.settings.positionPriority = defaultPriority;
+                
+                // Supabaseに保存
+                try {
+                    await saveDataToSupabase('settings', { positionPriority: defaultPriority });
+                    showSuccess('優先順位をデフォルトに戻しました');
+                } catch (error) {
+                    console.error('設定保存エラー:', error);
+                    showError('設定の保存に失敗しました');
+                }
+                
+                // 画面を再読み込み
                 showPriorityManagement();
             }
         }

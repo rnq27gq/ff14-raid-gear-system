@@ -1528,7 +1528,34 @@
                 </div>
                 
                 <div style="margin-top: 20px; font-size: 12px; color: #888;">
-                    <p>新しいチームの作成をご希望の場合は<br>管理者にお問い合わせください</p>
+                    <p><a href="#" onclick="showSignupForm()" style="color: #3498db; text-decoration: none;">新しいチームを作成</a></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 新規登録画面 -->
+        <div id="signupScreen" class="auth-screen" style="display: none;">
+            <div class="auth-container">
+                <h1>🛡️ 新しいチーム作成</h1>
+                <p style="margin-bottom: 30px; color: #666;">
+                    FF14零式装備分配システム用の<br>新しいチームを作成します
+                </p>
+                
+                <div class="auth-form">
+                    <input type="text" id="signupTeamIdInput" placeholder="チームID (英数字、3-20文字)" maxlength="20">
+                    <input type="password" id="signupPasswordInput" placeholder="パスワード (6文字以上)" maxlength="20">
+                    <input type="password" id="signupPasswordConfirmInput" placeholder="パスワード確認" maxlength="20">
+                    <button onclick="createNewTeam()">チーム作成</button>
+                </div>
+                
+                <div style="margin-top: 20px; font-size: 12px; color: #888;">
+                    <p><a href="#" onclick="showLoginForm()" style="color: #3498db; text-decoration: none;">既存チームでログイン</a></p>
+                </div>
+                
+                <div style="margin-top: 20px; font-size: 11px; color: #999; line-height: 1.4;">
+                    <p>・チームIDは他のチームと重複できません<br>
+                    ・パスワードは安全に管理してください<br>
+                    ・作成後は8人で共有してご利用ください</p>
                 </div>
             </div>
         </div>
@@ -1726,6 +1753,110 @@
                 console.error('認証エラー:', error);
                 showError('認証に失敗しました: ' + error.message);
             }
+        }
+        
+        // 新規チーム作成
+        async function createNewTeam() {
+            const teamId = document.getElementById('signupTeamIdInput').value;
+            const password = document.getElementById('signupPasswordInput').value;
+            const passwordConfirm = document.getElementById('signupPasswordConfirmInput').value;
+            
+            // バリデーション
+            if (!teamId || !password || !passwordConfirm) {
+                showError('すべての項目を入力してください');
+                return;
+            }
+            
+            if (teamId.length < 3) {
+                showError('チームIDは3文字以上で入力してください');
+                return;
+            }
+            
+            if (!/^[a-zA-Z0-9_-]+$/.test(teamId)) {
+                showError('チームIDは英数字、ハイフン、アンダースコアのみ使用可能です');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showError('パスワードは6文字以上で入力してください');
+                return;
+            }
+            
+            if (password !== passwordConfirm) {
+                showError('パスワードが一致しません');
+                return;
+            }
+            
+            try {
+                showMessage('チーム作成中...', 'info');
+                
+                // Supabaseクライアント確認
+                if (!window.supabaseClient) {
+                    throw new Error('Supabaseクライアントが初期化されていません');
+                }
+                
+                console.log('チーム作成試行:', teamId);
+                
+                // Supabaseでチーム作成
+                const { data, error } = await window.supabaseClient.rpc('create_team', {
+                    p_team_id: teamId,
+                    p_password: password
+                });
+                
+                console.log('チーム作成結果:', { data, error });
+                
+                if (error) {
+                    if (error.message.includes('already exists') || error.message.includes('duplicate')) {
+                        throw new Error('このチームIDは既に使用されています');
+                    }
+                    throw new Error(`チーム作成エラー: ${error.message}`);
+                }
+                
+                if (!data) {
+                    throw new Error('チーム作成に失敗しました');
+                }
+                
+                // 作成成功 - 自動ログイン
+                showSuccess('チームが作成されました！自動ログインします...');
+                
+                // 少し待ってから自動ログイン
+                setTimeout(async () => {
+                    // 入力フィールドに値を設定
+                    document.getElementById('teamIdInput').value = teamId;
+                    document.getElementById('mainTeamIdInput').value = teamId;
+                    document.getElementById('passwordInput').value = password;
+                    document.getElementById('mainPasswordInput').value = password;
+                    
+                    // ログイン画面に戻る
+                    showLoginForm();
+                    
+                    // 自動ログイン
+                    await authenticateTeam();
+                }, 1000);
+                
+            } catch (error) {
+                console.error('チーム作成エラー:', error);
+                showError('チーム作成に失敗しました: ' + error.message);
+            }
+        }
+        
+        // 新規登録画面表示
+        function showSignupForm() {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('signupScreen').style.display = 'block';
+            document.getElementById('mainContent').style.display = 'none';
+            
+            // 入力フィールドをクリア
+            document.getElementById('signupTeamIdInput').value = '';
+            document.getElementById('signupPasswordInput').value = '';
+            document.getElementById('signupPasswordConfirmInput').value = '';
+        }
+        
+        // ログイン画面表示
+        function showLoginForm() {
+            document.getElementById('authScreen').style.display = 'block';
+            document.getElementById('signupScreen').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'none';
         }
         
         // 認証後の状態表示

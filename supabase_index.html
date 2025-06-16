@@ -371,11 +371,6 @@
             max-width: 600px;
             margin: 20px auto;
         }
-        .priority-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
         .priority-item {
             background-color: #ffffff;
             border: 1px solid #ddd;
@@ -752,6 +747,8 @@
         .priority-container {
             max-width: 100%;
             margin: 15px 0;
+            width: 100%;
+            display: block;
         }
         
         .priority-list {
@@ -759,11 +756,14 @@
             border-radius: 6px;
             padding: 10px;
             display: flex;
+            flex-direction: row;
             flex-wrap: nowrap;
             gap: 8px;
-            justify-content: space-between;
+            justify-content: flex-start;
+            align-items: center;
             min-height: auto;
             overflow-x: auto;
+            width: 100%;
         }
         
         .priority-item {

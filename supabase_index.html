@@ -1800,6 +1800,7 @@
                 // Supabaseでチーム作成
                 const { data, error } = await window.supabaseClient.rpc('create_team', {
                     p_team_id: teamId,
+                    p_team_name: teamId, // チーム名はチームIDと同じに設定
                     p_password: password
                 });
                 

@@ -633,6 +633,18 @@
             color: #6c757d;
         }
         
+        .slot-col.tome-exchange {
+            background-color: #fff3cd;
+            color: #856404;
+            font-weight: bold;
+        }
+        
+        .slot-col.tome-exchange-completed {
+            background-color: #f8d7da;
+            color: #721c24;
+            font-weight: bold;
+        }
+        
         /* 編集モード用スタイル */
         .editable-slot {
             cursor: pointer;
@@ -3475,14 +3487,36 @@
             if (drop.type === 'equipment') {
                 // 装備の場合
                 const policy = player.equipmentPolicy?.[drop.slot] || 'トームストーン';
-                const hasEquipment = player.currentEquipment?.[drop.slot];
                 
-                if (policy === '零式' && !hasEquipment) {
+                // 現在の装備状況を取得（分配履歴から）
+                const equipmentStatus = getPlayerEquipmentStatus(player.position, drop.slot);
+                
+                // 断章交換者の特別処理
+                if (equipmentStatus === '断章交換') {
+                    // 未取得者がいるかチェック
+                    const hasUnacquiredRaidPlayer = hasUnacquiredRaidPlayers(drop.slot, player.position);
+                    
+                    if (hasUnacquiredRaidPlayer) {
+                        // 未取得者がいる場合は分配対象外
+                        type = 'pass';
+                        reason = 'Pass (断章交換 - 他に未取得者あり)';
+                    } else {
+                        // 未取得者がいない場合は復活
+                        canReceive = true;
+                        type = 'need';
+                        score = 1000 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
+                        reason = 'Need (断章交換 - 復活)';
+                    }
+                } else if (equipmentStatus === '断章交換・箱取得済') {
+                    // 断章交換・箱取得済は完全に分配対象外
+                    type = 'pass';
+                    reason = 'Pass (断章交換・箱取得済)';
+                } else if (policy === '零式' && equipmentStatus === '未取得') {
                     canReceive = true;
                     type = 'need';
                     score = 1000 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
                     reason = 'Need (零式)';
-                } else if (!hasEquipment) {
+                } else if (equipmentStatus === '未取得') {
                     canReceive = true;
                     type = 'greed';
                     score = 500 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
@@ -3493,12 +3527,16 @@
                 }
             } else if (drop.type === 'material') {
                 // 強化素材の場合（分配優先度設定に基づく）
-                const materialAllocations = appData.allocations?.[currentRaidTier.id] || [];
-                const hasThisMaterial = materialAllocations.some(alloc => 
-                    alloc.position === player.position && alloc.slot === drop.slot
-                );
+                const materialStatus = getPlayerEquipmentStatus(player.position, drop.slot);
                 
-                if (!hasThisMaterial) {
+                // 断章交換素材の特別処理
+                if (materialStatus === '断章交換') {
+                    type = 'pass';
+                    reason = 'Pass (断章交換)';
+                } else if (materialStatus === '断章交換・箱取得済') {
+                    type = 'pass';
+                    reason = 'Pass (断章交換・箱取得済)';
+                } else if (materialStatus === '未取得') {
                     canReceive = true;
                     type = 'need';
                     score = getPositionPriority(player.position) - (player.dynamicPriority || 0);
@@ -3509,8 +3547,25 @@
                 }
             } else if (drop.type === 'weapon_box') {
                 // 武器箱の場合
-                const hasWeapon = player.currentEquipment?.['武器'];
-                if (!hasWeapon) {
+                const weaponStatus = getPlayerEquipmentStatus(player.position, '武器');
+                
+                if (weaponStatus === '断章交換') {
+                    // 未取得者がいるかチェック
+                    const hasUnacquiredRaidPlayer = hasUnacquiredRaidPlayers('武器', player.position);
+                    
+                    if (hasUnacquiredRaidPlayer) {
+                        type = 'pass';
+                        reason = 'Pass (断章交換 - 他に未取得者あり)';
+                    } else {
+                        canReceive = true;
+                        type = 'need';
+                        score = 2000 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
+                        reason = 'Need (断章交換 - 復活)';
+                    }
+                } else if (weaponStatus === '断章交換・箱取得済') {
+                    type = 'pass';
+                    reason = 'Pass (断章交換・箱取得済)';
+                } else if (weaponStatus === '未取得') {
                     canReceive = true;
                     type = 'need';
                     score = 2000 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
@@ -3522,16 +3577,38 @@
             } else if (drop.type === 'direct_weapon') {
                 // 直ドロップ武器の場合（武器希望に基づく）
                 const weaponWishes = player.weaponWishes || [];
-                const hasWeapon = player.currentEquipment?.['武器'];
+                const weaponStatus = getPlayerEquipmentStatus(player.position, '武器');
                 const weaponType = drop.weapon; // 選択された武器種
                 
-                if (!hasWeapon && weaponType && weaponWishes.includes(weaponType)) {
+                if (weaponStatus === '断章交換') {
+                    // 未取得者がいるかチェック
+                    const hasUnacquiredRaidPlayer = hasUnacquiredRaidPlayers('武器', player.position);
+                    
+                    if (hasUnacquiredRaidPlayer) {
+                        type = 'pass';
+                        reason = 'Pass (断章交換 - 他に未取得者あり)';
+                    } else if (weaponType && weaponWishes.includes(weaponType)) {
+                        canReceive = true;
+                        type = 'need';
+                        const wishIndex = weaponWishes.indexOf(weaponType);
+                        score = 3000 + getPositionPriority(player.position) - (wishIndex * 100) - (player.dynamicPriority || 0);
+                        reason = `Need (断章交換 - 復活・第${wishIndex + 1}希望)`;
+                    } else {
+                        canReceive = true;
+                        type = 'greed';
+                        score = 100 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
+                        reason = 'Greed (断章交換 - 復活)';
+                    }
+                } else if (weaponStatus === '断章交換・箱取得済') {
+                    type = 'pass';
+                    reason = 'Pass (断章交換・箱取得済)';
+                } else if (weaponStatus === '未取得' && weaponType && weaponWishes.includes(weaponType)) {
                     canReceive = true;
                     type = 'need';
                     const wishIndex = weaponWishes.indexOf(weaponType);
                     score = 3000 + getPositionPriority(player.position) - (wishIndex * 100) - (player.dynamicPriority || 0);
                     reason = `Need (第${wishIndex + 1}希望)`;
-                } else if (!hasWeapon) {
+                } else if (weaponStatus === '未取得') {
                     canReceive = true;
                     type = 'greed';
                     score = 100 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
@@ -3543,6 +3620,44 @@
             }
             
             return { canReceive, score, reason, type };
+        }
+        
+        // プレイヤーの装備状況取得
+        function getPlayerEquipmentStatus(position, slot) {
+            const allocations = appData.allocations[currentRaidTier.id] || [];
+            const allocation = allocations.find(alloc => 
+                alloc.position === position && alloc.slot === slot
+            );
+            
+            if (allocation && allocation.status) {
+                return allocation.status;
+            }
+            
+            // 既存のデータでstatusがない場合は「取得済み」とみなす
+            if (allocation) {
+                return '取得済み';
+            }
+            
+            return '未取得';
+        }
+        
+        // 同じスロットで零式方針の未取得者がいるかチェック
+        function hasUnacquiredRaidPlayers(slot, excludePosition) {
+            const players = appData.players[currentRaidTier.id] || {};
+            
+            for (const [position, player] of Object.entries(players)) {
+                if (position === excludePosition) continue;
+                
+                const policy = player.equipmentPolicy?.[slot] || 'トームストーン';
+                const equipmentStatus = getPlayerEquipmentStatus(position, slot);
+                
+                // 零式方針で未取得のプレイヤーがいるか
+                if (policy === '零式' && equipmentStatus === '未取得') {
+                    return true;
+                }
+            }
+            
+            return false;
         }
         
         // ポジション間優先順位取得（装備・素材共通）
@@ -3949,7 +4064,7 @@
             
             // 装備部位順序を固定化 (頭→胴→手→脚→足→耳→首→腕→指→武器)
             const equipmentSlots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
-            const materialSlots = ['武器石', '硬化薬', '強化薬', '強化繊維'];
+            const materialSlots = ['武器石', '硬化薬', '強化薬', '強化繊維', '断章交換', '断章交換・箱取得済'];
             
             let html = '<div class="player-stats-table">';
             
@@ -3981,20 +4096,26 @@
                 
                 // 装備部位の取得状況
                 equipmentSlots.forEach(slot => {
-                    const acquired = acquiredSlots.has(slot);
+                    const allocation = playerAllocations.find(alloc => alloc.slot === slot);
+                    const status = allocation ? (allocation.status || '取得済み') : '未取得';
+                    const statusClass = getEquipmentStatusClass(status);
+                    
                     html += `
-                        <div class="slot-col ${acquired ? 'acquired' : 'not-acquired'}">
-                            ${acquired ? '取得済' : '未取得'}
+                        <div class="slot-col ${statusClass}">
+                            ${status}
                         </div>
                     `;
                 });
                 
                 // 素材の取得状況
                 materialSlots.forEach(slot => {
-                    const acquired = acquiredSlots.has(slot);
+                    const allocation = playerAllocations.find(alloc => alloc.slot === slot);
+                    const status = allocation ? (allocation.status || '取得済み') : '未取得';
+                    const statusClass = getEquipmentStatusClass(status);
+                    
                     html += `
-                        <div class="slot-col ${acquired ? 'acquired' : 'not-acquired'}">
-                            ${acquired ? '取得済' : '未取得'}
+                        <div class="slot-col ${statusClass}">
+                            ${status}
                         </div>
                     `;
                 });
@@ -4085,7 +4206,7 @@
         function generateEditablePlayerStatistics(players, allocations) {
             const positions = ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
             const equipmentSlots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
-            const materialSlots = ['武器石', '硬化薬', '強化薬', '強化繊維'];
+            const materialSlots = ['武器石', '硬化薬', '強化薬', '強化繊維', '断章交換', '断章交換・箱取得済'];
             
             let html = '<div class="player-stats-table">';
             
@@ -4105,7 +4226,6 @@
                 
                 // 該当プレイヤーの取得履歴を取得
                 const playerAllocations = allocations.filter(alloc => alloc.position === position);
-                const acquiredSlots = new Set(playerAllocations.map(alloc => alloc.slot));
                 
                 html += `
                     <div class="stats-row">
@@ -4117,36 +4237,42 @@
                 
                 // 装備部位の取得状況（編集可能）
                 equipmentSlots.forEach(slot => {
-                    const acquired = acquiredSlots.has(slot);
+                    const allocation = playerAllocations.find(alloc => alloc.slot === slot);
+                    const status = allocation ? (allocation.status || '取得済み') : '未取得';
+                    const statusClass = getEquipmentStatusClass(status);
+                    
                     html += `
-                        <div class="slot-col editable-slot ${acquired ? 'acquired' : 'not-acquired'}">
-                            <label class="checkbox-container">
-                                <input type="checkbox" 
-                                       data-position="${position}" 
-                                       data-slot="${slot}" 
-                                       ${acquired ? 'checked' : ''}
-                                       onchange="toggleAcquisitionStatus(this)">
-                                <span class="checkmark"></span>
-                                <span class="status-text">${acquired ? '取得済' : '未取得'}</span>
-                            </label>
+                        <div class="slot-col editable-slot ${statusClass}">
+                            <select data-position="${position}" 
+                                    data-slot="${slot}" 
+                                    onchange="updateEquipmentStatus(this)"
+                                    style="width: 100%; font-size: 0.8rem; padding: 2px;">
+                                <option value="未取得" ${status === '未取得' ? 'selected' : ''}>未取得</option>
+                                <option value="取得済み" ${status === '取得済み' ? 'selected' : ''}>取得済み</option>
+                                <option value="断章交換" ${status === '断章交換' ? 'selected' : ''}>断章交換</option>
+                                <option value="断章交換・箱取得済" ${status === '断章交換・箱取得済' ? 'selected' : ''}>断章交換・箱取得済</option>
+                            </select>
                         </div>
                     `;
                 });
                 
                 // 素材の取得状況（編集可能）
                 materialSlots.forEach(slot => {
-                    const acquired = acquiredSlots.has(slot);
+                    const allocation = playerAllocations.find(alloc => alloc.slot === slot);
+                    const status = allocation ? (allocation.status || '取得済み') : '未取得';
+                    const statusClass = getEquipmentStatusClass(status);
+                    
                     html += `
-                        <div class="slot-col editable-slot ${acquired ? 'acquired' : 'not-acquired'}">
-                            <label class="checkbox-container">
-                                <input type="checkbox" 
-                                       data-position="${position}" 
-                                       data-slot="${slot}" 
-                                       ${acquired ? 'checked' : ''}
-                                       onchange="toggleAcquisitionStatus(this)">
-                                <span class="checkmark"></span>
-                                <span class="status-text">${acquired ? '取得済' : '未取得'}</span>
-                            </label>
+                        <div class="slot-col editable-slot ${statusClass}">
+                            <select data-position="${position}" 
+                                    data-slot="${slot}" 
+                                    onchange="updateEquipmentStatus(this)"
+                                    style="width: 100%; font-size: 0.8rem; padding: 2px;">
+                                <option value="未取得" ${status === '未取得' ? 'selected' : ''}>未取得</option>
+                                <option value="取得済み" ${status === '取得済み' ? 'selected' : ''}>取得済み</option>
+                                <option value="断章交換" ${status === '断章交換' ? 'selected' : ''}>断章交換</option>
+                                <option value="断章交換・箱取得済" ${status === '断章交換・箱取得済' ? 'selected' : ''}>断章交換・箱取得済</option>
+                            </select>
                         </div>
                     `;
                 });
@@ -4158,36 +4284,42 @@
             return html;
         }
         
-        // 取得状況の切り替え
-        function toggleAcquisitionStatus(checkbox) {
-            const position = checkbox.dataset.position;
-            const slot = checkbox.dataset.slot;
-            const isChecked = checkbox.checked;
-            const slotDiv = checkbox.closest('.slot-col');
-            const statusText = slotDiv.querySelector('.status-text');
-            
-            // 見た目を即座に更新
-            if (isChecked) {
-                slotDiv.classList.remove('not-acquired');
-                slotDiv.classList.add('acquired');
-                statusText.textContent = '取得済';
-            } else {
-                slotDiv.classList.remove('acquired');
-                slotDiv.classList.add('not-acquired');
-                statusText.textContent = '未取得';
+        // 装備状況のCSSクラス取得
+        function getEquipmentStatusClass(status) {
+            switch (status) {
+                case '未取得': return 'not-acquired';
+                case '取得済み': return 'acquired';
+                case '断章交換': return 'tome-exchange';
+                case '断章交換・箱取得済': return 'tome-exchange-completed';
+                default: return 'not-acquired';
             }
+        }
+        
+        // 装備状況の更新
+        function updateEquipmentStatus(selectElement) {
+            const position = selectElement.dataset.position;
+            const slot = selectElement.dataset.slot;
+            const status = selectElement.value;
+            const slotDiv = selectElement.closest('.slot-col');
+            
+            // 既存のクラスを削除
+            slotDiv.classList.remove('not-acquired', 'acquired', 'tome-exchange', 'tome-exchange-completed');
+            
+            // 新しいクラスを追加
+            const statusClass = getEquipmentStatusClass(status);
+            slotDiv.classList.add(statusClass);
         }
         
         // 統計情報の変更を保存
         async function saveStatisticsChanges() {
-            const checkboxes = document.querySelectorAll('input[type="checkbox"][data-position][data-slot]');
+            const selectors = document.querySelectorAll('select[data-position][data-slot]');
             const currentAllocations = appData.allocations[currentRaidTier.id] || [];
             const newAllocations = [];
             
             // 既存の分配データから編集対象以外のデータを保持
             const editedSlots = new Set();
-            checkboxes.forEach(checkbox => {
-                const key = `${checkbox.dataset.position}-${checkbox.dataset.slot}`;
+            selectors.forEach(selector => {
+                const key = `${selector.dataset.position}-${selector.dataset.slot}`;
                 editedSlots.add(key);
             });
             
@@ -4199,12 +4331,14 @@
                 }
             });
             
-            // チェックされた項目を分配データとして追加
-            checkboxes.forEach(checkbox => {
-                if (checkbox.checked) {
-                    const position = checkbox.dataset.position;
-                    const slot = checkbox.dataset.slot;
-                    
+            // 選択された項目を分配データとして追加
+            selectors.forEach(selector => {
+                const position = selector.dataset.position;
+                const slot = selector.dataset.slot;
+                const status = selector.value;
+                
+                // 「未取得」以外の場合のみ分配データとして追加
+                if (status !== '未取得') {
                     // 既存の分配データがない場合のみ追加
                     const existingAllocation = newAllocations.find(alloc => 
                         alloc.position === position && alloc.slot === slot
@@ -4214,6 +4348,7 @@
                         newAllocations.push({
                             position: position,
                             slot: slot,
+                            status: status, // 装備状況を追加
                             week: 'Manual', // 手動編集であることを示す
                             layer: 'Manual', // 手動編集であることを示す
                             timestamp: new Date().toISOString()

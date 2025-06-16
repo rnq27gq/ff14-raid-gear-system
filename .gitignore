@@ -8,6 +8,7 @@ supabase_credentials.js
 .env.*
 
 # 開発用ファイル
+envdoc/
 temp/
 debug/
 *.log

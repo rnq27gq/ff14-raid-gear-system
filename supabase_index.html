@@ -757,12 +757,13 @@
         .priority-list {
             background-color: #f8f9fa;
             border-radius: 6px;
-            padding: 15px;
+            padding: 10px;
             display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
+            flex-wrap: nowrap;
+            gap: 8px;
+            justify-content: space-between;
             min-height: auto;
+            overflow-x: auto;
         }
         
         .priority-item {
@@ -770,7 +771,7 @@
             border: 2px solid #dee2e6;
             border-radius: 6px;
             margin: 0;
-            padding: 8px;
+            padding: 6px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -778,10 +779,12 @@
             transition: all 0.3s ease;
             user-select: none;
             position: relative;
-            width: 80px;
-            height: 80px;
+            min-width: 70px;
+            width: 70px;
+            height: 70px;
             text-align: center;
             justify-content: center;
+            flex-shrink: 0;
         }
         
         .priority-item:hover {
@@ -811,39 +814,39 @@
             background-color: #007bff;
             color: white;
             border-radius: 50%;
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 10px;
+            font-size: 9px;
             position: absolute;
-            top: 2px;
-            left: 2px;
+            top: 1px;
+            left: 1px;
         }
         
         .priority-info {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 2px;
-            margin-top: 15px;
+            gap: 1px;
+            margin-top: 12px;
         }
         
         .priority-info .position-badge {
             background-color: #28a745;
             color: white;
-            padding: 2px 4px;
+            padding: 1px 3px;
             border-radius: 3px;
             font-weight: bold;
-            font-size: 10px;
+            font-size: 9px;
         }
         
         .priority-info .player-name {
             font-weight: 600;
             color: #2c3e50;
-            font-size: 10px;
+            font-size: 8px;
             max-width: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -852,19 +855,19 @@
         
         .priority-info .player-job {
             color: #6c757d;
-            font-size: 9px;
+            font-size: 7px;
         }
         
         .drag-handle {
             color: #007bff;
-            font-size: 12px;
+            font-size: 10px;
             cursor: grab;
             transition: all 0.2s ease;
-            padding: 2px;
+            padding: 1px;
             border-radius: 3px;
             position: absolute;
-            bottom: 2px;
-            right: 2px;
+            bottom: 1px;
+            right: 1px;
         }
         
         .drag-handle:hover {
@@ -1557,6 +1560,7 @@
         let currentTeamId = null;
         let isInitializing = false;
         let isInitialized = false;
+        let selectedDirectWeapon = ''; // 直ドロップ武器の選択状態を保持
         
         // 初期化 - ライブラリ読み込み完了を待つ
         window.addEventListener('load', async function() {
@@ -3348,28 +3352,28 @@
                     <div class="weapon-selection">
                         <h5>直ドロップ武器選択:</h5>
                         <select id="directWeaponSelect" onchange="updateDirectWeapon()" style="width: 100%; padding: 5px;">
-                            <option value="">武器を選択してください</option>
-                            <option value="ナイト">ナイト武器</option>
-                            <option value="戦士">戦士武器</option>
-                            <option value="暗黒騎士">暗黒騎士武器</option>
-                            <option value="ガンブレイカー">ガンブレイカー武器</option>
-                            <option value="白魔道士">白魔道士武器</option>
-                            <option value="学者">学者武器</option>
-                            <option value="占星術士">占星術士武器</option>
-                            <option value="賢者">賢者武器</option>
-                            <option value="モンク">モンク武器</option>
-                            <option value="竜騎士">竜騎士武器</option>
-                            <option value="忍者">忍者武器</option>
-                            <option value="侍">侍武器</option>
-                            <option value="リーパー">リーパー武器</option>
-                            <option value="ヴァイパー">ヴァイパー武器</option>
-                            <option value="黒魔道士">黒魔道士武器</option>
-                            <option value="召喚士">召喚士武器</option>
-                            <option value="赤魔道士">赤魔道士武器</option>
-                            <option value="ピクトマンサー">ピクトマンサー武器</option>
-                            <option value="吟遊詩人">吟遊詩人武器</option>
-                            <option value="機工士">機工士武器</option>
-                            <option value="踊り子">踊り子武器</option>
+                            <option value="" ${selectedDirectWeapon === '' ? 'selected' : ''}>武器を選択してください</option>
+                            <option value="ナイト" ${selectedDirectWeapon === 'ナイト' ? 'selected' : ''}>ナイト武器</option>
+                            <option value="戦士" ${selectedDirectWeapon === '戦士' ? 'selected' : ''}>戦士武器</option>
+                            <option value="暗黒騎士" ${selectedDirectWeapon === '暗黒騎士' ? 'selected' : ''}>暗黒騎士武器</option>
+                            <option value="ガンブレイカー" ${selectedDirectWeapon === 'ガンブレイカー' ? 'selected' : ''}>ガンブレイカー武器</option>
+                            <option value="白魔道士" ${selectedDirectWeapon === '白魔道士' ? 'selected' : ''}>白魔道士武器</option>
+                            <option value="学者" ${selectedDirectWeapon === '学者' ? 'selected' : ''}>学者武器</option>
+                            <option value="占星術士" ${selectedDirectWeapon === '占星術士' ? 'selected' : ''}>占星術士武器</option>
+                            <option value="賢者" ${selectedDirectWeapon === '賢者' ? 'selected' : ''}>賢者武器</option>
+                            <option value="モンク" ${selectedDirectWeapon === 'モンク' ? 'selected' : ''}>モンク武器</option>
+                            <option value="竜騎士" ${selectedDirectWeapon === '竜騎士' ? 'selected' : ''}>竜騎士武器</option>
+                            <option value="忍者" ${selectedDirectWeapon === '忍者' ? 'selected' : ''}>忍者武器</option>
+                            <option value="侍" ${selectedDirectWeapon === '侍' ? 'selected' : ''}>侍武器</option>
+                            <option value="リーパー" ${selectedDirectWeapon === 'リーパー' ? 'selected' : ''}>リーパー武器</option>
+                            <option value="ヴァイパー" ${selectedDirectWeapon === 'ヴァイパー' ? 'selected' : ''}>ヴァイパー武器</option>
+                            <option value="黒魔道士" ${selectedDirectWeapon === '黒魔道士' ? 'selected' : ''}>黒魔道士武器</option>
+                            <option value="召喚士" ${selectedDirectWeapon === '召喚士' ? 'selected' : ''}>召喚士武器</option>
+                            <option value="赤魔道士" ${selectedDirectWeapon === '赤魔道士' ? 'selected' : ''}>赤魔道士武器</option>
+                            <option value="ピクトマンサー" ${selectedDirectWeapon === 'ピクトマンサー' ? 'selected' : ''}>ピクトマンサー武器</option>
+                            <option value="吟遊詩人" ${selectedDirectWeapon === '吟遊詩人' ? 'selected' : ''}>吟遊詩人武器</option>
+                            <option value="機工士" ${selectedDirectWeapon === '機工士' ? 'selected' : ''}>機工士武器</option>
+                            <option value="踊り子" ${selectedDirectWeapon === '踊り子' ? 'selected' : ''}>踊り子武器</option>
                         </select>
                     </div>
                 `;
@@ -3493,6 +3497,10 @@
             console.log('選択された武器:', selectedWeapon);
             console.log('プルダウンの全選択肢:', weaponSelect.options.length);
             
+            // グローバル変数に選択状態を保存
+            selectedDirectWeapon = selectedWeapon;
+            console.log('選択状態を保存:', selectedDirectWeapon);
+            
             if (selectedWeapon) {
                 try {
                     // 直ドロップ武器の分配を再計算
@@ -3518,6 +3526,10 @@
                 }
             } else {
                 console.log('武器選択がクリアされました');
+                // 選択がクリアされた場合も画面を更新
+                const drops = getLayerDrops(4);
+                const allocationResults = calculateAllocation(4, drops);
+                displayAllocationResults(4, allocationResults);
             }
         }
         

@@ -39,15 +39,15 @@ jobs:
         echo "✅ GitHub Secret が確認されました"
         
         # HTMLファイル内のプレースホルダーを置換
-        sed -i "s|SUPABASE_ANON_KEY: null|SUPABASE_ANON_KEY: '${SUPABASE_ANON_KEY}'|g" supabase_index.html
+        sed -i "s|SUPABASE_ANON_KEY: null|SUPABASE_ANON_KEY: '${SUPABASE_ANON_KEY}'|g" main.html
         
         # 置換確認
-        if grep -q "SUPABASE_ANON_KEY: 'eyJ" supabase_index.html; then
+        if grep -q "SUPABASE_ANON_KEY: 'eyJ" main.html; then
           echo "✅ Supabase credentials replacement successful"
         else
           echo "❌ Supabase credentials replacement failed"
           echo "置換後の内容:"
-          grep -A 2 -B 2 "SUPABASE_ANON_KEY" supabase_index.html
+          grep -A 2 -B 2 "SUPABASE_ANON_KEY" main.html
           exit 1
         fi
         

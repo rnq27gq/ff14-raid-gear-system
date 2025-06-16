@@ -837,16 +837,16 @@
         .priority-info .position-badge {
             background-color: #28a745;
             color: white;
-            padding: 1px 3px;
+            padding: 2px 4px;
             border-radius: 3px;
             font-weight: bold;
-            font-size: 9px;
+            font-size: 11px;
         }
         
         .priority-info .player-name {
             font-weight: 600;
             color: #2c3e50;
-            font-size: 8px;
+            font-size: 10px;
             max-width: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -855,7 +855,7 @@
         
         .priority-info .player-job {
             color: #6c757d;
-            font-size: 7px;
+            font-size: 9px;
         }
         
         .drag-handle {
@@ -2236,8 +2236,8 @@
                 <h2>${currentRaidTier.name}</h2>
                 
                 <div class="section">
-                    <h3>強化素材の分配優先順位</h3>
-                    <p>武器石、硬化薬、強化薬、強化繊維の分配で使用される優先順位です。ドラッグ&ドロップで順序を変更できます。</p>
+                    <h3>ポジション間優先順位設定</h3>
+                    <p>装備・素材すべての判定ロジックに作用する優先順位です。ドラッグ&ドロップで順序を変更できます。</p>
                     
                     <div class="priority-container">
                         <div class="priority-list" id="priorityList">
@@ -2273,7 +2273,8 @@
                     <h4>💡 優先順位の仕組み</h4>
                     <p><strong>装備分配：</strong> 装備方針（零式/トームストーン）とポジション優先順位の組み合わせで取得者を決定</p>
                     <p><strong>素材分配：</strong> ポジション優先順位に基づいて武器石、硬化薬、強化薬、強化繊維の取得者を決定</p>
-                    <p><strong>Note：</strong> 同じ条件の場合、上位のポジションが優先されます。ドラッグ&ドロップで順序を調整できます。</p>
+                    <p><strong>武器分配：</strong> 武器希望順位とポジション優先順位の組み合わせで取得者を決定</p>
+                    <p><strong>Note：</strong> 優先順位は装備・素材すべての判定ロジックに作用します。ドラッグ&ドロップで順序を調整できます。</p>
                 </div>
             `;
             
@@ -2466,7 +2467,10 @@
                         ${getTabContent(activeTab)}
                     </div>
                     
-                    <div class="navigation">
+                    <div class="navigation" style="display: flex; gap: 10px; justify-content: center; align-items: center;">
+                        <button class="save-btn" onclick="saveCurrentTab('${activeTab}')">
+                            ${activeTab === 'players' ? 'メンバー情報を保存' : activeTab === 'policy' ? '装備方針を保存' : '武器希望を保存'}
+                        </button>
                         <button class="nav-button" onclick="saveCurrentTabAndContinue('${activeTab}')">
                             設定完了
                         </button>
@@ -2493,8 +2497,8 @@
                                 'H2': ['白魔道士', '占星術士', '学者', '賢者'],
                                 'D1': ['モンク', '竜騎士', '忍者', '侍', 'リーパー', 'ヴァイパー'],
                                 'D2': ['モンク', '竜騎士', '忍者', '侍', 'リーパー', 'ヴァイパー'],
-                                'D3': ['黒魔道士', '召喚士', '赤魔道士', 'ピクトマンサー', '吟遊詩人', '機工士', '踊り子'],
-                                'D4': ['黒魔道士', '召喚士', '赤魔道士', 'ピクトマンサー', '吟遊詩人', '機工士', '踊り子']
+                                'D3': ['モンク', '竜騎士', '忍者', '侍', 'リーパー', 'ヴァイパー', '黒魔道士', '召喚士', '赤魔道士', 'ピクトマンサー', '吟遊詩人', '機工士', '踊り子'],
+                                'D4': ['モンク', '竜騎士', '忍者', '侍', 'リーパー', 'ヴァイパー', '黒魔道士', '召喚士', '赤魔道士', 'ピクトマンサー', '吟遊詩人', '機工士', '踊り子']
                             };
                             
                             return `
@@ -2506,7 +2510,7 @@
                                     <div style="margin: 10px 0;">
                                         <label>プレイヤー名（必須）:</label>
                                         <input type="text" id="${position}-name" value="${player.name || ''}" 
-                                               placeholder="プレイヤー名を入力" class="job-select">
+                                               placeholder="プレイヤー名を入力" class="job-select" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85rem;">
                                     </div>
                                     
                                     
@@ -2522,12 +2526,6 @@
                                 </div>
                             `;
                         }).join('')}
-                    </div>
-                    
-                    <div class="tab-save-button">
-                        <button class="save-btn" onclick="savePlayersDataTab()">
-                            メンバー情報を保存
-                        </button>
                     </div>
                 `;
             } else if (tabName === 'policy') {
@@ -2572,12 +2570,6 @@
                             `;
                         }).join('')}
                     </div>
-                    
-                    <div class="tab-save-button">
-                        <button class="save-btn" onclick="saveEquipmentPolicyDataTab()">
-                            装備方針を保存
-                        </button>
-                    </div>
                 `;
             } else if (tabName === 'weapons') {
                 if (Object.keys(players).length === 0) {
@@ -2621,7 +2613,7 @@
                                         <div class="wish-priority">
                                             <label>第二希望:</label>
                                             <select id="${position}-weapon-wish-2">
-                                                <option value="">選択してください</option>
+                                                <option value="">選択</option>
                                                 ${allWeapons.filter(w => w !== mainWeapon).map(job => `
                                                     <option value="${job}" ${weaponWishes[1] === job ? 'selected' : ''}>${job}</option>
                                                 `).join('')}
@@ -2630,7 +2622,7 @@
                                         <div class="wish-priority">
                                             <label>第三希望:</label>
                                             <select id="${position}-weapon-wish-3">
-                                                <option value="">選択してください</option>
+                                                <option value="">選択</option>
                                                 ${allWeapons.filter(w => w !== mainWeapon).map(job => `
                                                     <option value="${job}" ${weaponWishes[2] === job ? 'selected' : ''}>${job}</option>
                                                 `).join('')}
@@ -2639,7 +2631,7 @@
                                         <div class="wish-priority">
                                             <label>第四希望:</label>
                                             <select id="${position}-weapon-wish-4">
-                                                <option value="">選択してください</option>
+                                                <option value="">選択</option>
                                                 ${allWeapons.filter(w => w !== mainWeapon).map(job => `
                                                     <option value="${job}" ${weaponWishes[3] === job ? 'selected' : ''}>${job}</option>
                                                 `).join('')}
@@ -2650,18 +2642,31 @@
                             `;
                         }).join('')}
                     </div>
-                    
-                    <div class="tab-save-button">
-                        <button class="save-btn" onclick="saveWeaponWishesDataTab()">
-                            武器希望を保存
-                        </button>
-                    </div>
                 `;
             }
             
             return '';
         }
         
+        // 現在のタブのみ保存
+        async function saveCurrentTab(currentTab) {
+            try {
+                if (currentTab === 'players') {
+                    await savePlayersData();
+                    showSuccess('メンバー情報を保存しました');
+                } else if (currentTab === 'policy') {
+                    await saveEquipmentPolicyData();
+                    showSuccess('装備方針を保存しました');
+                } else if (currentTab === 'weapons') {
+                    await saveWeaponWishesData();
+                    showSuccess('武器希望を保存しました');
+                }
+            } catch (error) {
+                console.error('保存エラー:', error);
+                showError('保存に失敗しました: ' + error.message);
+            }
+        }
+
         // 現在のタブを保存して次へ進む
         async function saveCurrentTabAndContinue(currentTab) {
             try {

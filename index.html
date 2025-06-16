@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FF14 零式装備分配システム</title>
+    <title>FF14 零式装備分配システム - GitHub版廃止のお知らせ</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -19,177 +19,73 @@
             background: white;
             border-radius: 20px;
             padding: 40px;
+            max-width: 600px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             text-align: center;
-            max-width: 600px;
-            width: 100%;
         }
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 30px;
-            font-size: 2.5rem;
-        }
-        .version-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin: 30px 0;
-        }
-        .version-card {
-            border: 2px solid #e9ecef;
-            border-radius: 15px;
-            padding: 25px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        .version-card:hover {
-            border-color: #3498db;
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.2);
-        }
-        .version-card.recommended {
-            border-color: #27ae60;
-            background: linear-gradient(135deg, #f8fff9 0%, #e8f5e8 100%);
-        }
-        .version-card.recommended:hover {
-            border-color: #2ecc71;
-            box-shadow: 0 10px 20px rgba(39, 174, 96, 0.2);
-        }
-        .version-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #2c3e50;
-        }
-        .version-badge {
-            display: inline-block;
-            background: #3498db;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            margin-bottom: 15px;
-        }
-        .version-card.recommended .version-badge {
-            background: #27ae60;
-        }
-        .version-description {
-            color: #666;
-            line-height: 1.6;
+        .header {
+            color: #e74c3c;
+            font-size: 2rem;
             margin-bottom: 20px;
         }
-        .version-features {
-            text-align: left;
-            margin: 15px 0;
+        .message {
+            color: #333;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
         }
-        .version-features li {
-            margin: 5px 0;
-            color: #555;
-        }
-        .access-button {
-            background: #3498db;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            text-decoration: none;
-            display: inline-block;
-        }
-        .access-button:hover {
-            background: #2980b9;
-        }
-        .version-card.recommended .access-button {
-            background: #27ae60;
-        }
-        .version-card.recommended .access-button:hover {
-            background: #229954;
-        }
-        .info-section {
-            margin-top: 40px;
-            padding: 20px;
+        .new-version {
             background: #f8f9fa;
-            border-radius: 10px;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            margin: 20px 0;
             text-align: left;
         }
-        .info-section h3 {
-            color: #2c3e50;
-            margin-bottom: 15px;
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 10px;
+            transition: transform 0.2s;
         }
-        @media (max-width: 768px) {
-            .version-grid {
-                grid-template-columns: 1fr;
-            }
-            h1 {
-                font-size: 2rem;
-            }
-            .container {
-                padding: 20px;
-            }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .footer {
+            margin-top: 30px;
+            color: #666;
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🛡️ FF14 零式装備分配システム</h1>
-        <p style="color: #666; font-size: 1.1rem; margin-bottom: 30px;">
-            8人固定パーティでの装備分配を効率的に管理するWebアプリケーション
-        </p>
+        <div class="header">🚫 GitHub版 サービス廃止</div>
         
-        <div class="version-grid">
-            <div class="version-card recommended" onclick="location.href='supabase_index.html'">
-                <div class="version-badge">推奨</div>
-                <div class="version-title">Supabase連携版</div>
-                <div class="version-description">
-                    GitHubアカウント不要！チームID+パスワードで簡単アクセス
-                </div>
-                <ul class="version-features">
-                    <li>✅ 簡単認証（GitHubアカウント不要）</li>
-                    <li>✅ リアルタイムデータ同期</li>
-                    <li>✅ プレイヤー・装備管理完備</li>
-                    <li>🔄 装備分配システム（開発中）</li>
-                </ul>
-                <a href="supabase_index.html" class="access-button">
-                    アクセス →
-                </a>
-            </div>
-            
-            <div class="version-card" onclick="location.href='collaborative_index.html'">
-                <div class="version-badge">既存版</div>
-                <div class="version-title">GitHub連携版</div>
-                <div class="version-description">
-                    Personal Access Token必要。全機能完備の安定版
-                </div>
-                <ul class="version-features">
-                    <li>✅ 全機能完備</li>
-                    <li>✅ 装備分配システム完成</li>
-                    <li>✅ 統計・履歴機能</li>
-                    <li>⚠️ GitHubアカウント必要</li>
-                </ul>
-                <a href="collaborative_index.html" class="access-button">
-                    アクセス →
-                </a>
-            </div>
+        <div class="message">
+            <p>FF14零式装備分配システムのGitHub版は<strong>廃止</strong>されました。</p>
+            <p>今後は<strong>Supabase版</strong>をご利用ください。</p>
         </div>
         
-        <div class="info-section">
-            <h3>🎮 Supabase連携版 デモアカウント</h3>
-            <p><strong>チームID:</strong> <code>demo-team</code></p>
-            <p><strong>パスワード:</strong> <code>demo123</code></p>
-            
-            <h3>📋 利用手順（Supabase版）</h3>
-            <ol>
-                <li>「Supabase連携版」にアクセス</li>
-                <li>上記のデモアカウントでログイン</li>
-                <li>レイドティアを作成</li>
-                <li>メンバー管理で8人の情報を設定</li>
-                <li>装備方針・武器希望を設定</li>
-            </ol>
-            
-            <h3>🔧 本格運用について</h3>
-            <p>実際のレイドチームでご利用の場合は、専用のチームIDとパスワードを作成いたします。お気軽にお声がけください。</p>
+        <div class="new-version">
+            <h3>🚀 新バージョンの特徴</h3>
+            <ul>
+                <li><strong>新規チーム作成機能</strong> - セルフサービスでチーム作成</li>
+                <li><strong>リアルタイム同期</strong> - 8人での同時利用</li>
+                <li><strong>データ永続化</strong> - クラウドデータベース使用</li>
+                <li><strong>改善されたUI</strong> - より使いやすいインターフェース</li>
+            </ul>
+        </div>
+        
+        <a href="main.html" class="button">新バージョンを利用する</a>
+        
+        <div class="footer">
+            <p>※ GitHub版で作成したデータは引き継がれません。<br>
+            新バージョンで新しいチームを作成してください。</p>
         </div>
     </div>
 </body>

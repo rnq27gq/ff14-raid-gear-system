@@ -85,6 +85,49 @@ FF14零式レイドでの装備分配を公平かつ効率的に行うためのW
 - **武器箱**: 2000 + ポジション優先順位 - 動的優先度
 - **直ドロ武器**: 3000 + ポジション優先順位 - 希望順位×100 - 動的優先度
 
+## 🚀 テスト運用開始について
+
+### パスワードリセット機能の有効化
+新しいパスワードリセット機能を使用するには、Supabaseデータベースに以下のSQLを実行してください：
+
+```sql
+-- 必要な拡張機能を有効化
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- teamsテーブルにカラムを追加
+ALTER TABLE teams ADD COLUMN IF NOT EXISTS security_question TEXT;
+ALTER TABLE teams ADD COLUMN IF NOT EXISTS security_answer_hash VARCHAR(255);
+ALTER TABLE teams ADD COLUMN IF NOT EXISTS reset_token VARCHAR(100);
+ALTER TABLE teams ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMP WITH TIME ZONE;
+ALTER TABLE teams ADD COLUMN IF NOT EXISTS created_by VARCHAR(100);
+
+-- パスワードリセット用関数を作成（詳細は envdoc/quick_password_reset_setup.sql を参照）
+```
+
+### テストデータのクリーンアップ
+本格運用前にテストデータをクリーンアップする場合：
+
+```sql
+-- 全テストデータを削除
+DELETE FROM raid_data;
+DELETE FROM teams WHERE team_id != 'demo-team';
+
+-- または完全クリーンアップしてdemo-teamを再作成
+DELETE FROM raid_data;
+DELETE FROM teams;
+
+-- パスワードリセット対応demo-teamを再作成
+INSERT INTO teams (team_id, team_name, password_hash, created_by, security_question, security_answer_hash)
+VALUES ('demo-team', 'デモチーム', crypt('demo123', gen_salt('bf')), 'システム管理者', 
+        '好きなジョブは何ですか？', crypt('竜騎士', gen_salt('bf')));
+```
+
+### 新機能
+- **パスワードリセット**: セキュリティ質問による安全なパスワード復旧
+- **断章交換システム**: 零式装備の断章交換状態管理
+- **自動ステータス更新**: 箱取得時の断章交換者状態自動更新
+- **ロール別色分け**: タンク(青)・ヒーラー(緑)・DPS(オレンジ)
+
 ## 📞 サポート
 
 システムに関する質問や要望は、開発者にお問い合わせください。

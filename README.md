@@ -1,114 +1,114 @@
-# FF14 Raid Gear Allocation System
+# FF14 零式装備分配システム
 
-A comprehensive web application for managing gear distribution in Final Fantasy XIV raid teams. Built for static groups who want fair, transparent, and efficient loot allocation.
+FF14の零式レイドチーム向けの装備分配管理システムです。8人固定チームでの公平で透明性のある装備分配を支援します。
 
-## Overview
+## 概要
 
-This system helps 8-person raid teams manage equipment distribution using a fair priority-based algorithm. It supports real-time collaboration, tracks player preferences, and maintains historical data to ensure equitable gear distribution over time.
+このシステムは8人レイドチームの装備分配を、公平な優先度アルゴリズムを使用して管理します。リアルタイムでの共同作業をサポートし、プレイヤーの希望を追跡し、長期的に公平な装備分配を実現するための履歴データを保持します。
 
-## Key Features
+## 主な機能
 
-### Gear Distribution
-- **Need/Greed/Pass System**: Standard MMO loot distribution mechanics
-- **Smart Priority Calculation**: Considers position priority, gear policies, and acquisition history
-- **Weapon Distribution**: Specialized handling for weapon coffers and direct drops
-- **Tome Exchange Support**: Advanced tracking for tome-exchanged gear with conditional priority
+### 装備分配
+- **Need/Greed/Passシステム**: 標準的なMMOの装備分配方式
+- **スマート優先度計算**: ポジション優先度、装備方針、取得履歴を考慮
+- **武器分配**: 武器箱と直ドロップ武器の専用処理
+- **断章交換サポート**: 断章で交換した装備の高度な追跡機能
 
-### Team Management
-- **8-Position Support**: MT/ST/H1/H2/D1/D2/D3/D4 with job assignments
-- **Gear Policy Management**: Individual player preferences for raid vs tome gear
-- **Weapon Preference System**: Priority ranking for weapon types
+### チーム管理
+- **8ポジション対応**: MT/ST/H1/H2/D1/D2/D3/D4のジョブ割り当て
+- **装備方針管理**: プレイヤー個別の零式/トームストーン装備希望
+- **武器希望システム**: 武器種別の優先順位設定
 
-### Security & Access
-- **Team-Based Authentication**: Secure team creation with password protection
-- **Password Recovery**: Security question-based password reset system
-- **Real-time Synchronization**: Live updates across all team members
+### セキュリティとアクセス
+- **チーム認証**: パスワード保護によるセキュアなチーム作成
+- **パスワード復旧**: セキュリティ質問による安全なパスワードリセット
+- **リアルタイム同期**: チームメンバー全員へのライブ更新
 
-### Analytics & History
-- **Acquisition Statistics**: Comprehensive tracking of gear distribution
-- **Distribution History**: Complete log of all past allocations
-- **Manual Adjustments**: Admin controls for correcting data
+### 統計と履歴
+- **取得統計**: 装備分配の包括的な追跡
+- **分配履歴**: 過去の全分配記録
+- **手動調整**: データ修正のための管理者機能
 
-## Quick Start
+## クイックスタート
 
-### Demo Access
-Visit the live application: [https://rnq27gq.github.io/ff14-raid-gear-system/](https://rnq27gq.github.io/ff14-raid-gear-system/)
+### デモアクセス
+ライブアプリケーション: [https://rnq27gq.github.io/ff14-raid-gear-system/](https://rnq27gq.github.io/ff14-raid-gear-system/)
 
-**Demo Account:**
-- Team ID: `demo-team`
-- Password: `demo123`
+**デモアカウント:**
+- チームID: `demo-team`
+- パスワード: `demo123`
 
-### Creating Your Team
+### チーム作成
 
-1. **Visit the Application**
-   - Navigate to the application URL
-   - Click "Create New Team"
+1. **アプリケーションにアクセス**
+   - アプリケーションURLにアクセス
+   - 「新しいチームを作成」をクリック
 
-2. **Team Setup**
-   - Choose a unique Team ID (3-20 characters, alphanumeric)
-   - Set a secure password (6+ characters)
-   - Enter creator name for password recovery
-   - Set security question and answer
+2. **チーム設定**
+   - 一意のチームIDを選択（3-20文字、英数字）
+   - セキュアなパスワードを設定（6文字以上）
+   - パスワード復旧用の作成者名を入力
+   - セキュリティ質問と答えを設定
 
-3. **Member Configuration**
-   - Add all 8 team members with their preferred jobs
-   - Configure gear policies (Raid vs Tome preference for each slot)
-   - Set weapon preferences (1st through 4th choice)
+3. **メンバー設定**
+   - 8人全員のメンバーと希望ジョブを追加
+   - 装備方針を設定（各部位の零式/トームストーン希望）
+   - 武器希望を設定（第1〜第4希望）
 
-4. **Start Distributing**
-   - Access the allocation system
-   - Select dropped items from tier menus
-   - Review system recommendations
-   - Confirm distributions
+4. **分配開始**
+   - 分配システムにアクセス
+   - 層メニューからドロップアイテムを選択
+   - システム推奨を確認
+   - 分配を確定
 
-## How Distribution Works
+## 分配システムの仕組み
 
-### Priority Calculation
+### 優先度計算
 
-The system calculates distribution priority using multiple factors:
+システムは複数の要素を使用して分配優先度を計算します：
 
-1. **Gear Policy**: Players prioritizing raid gear get higher priority than those preferring tome gear
-2. **Position Priority**: Customizable ordering (default: D1 → D2 → D3 → D4 → MT → ST → H1 → H2)
-3. **Acquisition History**: Dynamic adjustments based on previous gear received
-4. **Weapon Preferences**: Ranking system for weapon types
+1. **装備方針**: 零式装備を優先するプレイヤーは、トームストーン装備希望者より高い優先度
+2. **ポジション優先度**: カスタマイズ可能な順序（デフォルト: D1 → D2 → D3 → D4 → MT → ST → H1 → H2）
+3. **取得履歴**: 過去の装備取得に基づく動的調整
+4. **武器希望**: 武器種別のランキングシステム
 
-### Scoring System
+### スコアリングシステム
 
-- **Raid Need**: 1000 + position priority - dynamic penalty
-- **Tome Greed**: 500 + position priority - dynamic penalty
-- **Weapon Coffer**: 2000 + position priority - dynamic penalty
-- **Direct Drop Weapon**: 3000 + position priority - preference ranking × 100 - dynamic penalty
+- **零式Need**: 1000 + ポジション優先度 - 動的ペナルティ
+- **トームGreed**: 500 + ポジション優先度 - 動的ペナルティ
+- **武器箱**: 2000 + ポジション優先度 - 動的ペナルティ
+- **直ドロップ武器**: 3000 + ポジション優先度 - 希望順位 × 100 - 動的ペナルティ
 
-### Tome Exchange System
+### 断章交換システム
 
-Advanced feature for players who exchange gear using tomes:
-- **Temporary Exclusion**: Tome exchange players are excluded while raid-policy players need gear
-- **Conditional Re-entry**: Become eligible again when no raid-policy players need the item
-- **Automatic Status Updates**: System automatically updates status when coffers are received
+断章で装備を交換したプレイヤー向けの高度な機能：
+- **一時的除外**: 零式方針のプレイヤーが装備を必要としている間は除外
+- **条件付き復帰**: 零式方針のプレイヤーが誰もアイテムを必要としなくなったら再び対象に
+- **自動ステータス更新**: 箱取得時にシステムが自動的にステータスを更新
 
-## Technical Requirements
+## 技術要件
 
-### Supported Browsers
+### 対応ブラウザ
 - Chrome 90+
 - Firefox 88+
 - Safari 14+
 - Edge 90+
 
-### Database Setup
+### データベース設定
 
-The application uses Supabase as its backend. For new deployments:
+このアプリケーションはSupabaseをバックエンドとして使用します。新規デプロイの場合：
 
-1. **Create Supabase Project**
-   - Sign up at [supabase.com](https://supabase.com)
-   - Create a new project
-   - Note your project URL and anon key
+1. **Supabaseプロジェクト作成**
+   - [supabase.com](https://supabase.com)でサインアップ
+   - 新しいプロジェクトを作成
+   - プロジェクトURLとanon keyをメモ
 
-2. **Configure Database**
+2. **データベース設定**
    ```sql
-   -- Enable required extensions
+   -- 必要な拡張機能を有効化
    CREATE EXTENSION IF NOT EXISTS "pgcrypto";
    
-   -- Create teams table
+   -- teamsテーブル作成
    CREATE TABLE teams (
        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
        team_id VARCHAR(50) UNIQUE NOT NULL,
@@ -123,7 +123,7 @@ The application uses Supabase as its backend. For new deployments:
        last_access TIMESTAMP WITH TIME ZONE DEFAULT NOW()
    );
    
-   -- Create raid data table
+   -- raid_dataテーブル作成
    CREATE TABLE raid_data (
        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
        team_id VARCHAR(50) NOT NULL,
@@ -135,7 +135,7 @@ The application uses Supabase as its backend. For new deployments:
    );
    ```
 
-3. **Enable Row Level Security**
+3. **行レベルセキュリティ有効化**
    ```sql
    ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
    ALTER TABLE raid_data ENABLE ROW LEVEL SECURITY;
@@ -144,132 +144,132 @@ The application uses Supabase as its backend. For new deployments:
        FOR ALL USING (team_id = current_setting('app.current_team_id', true));
    ```
 
-## User Guide
+## 利用ガイド
 
-### For Team Leaders
+### チームリーダー向け
 
-1. **Initial Setup**
-   - Create team account with secure credentials
-   - Add all 8 members with accurate job information
-   - Configure position priority order if different from default
-   - Set up gear policies for each member
+1. **初期設定**
+   - セキュアな認証情報でチームアカウントを作成
+   - 正確なジョブ情報で8人全員を追加
+   - デフォルトと異なる場合はポジション優先度を設定
+   - 各メンバーの装備方針を設定
 
-2. **Weekly Operations**
-   - Access the allocation system before raid night
-   - Input dropped items as they occur
-   - Review and confirm system recommendations
-   - Handle any manual adjustments needed
+2. **週次運用**
+   - レイド前に分配システムにアクセス
+   - ドロップアイテムが出現したら入力
+   - システム推奨を確認して承認
+   - 必要に応じて手動調整を実施
 
-3. **Maintenance**
-   - Regularly review statistics for fairness
-   - Update member information as needed
-   - Export data for backup purposes
+3. **メンテナンス**
+   - 公平性のため定期的に統計を確認
+   - 必要に応じてメンバー情報を更新
+   - バックアップ用にデータをエクスポート
 
-### For Team Members
+### チームメンバー向け
 
-1. **Initial Configuration**
-   - Provide job and character information to team leader
-   - Specify gear preferences (raid vs tome for each slot)
-   - Set weapon preference ranking
+1. **初期設定**
+   - チームリーダーにジョブとキャラクター情報を提供
+   - 装備希望を指定（各部位の零式/トームストーン）
+   - 武器希望ランキングを設定
 
-2. **Ongoing Use**
-   - View current allocation statistics
-   - Check distribution history
-   - Access the system during raids for real-time updates
+2. **継続利用**
+   - 現在の分配統計を確認
+   - 分配履歴をチェック
+   - レイド中はリアルタイム更新のためシステムにアクセス
 
-### For Administrators
+### 管理者向け
 
-1. **Data Management**
-   - Monitor system performance and usage
-   - Perform regular database maintenance
-   - Handle password reset requests if needed
+1. **データ管理**
+   - システムパフォーマンスと使用状況の監視
+   - 定期的なデータベースメンテナンス
+   - 必要に応じてパスワードリセット対応
 
-2. **Troubleshooting**
-   - Check browser console for JavaScript errors
-   - Verify Supabase connection status
-   - Assist with data corrections when necessary
+2. **トラブルシューティング**
+   - ブラウザコンソールでJavaScriptエラーをチェック
+   - Supabase接続状況の確認
+   - 必要に応じてデータ修正の支援
 
-## Advanced Features
+## 高度な機能
 
-### Position Priority Customization
+### ポジション優先度カスタマイズ
 
-Teams can adjust the default position priority order:
-1. Access "Priority Settings" from the dashboard
-2. Drag and drop positions to reorder
-3. Save changes - affects all future distributions
+チームはデフォルトのポジション優先度順序を調整できます：
+1. ダッシュボードから「優先度設定」にアクセス
+2. ドラッグ&ドロップでポジションを並び替え
+3. 変更を保存 - 今後の全分配に影響
 
-### Manual Statistics Editing
+### 統計の手動編集
 
-For corrections or adjustments:
-1. Navigate to "Statistics" section
-2. Click "Edit Mode"
-3. Toggle acquisition status for any item
-4. Save changes to update system state
+修正や調整のため：
+1. 「統計情報」セクションに移動
+2. 「編集モード」をクリック
+3. 任意のアイテムの取得状況を切り替え
+4. 変更を保存してシステム状態を更新
 
-### Data Export/Import
+### データエクスポート/インポート
 
-- **Export**: Download complete team data as JSON
-- **Import**: Upload data from previous systems or backups
-- **CSV Support**: Import basic member information via CSV
+- **エクスポート**: チームデータをJSONで完全ダウンロード
+- **インポート**: 以前のシステムやバックアップからデータをアップロード
+- **CSV対応**: 基本メンバー情報をCSV経由でインポート
 
-## Security Considerations
+## セキュリティ考慮事項
 
-### Password Management
-- Use strong, unique passwords for team accounts
-- Choose security questions with memorable but non-obvious answers
-- Regularly update passwords if team membership changes
+### パスワード管理
+- チームアカウントには強力で一意のパスワードを使用
+- 覚えやすいが推測しにくいセキュリティ質問を選択
+- チームメンバーに変更があった場合は定期的にパスワード更新
 
-### Data Privacy
-- Team data is isolated using row-level security
-- No cross-team data access possible
-- Regular backups recommended for important progression
+### データプライバシー
+- チームデータは行レベルセキュリティで分離
+- クロスチームデータアクセスは不可能
+- 重要な進行データには定期バックアップを推奨
 
-### Access Control
-- Team IDs should be shared only with trusted members
-- Consider rotating credentials if members leave
-- Monitor access logs for unusual activity
+### アクセス制御
+- チームIDは信頼できるメンバーのみと共有
+- メンバーが離脱した場合は認証情報のローテーションを検討
+- 異常なアクセスがないかアクセスログを監視
 
-## Troubleshooting
+## トラブルシューティング
 
-### Common Issues
+### よくある問題
 
-**Login Problems**
-- Verify team ID and password spelling
-- Use password reset if credentials are forgotten
-- Check browser console for connection errors
+**ログイン問題**
+- チームIDとパスワードのスペルを確認
+- 認証情報を忘れた場合はパスワードリセットを使用
+- 接続エラーがないかブラウザコンソールをチェック
 
-**Data Sync Issues**
-- Refresh page to force resynchronization
-- Verify internet connection stability
-- Clear browser cache if problems persist
+**データ同期問題**
+- ページを更新して強制再同期
+- インターネット接続の安定性を確認
+- 問題が続く場合はブラウザキャッシュをクリア
 
-**Performance Issues**
-- Ensure modern browser version
-- Close unnecessary browser tabs
-- Check for JavaScript errors in console
+**パフォーマンス問題**
+- 最新のブラウザバージョンを確認
+- 不要なブラウザタブを閉じる
+- コンソールでJavaScriptエラーをチェック
 
-### Getting Help
+### ヘルプの取得
 
-For technical issues or feature requests:
-1. Check the troubleshooting section above
-2. Verify your browser meets minimum requirements
-3. Contact system administrator with specific error messages
+技術的な問題や機能要求については：
+1. 上記のトラブルシューティングセクションを確認
+2. ブラウザが最小要件を満たしているかを確認
+3. 具体的なエラーメッセージと共にシステム管理者に連絡
 
-## Development
+## 開発情報
 
-### Architecture
-- **Frontend**: Pure HTML/CSS/JavaScript (no frameworks)
-- **Backend**: Supabase (PostgreSQL + Auth + Real-time)
-- **Hosting**: GitHub Pages (static hosting)
-- **Security**: Row-level security + bcrypt password hashing
+### アーキテクチャ
+- **フロントエンド**: 純粋なHTML/CSS/JavaScript（フレームワークなし）
+- **バックエンド**: Supabase（PostgreSQL + 認証 + リアルタイム）
+- **ホスティング**: GitHub Pages（静的ホスティング）
+- **セキュリティ**: 行レベルセキュリティ + bcryptパスワードハッシュ化
 
-### Contributing
-This project is designed for Final Fantasy XIV raid teams. While primarily for internal use, feedback and suggestions are welcome.
+### 貢献
+このプロジェクトはファイナルファンタジーXIVのレイドチーム向けに設計されています。主に内部利用を目的としていますが、フィードバックや提案は歓迎します。
 
-## License
+## ライセンス
 
-This project is intended for personal and team use within the Final Fantasy XIV community. Not for commercial distribution.
+このプロジェクトは、ファイナルファンタジーXIVコミュニティ内での個人およびチーム利用を目的としています。商用配布は対象外です。
 
 ---
 
-**Designed for the Final Fantasy XIV raiding community**
+**ファイナルファンタジーXIVレイドコミュニティのために設計**

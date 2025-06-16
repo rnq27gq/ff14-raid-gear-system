@@ -1599,11 +1599,14 @@
         
         // DOMContentLoadedでも初期化を試行（ハードリロード対策）
         document.addEventListener('DOMContentLoaded', async function() {
+            console.log('DOMContentLoaded: DOM準備完了');
             if (!isInitialized && !isInitializing && !window.supabaseClient) {
                 showMessage('システム初期化中...', 'info');
+                // DOM要素の存在確認
                 setTimeout(async () => {
+                    console.log('DOM要素確認後の初期化開始');
                     await initializeApp();
-                }, 200);
+                }, 300);
             }
         });
         
@@ -1856,37 +1859,61 @@
         
         // 新規登録画面表示
         function showSignupForm() {
-            document.getElementById('authScreen').style.display = 'none';
-            document.getElementById('signupScreen').style.display = 'block';
-            document.getElementById('mainContent').style.display = 'none';
+            const authScreen = document.getElementById('authScreen');
+            if (authScreen) authScreen.style.display = 'none';
+            
+            const signupScreen = document.getElementById('signupScreen');
+            if (signupScreen) signupScreen.style.display = 'block';
+            
+            const mainContent = document.getElementById('mainContent');
+            if (mainContent) mainContent.style.display = 'none';
             
             // 入力フィールドをクリア
-            document.getElementById('signupTeamIdInput').value = '';
-            document.getElementById('signupPasswordInput').value = '';
-            document.getElementById('signupPasswordConfirmInput').value = '';
+            const signupTeamIdInput = document.getElementById('signupTeamIdInput');
+            if (signupTeamIdInput) signupTeamIdInput.value = '';
+            
+            const signupPasswordInput = document.getElementById('signupPasswordInput');
+            if (signupPasswordInput) signupPasswordInput.value = '';
+            
+            const signupPasswordConfirmInput = document.getElementById('signupPasswordConfirmInput');
+            if (signupPasswordConfirmInput) signupPasswordConfirmInput.value = '';
         }
         
         // ログイン画面表示
         function showLoginForm() {
-            document.getElementById('authScreen').style.display = 'block';
-            document.getElementById('signupScreen').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'none';
+            const authScreen = document.getElementById('authScreen');
+            if (authScreen) authScreen.style.display = 'block';
+            
+            const signupScreen = document.getElementById('signupScreen');
+            if (signupScreen) signupScreen.style.display = 'none';
+            
+            const mainContent = document.getElementById('mainContent');
+            if (mainContent) mainContent.style.display = 'none';
         }
         
         // 認証後の状態表示
         async function showAuthenticatedState() {
             isAuthenticated = true;
             
-            // UI切り替え
-            document.getElementById('authScreen').style.display = 'none';
-            document.getElementById('mainContent').classList.add('authenticated');
-            document.getElementById('authControls').style.display = 'none';
-            document.getElementById('loggedInControls').style.display = 'flex';
-            document.getElementById('loggedInTeam').textContent = currentTeamId;
+            // UI切り替え（安全な要素アクセス）
+            const authScreen = document.getElementById('authScreen');
+            if (authScreen) authScreen.style.display = 'none';
+            
+            const mainContent = document.getElementById('mainContent');
+            if (mainContent) mainContent.classList.add('authenticated');
+            
+            const loggedInControls = document.getElementById('loggedInControls');
+            if (loggedInControls) loggedInControls.style.display = 'flex';
+            
+            const loggedInTeam = document.getElementById('loggedInTeam');
+            if (loggedInTeam) loggedInTeam.textContent = currentTeamId;
             
             // チーム情報表示
-            document.getElementById('teamInfo').style.display = 'block';
-            document.getElementById('currentTeamName').textContent = `チーム: ${currentTeamId}`;
+            const teamInfo = document.getElementById('teamInfo');
+            if (teamInfo) teamInfo.style.display = 'block';
+            
+            const currentTeamName = document.getElementById('currentTeamName');
+            if (currentTeamName) currentTeamName.textContent = `チーム: ${currentTeamId}`;
         }
         
         // ログアウト
@@ -1898,18 +1925,25 @@
             localStorage.removeItem('ff14_team_id');
             supabaseConfig.currentTeamId = null;
             
-            // UI切り替え
-            document.getElementById('authScreen').style.display = 'flex';
-            document.getElementById('mainContent').classList.remove('authenticated');
-            document.getElementById('authControls').style.display = 'flex';
-            document.getElementById('loggedInControls').style.display = 'none';
-            document.getElementById('teamInfo').style.display = 'none';
+            // UI切り替え（安全な要素アクセス）
+            const authScreen = document.getElementById('authScreen');
+            if (authScreen) authScreen.style.display = 'flex';
             
-            // 入力欄クリア
-            document.getElementById('teamIdInput').value = '';
-            document.getElementById('passwordInput').value = '';
-            document.getElementById('mainTeamIdInput').value = '';
-            document.getElementById('mainPasswordInput').value = '';
+            const mainContent = document.getElementById('mainContent');
+            if (mainContent) mainContent.classList.remove('authenticated');
+            
+            const loggedInControls = document.getElementById('loggedInControls');
+            if (loggedInControls) loggedInControls.style.display = 'none';
+            
+            const teamInfo = document.getElementById('teamInfo');
+            if (teamInfo) teamInfo.style.display = 'none';
+            
+            // 入力欄クリア（メイン認証フォームのみ）
+            const mainTeamIdInput = document.getElementById('mainTeamIdInput');
+            if (mainTeamIdInput) mainTeamIdInput.value = '';
+            
+            const mainPasswordInput = document.getElementById('mainPasswordInput');
+            if (mainPasswordInput) mainPasswordInput.value = '';
             
             showSuccess('ログアウトしました');
         }

@@ -1554,7 +1554,8 @@
                 </div>
                 
                 <div style="margin-top: 20px; font-size: 12px; color: #888;">
-                    <p><a href="#" onclick="showSignupForm()" style="color: #3498db; text-decoration: none;">新しいチームを作成</a></p>
+                    <p><a href="#" onclick="showSignupForm()" style="color: #3498db; text-decoration: none;">新しいチームを作成</a> | 
+                    <a href="#" onclick="showPasswordResetForm()" style="color: #e74c3c; text-decoration: none;">パスワードを忘れた場合</a></p>
                 </div>
             </div>
         </div>
@@ -1569,8 +1570,26 @@
                 
                 <div class="auth-form">
                     <input type="text" id="signupTeamIdInput" placeholder="チームID (英数字、3-20文字)" maxlength="20">
+                    <input type="text" id="signupCreatedByInput" placeholder="作成者名 (パスワードリセット時に使用)" maxlength="50">
                     <input type="password" id="signupPasswordInput" placeholder="パスワード (6文字以上)" maxlength="20">
                     <input type="password" id="signupPasswordConfirmInput" placeholder="パスワード確認" maxlength="20">
+                    
+                    <div style="margin: 15px 0; text-align: left;">
+                        <label style="display: block; margin-bottom: 5px; color: #666; font-size: 0.9rem;">セキュリティ質問 (パスワードリセット用)</label>
+                        <select id="signupSecurityQuestionSelect" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
+                            <option value="">セキュリティ質問を選択してください</option>
+                            <option value="favorite_job">好きなジョブは何ですか？</option>
+                            <option value="first_datacenter">最初にプレイしたデータセンターは？</option>
+                            <option value="main_character">メインキャラクターの名前は？</option>
+                            <option value="favorite_raid">好きな零式レイドは？</option>
+                            <option value="fc_name">所属FCの名前は？</option>
+                            <option value="custom">カスタム質問を入力</option>
+                        </select>
+                    </div>
+                    
+                    <input type="text" id="signupCustomQuestionInput" placeholder="カスタム質問を入力してください" style="display: none;" maxlength="100">
+                    <input type="text" id="signupSecurityAnswerInput" placeholder="セキュリティ質問の答え" maxlength="50">
+                    
                     <button onclick="createNewTeam()">チーム作成</button>
                 </div>
                 
@@ -1582,6 +1601,54 @@
                     <p>・チームIDは他のチームと重複できません<br>
                     ・パスワードは安全に管理してください<br>
                     ・作成後は8人で共有してご利用ください</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- パスワードリセット画面 -->
+        <div id="passwordResetScreen" class="auth-screen" style="display: none;">
+            <div class="auth-container">
+                <h1>🔑 パスワードリセット</h1>
+                <p style="margin-bottom: 30px; color: #666;">
+                    セキュリティ質問に答えて<br>パスワードをリセットします
+                </p>
+                
+                <!-- ステップ1: チームIDとセキュリティ質問確認 -->
+                <div id="resetStep1" class="auth-form">
+                    <input type="text" id="resetTeamIdInput" placeholder="チームID" maxlength="20">
+                    <button onclick="getSecurityQuestion()">セキュリティ質問を取得</button>
+                </div>
+                
+                <!-- ステップ2: セキュリティ質問回答 -->
+                <div id="resetStep2" class="auth-form" style="display: none;">
+                    <div id="teamInfoDisplay" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px; text-align: left;">
+                        <!-- チーム情報がここに表示される -->
+                    </div>
+                    <div id="securityQuestionDisplay" style="margin-bottom: 15px; color: #666; font-weight: bold;">
+                        <!-- セキュリティ質問がここに表示される -->
+                    </div>
+                    <input type="text" id="resetSecurityAnswerInput" placeholder="セキュリティ質問の答え" maxlength="50">
+                    <button onclick="verifySecurityAnswer()">答えを確認</button>
+                </div>
+                
+                <!-- ステップ3: 新しいパスワード設定 -->
+                <div id="resetStep3" class="auth-form" style="display: none;">
+                    <div style="margin-bottom: 20px; color: #27ae60; font-weight: bold;">
+                        ✅ セキュリティ質問の確認が完了しました
+                    </div>
+                    <input type="password" id="resetNewPasswordInput" placeholder="新しいパスワード (6文字以上)" maxlength="20">
+                    <input type="password" id="resetNewPasswordConfirmInput" placeholder="新しいパスワード確認" maxlength="20">
+                    <button onclick="executePasswordReset()">パスワードを変更</button>
+                </div>
+                
+                <div style="margin-top: 20px; font-size: 12px; color: #888;">
+                    <p><a href="#" onclick="showLoginForm()" style="color: #3498db; text-decoration: none;">ログイン画面に戻る</a></p>
+                </div>
+                
+                <div style="margin-top: 20px; font-size: 11px; color: #999; line-height: 1.4;">
+                    <p>・チーム作成時に設定したセキュリティ質問が必要です<br>
+                    ・セキュリティ質問の答えを忘れた場合は、チーム作成者に相談してください<br>
+                    ・パスワードリセット後は新しいパスワードでログインしてください</p>
                 </div>
             </div>
         </div>
@@ -1817,11 +1884,15 @@
         // 新規チーム作成
         async function createNewTeam() {
             const teamId = document.getElementById('signupTeamIdInput').value;
+            const createdBy = document.getElementById('signupCreatedByInput').value;
             const password = document.getElementById('signupPasswordInput').value;
             const passwordConfirm = document.getElementById('signupPasswordConfirmInput').value;
+            const securityQuestionSelect = document.getElementById('signupSecurityQuestionSelect').value;
+            const customQuestion = document.getElementById('signupCustomQuestionInput').value;
+            const securityAnswer = document.getElementById('signupSecurityAnswerInput').value;
             
             // バリデーション
-            if (!teamId || !password || !passwordConfirm) {
+            if (!teamId || !createdBy || !password || !passwordConfirm || !securityQuestionSelect || !securityAnswer) {
                 showError('すべての項目を入力してください');
                 return;
             }
@@ -1846,6 +1917,25 @@
                 return;
             }
             
+            // セキュリティ質問の検証
+            let finalSecurityQuestion;
+            if (securityQuestionSelect === 'custom') {
+                if (!customQuestion.trim()) {
+                    showError('カスタム質問を入力してください');
+                    return;
+                }
+                finalSecurityQuestion = customQuestion.trim();
+            } else {
+                const questionTexts = {
+                    'favorite_job': '好きなジョブは何ですか？',
+                    'first_datacenter': '最初にプレイしたデータセンターは？',
+                    'main_character': 'メインキャラクターの名前は？',
+                    'favorite_raid': '好きな零式レイドは？',
+                    'fc_name': '所属FCの名前は？'
+                };
+                finalSecurityQuestion = questionTexts[securityQuestionSelect];
+            }
+            
             try {
                 showMessage('チーム作成中...', 'info');
                 
@@ -1856,11 +1946,14 @@
                 
                 console.log('チーム作成試行:', teamId);
                 
-                // Supabaseでチーム作成
-                const { data, error } = await window.supabaseClient.rpc('create_team', {
+                // Supabaseでセキュリティ質問付きチーム作成
+                const { data, error } = await window.supabaseClient.rpc('create_team_with_security', {
                     p_team_id: teamId,
                     p_team_name: teamId, // チーム名はチームIDと同じに設定
-                    p_password: password
+                    p_password: password,
+                    p_created_by: createdBy,
+                    p_security_question: finalSecurityQuestion,
+                    p_security_answer: securityAnswer
                 });
                 
                 console.log('チーム作成結果:', { data, error });
@@ -1928,8 +2021,29 @@
             const signupScreen = document.getElementById('signupScreen');
             if (signupScreen) signupScreen.style.display = 'none';
             
+            const passwordResetScreen = document.getElementById('passwordResetScreen');
+            if (passwordResetScreen) passwordResetScreen.style.display = 'none';
+            
             const mainContent = document.getElementById('mainContent');
             if (mainContent) mainContent.style.display = 'none';
+        }
+        
+        // パスワードリセット画面表示
+        function showPasswordResetForm() {
+            const authScreen = document.getElementById('authScreen');
+            if (authScreen) authScreen.style.display = 'none';
+            
+            const signupScreen = document.getElementById('signupScreen');
+            if (signupScreen) signupScreen.style.display = 'none';
+            
+            const passwordResetScreen = document.getElementById('passwordResetScreen');
+            if (passwordResetScreen) passwordResetScreen.style.display = 'block';
+            
+            const mainContent = document.getElementById('mainContent');
+            if (mainContent) mainContent.style.display = 'none';
+            
+            // リセット画面の初期化
+            resetPasswordResetForm();
         }
         
         // 認証後の状態表示
@@ -1986,6 +2100,196 @@
             if (mainPasswordInput) mainPasswordInput.value = '';
             
             showSuccess('ログアウトしました');
+        }
+        
+        // パスワードリセット関連関数
+        
+        // パスワードリセットフォームの初期化
+        function resetPasswordResetForm() {
+            // 全ステップを非表示にしてステップ1のみ表示
+            document.getElementById('resetStep1').style.display = 'block';
+            document.getElementById('resetStep2').style.display = 'none';
+            document.getElementById('resetStep3').style.display = 'none';
+            
+            // 入力欄をクリア
+            document.getElementById('resetTeamIdInput').value = '';
+            document.getElementById('resetSecurityAnswerInput').value = '';
+            document.getElementById('resetNewPasswordInput').value = '';
+            document.getElementById('resetNewPasswordConfirmInput').value = '';
+            
+            // グローバル変数をクリア
+            window.resetToken = null;
+            window.resetTeamId = null;
+        }
+        
+        // セキュリティ質問取得
+        async function getSecurityQuestion() {
+            const teamId = document.getElementById('resetTeamIdInput').value.trim();
+            
+            if (!teamId) {
+                showError('チームIDを入力してください');
+                return;
+            }
+            
+            try {
+                showMessage('チーム情報を取得中...', 'info');
+                
+                if (!window.supabaseClient) {
+                    throw new Error('Supabaseクライアントが初期化されていません');
+                }
+                
+                const { data, error } = await window.supabaseClient.rpc('get_team_reset_info', {
+                    p_team_id: teamId
+                });
+                
+                if (error) {
+                    throw new Error(`チーム情報取得エラー: ${error.message}`);
+                }
+                
+                if (!data || data.length === 0) {
+                    showError('指定されたチームIDが見つかりません');
+                    return;
+                }
+                
+                const teamInfo = data[0];
+                
+                if (!teamInfo.security_question) {
+                    showError('このチームにはセキュリティ質問が設定されていません。チーム作成者に相談してください。');
+                    return;
+                }
+                
+                // チーム情報とセキュリティ質問を表示
+                const teamInfoDisplay = document.getElementById('teamInfoDisplay');
+                teamInfoDisplay.innerHTML = `
+                    <strong>チーム名:</strong> ${teamInfo.team_name}<br>
+                    <strong>作成者:</strong> ${teamInfo.created_by || '未設定'}<br>
+                    <strong>作成日:</strong> ${new Date(teamInfo.created_at).toLocaleDateString('ja-JP')}
+                `;
+                
+                const securityQuestionDisplay = document.getElementById('securityQuestionDisplay');
+                securityQuestionDisplay.textContent = `Q: ${teamInfo.security_question}`;
+                
+                // ステップ2を表示
+                document.getElementById('resetStep1').style.display = 'none';
+                document.getElementById('resetStep2').style.display = 'block';
+                
+                window.resetTeamId = teamId;
+                showSuccess('セキュリティ質問を取得しました');
+                
+            } catch (error) {
+                console.error('セキュリティ質問取得エラー:', error);
+                showError('セキュリティ質問の取得に失敗しました: ' + error.message);
+            }
+        }
+        
+        // セキュリティ質問の答え確認
+        async function verifySecurityAnswer() {
+            const answer = document.getElementById('resetSecurityAnswerInput').value.trim();
+            
+            if (!answer) {
+                showError('セキュリティ質問の答えを入力してください');
+                return;
+            }
+            
+            try {
+                showMessage('セキュリティ質問を確認中...', 'info');
+                
+                if (!window.supabaseClient || !window.resetTeamId) {
+                    throw new Error('システムエラーが発生しました');
+                }
+                
+                const { data, error } = await window.supabaseClient.rpc('verify_security_answer', {
+                    p_team_id: window.resetTeamId,
+                    p_answer: answer
+                });
+                
+                if (error) {
+                    throw new Error(`セキュリティ質問確認エラー: ${error.message}`);
+                }
+                
+                if (!data) {
+                    showError('セキュリティ質問の答えが正しくありません');
+                    return;
+                }
+                
+                // リセットトークンを生成
+                const tokenResult = await window.supabaseClient.rpc('generate_reset_token', {
+                    p_team_id: window.resetTeamId
+                });
+                
+                if (tokenResult.error) {
+                    throw new Error(`トークン生成エラー: ${tokenResult.error.message}`);
+                }
+                
+                window.resetToken = tokenResult.data;
+                
+                // ステップ3を表示
+                document.getElementById('resetStep2').style.display = 'none';
+                document.getElementById('resetStep3').style.display = 'block';
+                
+                showSuccess('セキュリティ質問の確認が完了しました');
+                
+            } catch (error) {
+                console.error('セキュリティ質問確認エラー:', error);
+                showError('セキュリティ質問の確認に失敗しました: ' + error.message);
+            }
+        }
+        
+        // パスワードリセット実行
+        async function executePasswordReset() {
+            const newPassword = document.getElementById('resetNewPasswordInput').value;
+            const newPasswordConfirm = document.getElementById('resetNewPasswordConfirmInput').value;
+            
+            if (!newPassword || !newPasswordConfirm) {
+                showError('新しいパスワードを入力してください');
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                showError('パスワードは6文字以上で入力してください');
+                return;
+            }
+            
+            if (newPassword !== newPasswordConfirm) {
+                showError('パスワードが一致しません');
+                return;
+            }
+            
+            try {
+                showMessage('パスワードをリセット中...', 'info');
+                
+                if (!window.supabaseClient || !window.resetTeamId || !window.resetToken) {
+                    throw new Error('システムエラーが発生しました');
+                }
+                
+                const { data, error } = await window.supabaseClient.rpc('reset_password', {
+                    p_team_id: window.resetTeamId,
+                    p_token: window.resetToken,
+                    p_new_password: newPassword
+                });
+                
+                if (error) {
+                    throw new Error(`パスワードリセットエラー: ${error.message}`);
+                }
+                
+                if (!data) {
+                    showError('パスワードリセットに失敗しました。トークンの有効期限が切れている可能性があります。');
+                    return;
+                }
+                
+                showSuccess('パスワードが正常にリセットされました！新しいパスワードでログインしてください。');
+                
+                // ログイン画面に戻る
+                setTimeout(() => {
+                    showLoginForm();
+                    // ログインフォームに新しい値を設定
+                    document.getElementById('mainTeamIdInput').value = window.resetTeamId;
+                }, 2000);
+                
+            } catch (error) {
+                console.error('パスワードリセットエラー:', error);
+                showError('パスワードリセットに失敗しました: ' + error.message);
+            }
         }
         
         // データベース接続テスト
@@ -4584,6 +4888,24 @@
             URL.revokeObjectURL(url);
             showSuccess('データをエクスポートしました');
         }
+        
+        // セキュリティ質問選択時の動作
+        document.addEventListener('DOMContentLoaded', function() {
+            const securityQuestionSelect = document.getElementById('signupSecurityQuestionSelect');
+            const customQuestionInput = document.getElementById('signupCustomQuestionInput');
+            
+            if (securityQuestionSelect && customQuestionInput) {
+                securityQuestionSelect.addEventListener('change', function() {
+                    if (this.value === 'custom') {
+                        customQuestionInput.style.display = 'block';
+                        customQuestionInput.focus();
+                    } else {
+                        customQuestionInput.style.display = 'none';
+                        customQuestionInput.value = '';
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>アップデート確認用のコメント

@@ -836,7 +836,6 @@
         }
         
         .priority-info .position-badge {
-            background-color: #28a745;
             color: white;
             padding: 2px 4px;
             border-radius: 3px;
@@ -844,19 +843,35 @@
             font-size: 11px;
         }
         
+        /* ロール別色分け */
+        .priority-info .position-badge.tank {
+            background-color: #3498db; /* タンク: 青 */
+        }
+        
+        .priority-info .position-badge.healer {
+            background-color: #27ae60; /* ヒーラー: 緑 */
+        }
+        
+        .priority-info .position-badge.dps {
+            background-color: #e74c3c; /* DPS: 赤 */
+        }
+        
         .priority-info .player-name {
             font-weight: 600;
             color: #2c3e50;
-            font-size: 10px;
+            font-size: 11px;
             max-width: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            line-height: 1.2;
         }
         
         .priority-info .player-job {
             color: #6c757d;
-            font-size: 9px;
+            font-size: 10px;
+            font-weight: 500;
+            line-height: 1.1;
         }
         
         .drag-handle {
@@ -1584,6 +1599,18 @@
         let isInitializing = false;
         let isInitialized = false;
         let selectedDirectWeapon = ''; // 直ドロップ武器の選択状態を保持
+        
+        // ロール判定用共通関数
+        function getPositionRoleClass(position) {
+            if (position === 'MT' || position === 'ST') {
+                return 'tank';
+            } else if (position === 'H1' || position === 'H2') {
+                return 'healer';
+            } else if (position.startsWith('D')) {
+                return 'dps';
+            }
+            return '';
+        }
         
         // 初期化 - ライブラリ読み込み完了を待つ
         window.addEventListener('load', async function() {
@@ -2432,11 +2459,15 @@
                             ${currentPriority.map((position, index) => {
                                 const player = players[position];
                                 if (!player) return '';
+                                
+                                // ロール別クラス判定
+                                const roleClass = getPositionRoleClass(position);
+                                
                                 return `
                                     <div class="priority-item" data-position="${position}" draggable="true">
                                         <div class="priority-rank">${index + 1}</div>
                                         <div class="priority-info">
-                                            <span class="position-badge">${position}</span>
+                                            <span class="position-badge ${roleClass}">${position}</span>
                                             <span class="player-name">${player.name}</span>
                                             <span class="player-job">[${player.job}]</span>
                                         </div>

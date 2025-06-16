@@ -843,17 +843,20 @@
             font-size: 11px;
         }
         
-        /* ロール別色分け */
-        .priority-info .position-badge.tank {
+        /* ロール別色分け - 共通定義 */
+        .role-tank, .priority-info .position-badge.tank {
             background-color: #3498db; /* タンク: 青 */
+            color: white;
         }
         
-        .priority-info .position-badge.healer {
+        .role-healer, .priority-info .position-badge.healer {
             background-color: #27ae60; /* ヒーラー: 緑 */
+            color: white;
         }
         
-        .priority-info .position-badge.dps {
-            background-color: #e74c3c; /* DPS: 赤 */
+        .role-dps, .priority-info .position-badge.dps {
+            background-color: #e67e22; /* DPS: 柔らかい赤（オレンジ寄り） */
+            color: white;
         }
         
         .priority-info .player-name {
@@ -1591,7 +1594,6 @@
     </script>
     
     <!-- Supabase設定とメイン機能 -->
-    <script src="supabase_config.js"></script>
     <script>
         // グローバル変数
         let isAuthenticated = false;
@@ -1711,7 +1713,6 @@
             if (savedTeamId) {
                 console.log('自動ログイン開始:', savedTeamId);
                 currentTeamId = savedTeamId;
-                supabaseConfig.currentTeamId = savedTeamId;
                 
                 // チームコンテキスト設定
                 try {
@@ -1951,7 +1952,6 @@
             
             // ローカルストレージクリア
             localStorage.removeItem('ff14_team_id');
-            supabaseConfig.currentTeamId = null;
             
             // UI切り替え（安全な要素アクセス）
             const authScreen = document.getElementById('authScreen');

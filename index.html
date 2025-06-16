@@ -3,90 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FF14 零式装備分配システム - GitHub版廃止のお知らせ</title>
+    <title>FF14 零式装備分配システム</title>
+    <script>
+        // メインアプリに自動リダイレクト
+        window.location.href = 'main.html';
+    </script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
             display: flex;
-            align-items: center;
             justify-content: center;
-        }
-        .container {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 600px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        .header {
-            color: #e74c3c;
-            font-size: 2rem;
-            margin-bottom: 20px;
-        }
-        .message {
-            color: #333;
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin-bottom: 30px;
-        }
-        .new-version {
-            background: #f8f9fa;
-            border-left: 4px solid #28a745;
-            padding: 20px;
-            margin: 20px 0;
-            text-align: left;
-        }
-        .button {
-            display: inline-block;
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 15px 30px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-weight: 600;
-            margin: 10px;
-            transition: transform 0.2s;
         }
-        .button:hover {
-            transform: translateY(-2px);
-        }
-        .footer {
-            margin-top: 30px;
-            color: #666;
-            font-size: 0.9rem;
+        .loading {
+            text-align: center;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">🚫 GitHub版 サービス廃止</div>
-        
-        <div class="message">
-            <p>FF14零式装備分配システムのGitHub版は<strong>廃止</strong>されました。</p>
-            <p>今後は<strong>Supabase版</strong>をご利用ください。</p>
-        </div>
-        
-        <div class="new-version">
-            <h3>🚀 新バージョンの特徴</h3>
-            <ul>
-                <li><strong>新規チーム作成機能</strong> - セルフサービスでチーム作成</li>
-                <li><strong>リアルタイム同期</strong> - 8人での同時利用</li>
-                <li><strong>データ永続化</strong> - クラウドデータベース使用</li>
-                <li><strong>改善されたUI</strong> - より使いやすいインターフェース</li>
-            </ul>
-        </div>
-        
-        <a href="main.html" class="button">新バージョンを利用する</a>
-        
-        <div class="footer">
-            <p>※ GitHub版で作成したデータは引き継がれません。<br>
-            新バージョンで新しいチームを作成してください。</p>
-        </div>
+    <div class="loading">
+        <h1>FF14 零式装備分配システム</h1>
+        <p>システムを読み込み中...</p>
+        <p><a href="main.html" style="color: white;">リダイレクトされない場合はこちらをクリック</a></p>
     </div>
 </body>
 </html>

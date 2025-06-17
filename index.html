@@ -3774,11 +3774,71 @@
                 // 取得可能な候補者のみ抽出
                 const candidates = allCandidates.filter(c => c.canReceive);
                 
-                results[drop.slot] = {
-                    drop,
-                    candidates: allCandidates, // 全プレイヤーの判定結果
-                    recommended: candidates[0] || null // 最優先の取得可能者
-                };
+                // 直ドロ武器の特別処理
+                if (drop.type === 'direct_weapon' && drop.weapon) {
+                    console.log(`直ドロ武器分配計算: ${drop.weapon}`);
+                    
+                    // 第一希望者を探す
+                    const firstChoiceCandidates = candidates.filter(c => {
+                        const weaponWishes = c.player.weaponWishes || [];
+                        const isFirstChoice = weaponWishes[0] === drop.weapon;
+                        console.log(`${c.position}(${c.player.name}): 希望=[${weaponWishes.join(',')}], 第一希望=${isFirstChoice}`);
+                        return isFirstChoice;
+                    });
+                    
+                    console.log(`第一希望者数: ${firstChoiceCandidates.length}`);
+                    
+                    if (firstChoiceCandidates.length > 0) {
+                        // 第一希望者がいる場合は最優先者のみ
+                        console.log(`第一希望者選択: ${firstChoiceCandidates[0].player.name}`);
+                        results[drop.slot] = {
+                            drop,
+                            candidates: allCandidates,
+                            recommended: firstChoiceCandidates[0],
+                            isMultipleRecommended: false
+                        };
+                    } else {
+                        // 第一希望者がいない場合、第二希望以降をチェック
+                        const otherChoiceCandidates = candidates.filter(c => {
+                            const weaponWishes = c.player.weaponWishes || [];
+                            const hasWeapon = weaponWishes.includes(drop.weapon);
+                            const notFirstChoice = weaponWishes[0] !== drop.weapon;
+                            console.log(`${c.position}(${c.player.name}): 希望に含む=${hasWeapon}, 第一希望でない=${notFirstChoice}`);
+                            return hasWeapon && notFirstChoice;
+                        });
+                        
+                        console.log(`第二希望以降候補者数: ${otherChoiceCandidates.length}`);
+                        
+                        if (otherChoiceCandidates.length > 1) {
+                            // 複数の第二希望以降がある場合
+                            console.log(`複数推奨者: ${otherChoiceCandidates.map(c => c.player.name).join(', ')}`);
+                            results[drop.slot] = {
+                                drop,
+                                candidates: allCandidates,
+                                recommended: null,
+                                multipleRecommended: otherChoiceCandidates,
+                                isMultipleRecommended: true
+                            };
+                        } else {
+                            // 単一の第二希望以降
+                            console.log(`単一推奨者: ${otherChoiceCandidates[0]?.player.name || 'なし'}`);
+                            results[drop.slot] = {
+                                drop,
+                                candidates: allCandidates,
+                                recommended: otherChoiceCandidates[0] || null,
+                                isMultipleRecommended: false
+                            };
+                        }
+                    }
+                } else {
+                    // 通常の装備・素材処理
+                    results[drop.slot] = {
+                        drop,
+                        candidates: allCandidates, // 全プレイヤーの判定結果
+                        recommended: candidates[0] || null, // 最優先の取得可能者
+                        isMultipleRecommended: false
+                    };
+                }
             });
             
             return results;
@@ -4110,7 +4170,12 @@
                         <div class="predicted-winner">
                             <strong>予測取得者:</strong> 
                             ${(() => {
-                                if (result.recommended) {
+                                if (result.isMultipleRecommended && result.multipleRecommended) {
+                                    console.log(`複数推奨者: ${result.multipleRecommended.map(r => r.player.name).join(', ')}`);
+                                    return result.multipleRecommended.map(r => 
+                                        `${r.player.name} (${r.position}) [${r.player.job}]`
+                                    ).join('<br>');
+                                } else if (result.recommended) {
                                     console.log(`推奨者あり: ${result.recommended.player.name} (${result.recommended.position}) [${result.recommended.reason}]`);
                                     return `${result.recommended.player.name} (${result.recommended.position}) [${result.recommended.player.job}]`;
                                 } else {
@@ -4125,12 +4190,24 @@
                             <label>実際の取得者:</label>
                             <select id="allocation-${itemKey}" onchange="updateAllocationChoice('${itemKey}')">
                                 <option value="">選択してください</option>
-                                ${result.candidates.map(candidate => `
-                                    <option value="${candidate.position}" 
-                                            ${result.recommended?.position === candidate.position ? 'selected' : ''}>
+                                ${result.candidates.map(candidate => {
+                                    // 単一推奨者の場合
+                                    if (result.recommended?.position === candidate.position) {
+                                        return `<option value="${candidate.position}" selected>
+                                            ${candidate.player.name} (${candidate.position}) [${candidate.player.job}]
+                                        </option>`;
+                                    }
+                                    // 複数推奨者の場合
+                                    if (result.isMultipleRecommended && result.multipleRecommended?.some(r => r.position === candidate.position)) {
+                                        return `<option value="${candidate.position}" style="background-color: #fff3cd;">
+                                            ${candidate.player.name} (${candidate.position}) [${candidate.player.job}] ★
+                                        </option>`;
+                                    }
+                                    // 通常の候補者
+                                    return `<option value="${candidate.position}">
                                         ${candidate.player.name} (${candidate.position}) [${candidate.player.job}]
-                                    </option>
-                                `).join('')}
+                                    </option>`;
+                                }).join('')}
                             </select>
                         </div>
                         

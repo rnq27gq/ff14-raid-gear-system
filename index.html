@@ -584,7 +584,7 @@
         /* 統計情報用スタイル */
         .player-stats-table {
             display: grid;
-            grid-template-columns: 150px repeat(14, 1fr);
+            grid-template-columns: 150px repeat(15, 1fr);
             gap: 1px;
             background-color: #ddd;
             border-radius: 8px;
@@ -3930,43 +3930,24 @@
             } else if (drop.type === 'direct_weapon') {
                 // 直ドロップ武器の場合（武器希望に基づく）
                 const weaponWishes = player.weaponWishes || [];
-                const weaponStatus = getPlayerEquipmentStatus(player.position, '武器');
+                const firstChoiceWeaponStatus = getPlayerEquipmentStatus(player.position, '直ドロップ武器');
                 const weaponType = drop.weapon; // 選択された武器種
                 
-                if (weaponStatus === '断章交換') {
-                    // 未取得者がいるかチェック
-                    const hasUnacquiredRaidPlayer = hasUnacquiredRaidPlayers('武器', player.position);
-                    
-                    if (hasUnacquiredRaidPlayer) {
-                        type = 'pass';
-                        reason = 'Pass (断章交換 - 他に未取得者あり)';
-                    } else if (weaponType && weaponWishes.includes(weaponType)) {
-                        canReceive = true;
-                        type = 'need';
-                        const wishIndex = weaponWishes.indexOf(weaponType);
-                        score = 3000 + getPositionPriority(player.position) - (wishIndex * 100) - (player.dynamicPriority || 0);
-                        reason = `Need (断章交換 - 復活・第${wishIndex + 1}希望)`;
-                    } else {
-                        // 直ドロ武器の場合は希望していない武器はPassとする
-                        type = 'pass';
-                        reason = 'Pass (断章交換 - 希望なし)';
-                    }
-                } else if (weaponStatus === '断章交換・箱取得済') {
+                // 第一希望武器を既に取得済みの場合はPass
+                if (firstChoiceWeaponStatus === '取得済み') {
                     type = 'pass';
-                    reason = 'Pass (断章交換・箱取得済)';
-                } else if (weaponStatus === '未取得' && weaponType && weaponWishes.includes(weaponType)) {
+                    reason = 'Pass (第一希望武器取得済み)';
+                } else if (weaponType && weaponWishes.includes(weaponType)) {
+                    // 希望している武器の場合
                     canReceive = true;
                     type = 'need';
                     const wishIndex = weaponWishes.indexOf(weaponType);
                     score = 3000 + getPositionPriority(player.position) - (wishIndex * 100) - (player.dynamicPriority || 0);
                     reason = `Need (第${wishIndex + 1}希望)`;
-                } else if (weaponStatus === '未取得') {
-                    // 直ドロ武器の場合は希望していない武器はPassとする
+                } else {
+                    // 希望していない武器の場合はPass
                     type = 'pass';
                     reason = 'Pass (希望なし)';
-                } else {
-                    type = 'pass';
-                    reason = 'Pass (武器所持済み)';
                 }
             }
             
@@ -4028,21 +4009,20 @@
                 
                 for (const [position, player] of Object.entries(players)) {
                     const weaponWishes = player.weaponWishes || [];
-                    const weaponStatus = getPlayerEquipmentStatus(position, '武器');
                     
-                    // この武器を希望していて未取得のプレイヤーがいるかチェック
-                    if (weaponStatus === '未取得' && weaponWishes.includes(weaponType)) {
-                        hasEligiblePlayer = true;
-                        break;
+                    // 第一希望武器の取得状況をチェック
+                    const firstChoiceWeaponStatus = getPlayerEquipmentStatus(position, '直ドロップ武器');
+                    const weaponBoxStatus = getPlayerEquipmentStatus(position, '武器箱');
+                    
+                    // 第一希望武器を既に取得済みの場合は対象外
+                    if (firstChoiceWeaponStatus === '取得済み') {
+                        continue;
                     }
                     
-                    // 断章交換で復活可能かつこの武器を希望している場合
-                    if (weaponStatus === '断章交換') {
-                        const hasUnacquiredRaidPlayer = hasUnacquiredRaidPlayers('武器', position);
-                        if (!hasUnacquiredRaidPlayer && weaponWishes.includes(weaponType)) {
-                            hasEligiblePlayer = true;
-                            break;
-                        }
+                    // この武器を希望していて第一希望武器未取得のプレイヤーがいるかチェック
+                    if (weaponWishes.includes(weaponType)) {
+                        hasEligiblePlayer = true;
+                        break;
                     }
                 }
                 
@@ -4380,6 +4360,17 @@
                 allocations.forEach(allocation => {
                     appData.allocations[currentRaidTier.id].push(allocation);
                     
+                    // 直ドロップ武器の場合は「第一希望武器」カラムを取得済みに更新
+                    if (allocation.slot === '武器' && allocation.itemType === 'direct_weapon') {
+                        // 直ドロップ武器用の別エントリを作成
+                        const directWeaponAllocation = {
+                            ...allocation,
+                            id: `${allocation.id}-direct`,
+                            slot: '直ドロップ武器'
+                        };
+                        appData.allocations[currentRaidTier.id].push(directWeaponAllocation);
+                    }
+                    
                     // プレイヤーの装備状況更新
                     const player = appData.players[currentRaidTier.id][allocation.position];
                     if (player) {
@@ -4536,8 +4527,8 @@
             // ポジション順序を固定化 (D1→D2→D3→D4→MT→ST→H1→H2)
             const positions = ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
             
-            // 装備部位順序を固定化 (頭→胴→手→脚→足→耳→首→腕→指→武器)
-            const equipmentSlots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+            // 装備部位順序を固定化 (頭→胴→手→脚→足→耳→首→腕→指→第一希望武器→武器箱)
+            const equipmentSlots = ['頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指', '第一希望武器', '武器箱'];
             const materialSlots = ['武器石', '硬化薬', '強化薬', '強化繊維'];
             
             let html = '<div class="player-stats-table">';
@@ -4570,9 +4561,23 @@
                 
                 // 装備部位の取得状況
                 equipmentSlots.forEach(slot => {
-                    const allocation = playerAllocations.find(alloc => alloc.slot === slot);
-                    const status = allocation ? (allocation.status || '取得済み') : '未取得';
-                    const statusClass = getEquipmentStatusClass(status);
+                    let allocation, status, statusClass;
+                    
+                    if (slot === '第一希望武器') {
+                        // 第一希望武器: 直ドロップ武器からの取得状況
+                        allocation = playerAllocations.find(alloc => alloc.slot === '直ドロップ武器');
+                        status = allocation ? '取得済み' : '未取得';
+                    } else if (slot === '武器箱') {
+                        // 武器箱: 武器箱からの取得状況（断章交換含む）
+                        allocation = playerAllocations.find(alloc => alloc.slot === '武器箱' || alloc.slot === '武器');
+                        status = allocation ? (allocation.status || '取得済み') : '未取得';
+                    } else {
+                        // 通常装備
+                        allocation = playerAllocations.find(alloc => alloc.slot === slot);
+                        status = allocation ? (allocation.status || '取得済み') : '未取得';
+                    }
+                    
+                    statusClass = getEquipmentStatusClass(status);
                     
                     html += `
                         <div class="slot-col ${statusClass}">
@@ -4679,7 +4684,7 @@
         // 編集可能なプレイヤー別統計情報生成
         function generateEditablePlayerStatistics(players, allocations) {
             const positions = ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
-            const equipmentSlots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+            const equipmentSlots = ['頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指', '第一希望武器', '武器箱'];
             const materialSlots = ['武器石', '硬化薬', '強化薬', '強化繊維'];
             
             let html = '<div class="player-stats-table">';
@@ -4711,9 +4716,39 @@
                 
                 // 装備部位の取得状況（編集可能）
                 equipmentSlots.forEach(slot => {
-                    const allocation = playerAllocations.find(alloc => alloc.slot === slot);
-                    const status = allocation ? (allocation.status || '取得済み') : '未取得';
-                    const statusClass = getEquipmentStatusClass(status);
+                    let allocation, status, statusClass, optionsHtml;
+                    
+                    if (slot === '第一希望武器') {
+                        // 第一希望武器: 直ドロップ武器からの取得状況（未取得・取得済のみ）
+                        allocation = playerAllocations.find(alloc => alloc.slot === '直ドロップ武器');
+                        status = allocation ? '取得済み' : '未取得';
+                        optionsHtml = `
+                            <option value="未取得" ${status === '未取得' ? 'selected' : ''}>未取得</option>
+                            <option value="取得済み" ${status === '取得済み' ? 'selected' : ''}>取得済み</option>
+                        `;
+                    } else if (slot === '武器箱') {
+                        // 武器箱: 武器箱からの取得状況（4つの選択肢）
+                        allocation = playerAllocations.find(alloc => alloc.slot === '武器箱' || alloc.slot === '武器');
+                        status = allocation ? (allocation.status || '取得済み') : '未取得';
+                        optionsHtml = `
+                            <option value="未取得" ${status === '未取得' ? 'selected' : ''}>未取得</option>
+                            <option value="取得済み" ${status === '取得済み' ? 'selected' : ''}>取得済み</option>
+                            <option value="断章交換" ${status === '断章交換' ? 'selected' : ''}>断章交換</option>
+                            <option value="断章交換・箱取得済" ${status === '断章交換・箱取得済' ? 'selected' : ''}>断章交換・箱取得済</option>
+                        `;
+                    } else {
+                        // 通常装備（4つの選択肢）
+                        allocation = playerAllocations.find(alloc => alloc.slot === slot);
+                        status = allocation ? (allocation.status || '取得済み') : '未取得';
+                        optionsHtml = `
+                            <option value="未取得" ${status === '未取得' ? 'selected' : ''}>未取得</option>
+                            <option value="取得済み" ${status === '取得済み' ? 'selected' : ''}>取得済み</option>
+                            <option value="断章交換" ${status === '断章交換' ? 'selected' : ''}>断章交換</option>
+                            <option value="断章交換・箱取得済" ${status === '断章交換・箱取得済' ? 'selected' : ''}>断章交換・箱取得済</option>
+                        `;
+                    }
+                    
+                    statusClass = getEquipmentStatusClass(status);
                     
                     html += `
                         <div class="slot-col editable-slot ${statusClass}">
@@ -4721,10 +4756,7 @@
                                     data-slot="${slot}" 
                                     onchange="updateEquipmentStatus(this)"
                                     style="width: 100%; font-size: 0.8rem; padding: 2px;">
-                                <option value="未取得" ${status === '未取得' ? 'selected' : ''}>未取得</option>
-                                <option value="取得済み" ${status === '取得済み' ? 'selected' : ''}>取得済み</option>
-                                <option value="断章交換" ${status === '断章交換' ? 'selected' : ''}>断章交換</option>
-                                <option value="断章交換・箱取得済" ${status === '断章交換・箱取得済' ? 'selected' : ''}>断章交換・箱取得済</option>
+                                ${optionsHtml}
                             </select>
                         </div>
                     `;

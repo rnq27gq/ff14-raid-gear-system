@@ -2055,7 +2055,10 @@
             if (authScreen) authScreen.style.display = 'none';
             
             const mainContent = document.getElementById('mainContent');
-            if (mainContent) mainContent.classList.add('authenticated');
+            if (mainContent) {
+                mainContent.classList.add('authenticated');
+                mainContent.style.display = 'block'; // Override inline style from showLoginForm
+            }
             
             const loggedInControls = document.getElementById('loggedInControls');
             if (loggedInControls) loggedInControls.style.display = 'flex';
@@ -3964,6 +3967,68 @@
             return false;
         }
         
+        // 分配対象の全員が取得済みまたは断章交換・箱取得済かを判定
+        function isAllEligiblePlayersObtained(drop, candidates) {
+            const players = appData.players[currentRaidTier.id] || {};
+            
+            // 4層直ドロ武器の特別処理
+            if (drop.type === 'direct_weapon') {
+                const weaponType = drop.weapon;
+                
+                // 武器が選択されていない場合はフリロ
+                if (!weaponType) {
+                    return true;
+                }
+                
+                let hasEligiblePlayer = false;
+                
+                for (const [position, player] of Object.entries(players)) {
+                    const weaponWishes = player.weaponWishes || [];
+                    const weaponStatus = getPlayerEquipmentStatus(position, '武器');
+                    
+                    // この武器を希望していて未取得のプレイヤーがいるかチェック
+                    if (weaponStatus === '未取得' && weaponWishes.includes(weaponType)) {
+                        hasEligiblePlayer = true;
+                        break;
+                    }
+                    
+                    // 断章交換で復活可能かつこの武器を希望している場合
+                    if (weaponStatus === '断章交換') {
+                        const hasUnacquiredRaidPlayer = hasUnacquiredRaidPlayers('武器', position);
+                        if (!hasUnacquiredRaidPlayer && weaponWishes.includes(weaponType)) {
+                            hasEligiblePlayer = true;
+                            break;
+                        }
+                    }
+                }
+                
+                // 希望者がいない、または希望者全員が取得済み = フリロ
+                return !hasEligiblePlayer;
+            }
+            
+            // 通常装備の処理
+            for (const [position, player] of Object.entries(players)) {
+                const policy = player.equipmentPolicy?.[drop.slot] || 'トームストーン';
+                const equipmentStatus = getPlayerEquipmentStatus(position, drop.slot);
+                
+                // 零式方針で未取得のプレイヤーがいる場合はフリロ対象外
+                if (policy === '零式' && equipmentStatus === '未取得') {
+                    return false;
+                }
+                
+                // 断章交換で未取得者がいない場合は復活対象も考慮
+                if (equipmentStatus === '断章交換') {
+                    const hasUnacquiredRaidPlayer = hasUnacquiredRaidPlayers(drop.slot, position);
+                    if (!hasUnacquiredRaidPlayer) {
+                        return false; // 断章交換者が復活可能 = フリロ対象外
+                    }
+                }
+            }
+            
+            // 全員が取得済み、トーム方針、または断章交換・箱取得済 = フリロ
+            return true;
+        }
+        
         // ポジション間優先順位取得（装備・素材共通）
         function getPositionPriority(position) {
             // 設定された優先順位を取得（デフォルト: D1D2D3D4MTSTH1H2）
@@ -4041,7 +4106,7 @@
                             <strong>予測取得者:</strong> 
                             ${result.recommended ? 
                                 `${result.recommended.player.name} (${result.recommended.position}) [${result.recommended.player.job}]` : 
-                                '該当者なし'
+                                (isAllEligiblePlayersObtained(drop, result.candidates) ? 'フリロ' : '該当者なし')
                             }
                         </div>
                         
@@ -4055,8 +4120,6 @@
                                         ${candidate.player.name} (${candidate.position}) [${candidate.player.job}]
                                     </option>
                                 `).join('')}
-                                <option value="フリロ">フリロ</option>
-                                <option value="discard">破棄</option>
                             </select>
                         </div>
                         

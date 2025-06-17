@@ -3741,7 +3741,7 @@
                 4: [
                     { name: '胴装備', slot: '胴', type: 'equipment', itemLevel: '' },
                     { name: '武器箱', slot: '武器箱', type: 'weapon_box', itemLevel: '' },
-                    { name: '直ドロップ武器', slot: '武器', type: 'direct_weapon', itemLevel: '', weapon: selectedDirectWeapon || null }
+                    { name: '直ドロップ武器', slot: '直ドロップ武器', type: 'direct_weapon', itemLevel: '', weapon: selectedDirectWeapon || null }
                 ]
             };
             
@@ -4343,20 +4343,17 @@
                         const drop = drops.find(d => d.slot === itemKey || d.name.includes(itemKey));
                         
                         if (drop && player) {
-                            // 直ドロップ武器の場合はスロットを明確に区別
-                            const actualSlot = drop.type === 'direct_weapon' ? '直ドロップ武器' : drop.slot;
-                            
                             const allocation = {
                                 id: `${allocationId}-${itemKey}`,
                                 layer: parseInt(layer) || layer,
-                                slot: actualSlot,
+                                slot: drop.slot,
                                 position: position,
                                 playerName: player.name,
                                 characterName: player.characterName || '',
                                 job: player.job,
                                 equipment: {
                                     name: drop.name,
-                                    slot: actualSlot,
+                                    slot: drop.slot,
                                     itemLevel: drop.itemLevel
                                 },
                                 timestamp: new Date().toISOString(),

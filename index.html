@@ -3899,12 +3899,13 @@
                     reason = 'Pass (取得済み)';
                 }
             } else if (drop.type === 'weapon_box') {
-                // 武器箱の場合
-                const weaponStatus = getPlayerEquipmentStatus(player.position, '武器');
+                // 武器箱の場合（装備方針は「武器」スロットを参照）
+                const weaponBoxStatus = getPlayerEquipmentStatus(player.position, '武器箱');
+                const weaponPolicy = player.equipmentPolicy?.['武器'] || 'トームストーン';
                 
-                if (weaponStatus === '断章交換') {
-                    // 未取得者がいるかチェック
-                    const hasUnacquiredRaidPlayer = hasUnacquiredRaidPlayers('武器', player.position);
+                if (weaponBoxStatus === '断章交換') {
+                    // 未取得者がいるかチェック（武器方針で判定）
+                    const hasUnacquiredRaidPlayer = hasUnacquiredWeaponBoxPlayers(player.position);
                     
                     if (hasUnacquiredRaidPlayer) {
                         type = 'pass';
@@ -3915,17 +3916,22 @@
                         score = 2000 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
                         reason = 'Need (断章交換 - 復活)';
                     }
-                } else if (weaponStatus === '断章交換・箱取得済') {
+                } else if (weaponBoxStatus === '断章交換・箱取得済') {
                     type = 'pass';
                     reason = 'Pass (断章交換・箱取得済)';
-                } else if (weaponStatus === '未取得') {
+                } else if (weaponPolicy === '零式' && weaponBoxStatus === '未取得') {
                     canReceive = true;
                     type = 'need';
                     score = 2000 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
                     reason = 'Need (武器箱)';
+                } else if (weaponBoxStatus === '未取得') {
+                    canReceive = true;
+                    type = 'greed';
+                    score = 500 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
+                    reason = 'Greed (武器箱 - トーム可)';
                 } else {
                     type = 'pass';
-                    reason = 'Pass (武器所持済み)';
+                    reason = 'Pass (武器箱取得済み)';
                 }
             } else if (drop.type === 'direct_weapon') {
                 // 直ドロップ武器の場合（武器希望に基づく）
@@ -3985,6 +3991,25 @@
                 
                 // 零式方針で未取得のプレイヤーがいるか
                 if (policy === '零式' && equipmentStatus === '未取得') {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        // 武器箱：未取得者がいるかチェック（武器方針で判定）
+        function hasUnacquiredWeaponBoxPlayers(excludePosition) {
+            const players = appData.players[currentRaidTier.id] || {};
+            
+            for (const [position, player] of Object.entries(players)) {
+                if (position === excludePosition) continue;
+                
+                const weaponPolicy = player.equipmentPolicy?.['武器'] || 'トームストーン';
+                const weaponBoxStatus = getPlayerEquipmentStatus(position, '武器箱');
+                
+                // 武器を零式方針にしていて武器箱未取得のプレイヤーがいるか
+                if (weaponPolicy === '零式' && weaponBoxStatus === '未取得') {
                     return true;
                 }
             }

@@ -3901,10 +3901,9 @@
                         score = 3000 + getPositionPriority(player.position) - (wishIndex * 100) - (player.dynamicPriority || 0);
                         reason = `Need (断章交換 - 復活・第${wishIndex + 1}希望)`;
                     } else {
-                        canReceive = true;
-                        type = 'greed';
-                        score = 100 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
-                        reason = 'Greed (断章交換 - 復活)';
+                        // 直ドロ武器の場合は希望していない武器はPassとする
+                        type = 'pass';
+                        reason = 'Pass (断章交換 - 希望なし)';
                     }
                 } else if (weaponStatus === '断章交換・箱取得済') {
                     type = 'pass';
@@ -3916,10 +3915,9 @@
                     score = 3000 + getPositionPriority(player.position) - (wishIndex * 100) - (player.dynamicPriority || 0);
                     reason = `Need (第${wishIndex + 1}希望)`;
                 } else if (weaponStatus === '未取得') {
-                    canReceive = true;
-                    type = 'greed';
-                    score = 100 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
-                    reason = 'Greed (武器)';
+                    // 直ドロ武器の場合は希望していない武器はPassとする
+                    type = 'pass';
+                    reason = 'Pass (希望なし)';
                 } else {
                     type = 'pass';
                     reason = 'Pass (武器所持済み)';

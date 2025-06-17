@@ -3741,7 +3741,7 @@
                 4: [
                     { name: '胴装備', slot: '胴', type: 'equipment', itemLevel: '' },
                     { name: '武器箱', slot: '武器箱', type: 'weapon_box', itemLevel: '' },
-                    { name: '直ドロップ武器', slot: '武器', type: 'direct_weapon', itemLevel: '', weapon: null }
+                    { name: '直ドロップ武器', slot: '武器', type: 'direct_weapon', itemLevel: '', weapon: selectedDirectWeapon || null }
                 ]
             };
             
@@ -3974,9 +3974,11 @@
             // 4層直ドロ武器の特別処理
             if (drop.type === 'direct_weapon') {
                 const weaponType = drop.weapon;
+                console.log('4層直ドロ武器判定:', weaponType);
                 
                 // 武器が選択されていない場合はフリロ
                 if (!weaponType) {
+                    console.log('武器未選択 -> フリロ');
                     return true;
                 }
                 
@@ -3986,8 +3988,11 @@
                     const weaponWishes = player.weaponWishes || [];
                     const weaponStatus = getPlayerEquipmentStatus(position, '武器');
                     
+                    console.log(`${position}(${player.name}): 希望=[${weaponWishes.join(',')}], 状況=${weaponStatus}, 希望に含まれる=${weaponWishes.includes(weaponType)}`);
+                    
                     // この武器を希望していて未取得のプレイヤーがいるかチェック
                     if (weaponStatus === '未取得' && weaponWishes.includes(weaponType)) {
+                        console.log(`${position}: 未取得で希望あり -> 分配対象`);
                         hasEligiblePlayer = true;
                         break;
                     }
@@ -3996,12 +4001,14 @@
                     if (weaponStatus === '断章交換') {
                         const hasUnacquiredRaidPlayer = hasUnacquiredRaidPlayers('武器', position);
                         if (!hasUnacquiredRaidPlayer && weaponWishes.includes(weaponType)) {
+                            console.log(`${position}: 断章交換復活で希望あり -> 分配対象`);
                             hasEligiblePlayer = true;
                             break;
                         }
                     }
                 }
                 
+                console.log(`分配対象者存在: ${hasEligiblePlayer} -> フリロ判定: ${!hasEligiblePlayer}`);
                 // 希望者がいない、または希望者全員が取得済み = フリロ
                 return !hasEligiblePlayer;
             }
@@ -4104,10 +4111,16 @@
                         
                         <div class="predicted-winner">
                             <strong>予測取得者:</strong> 
-                            ${result.recommended ? 
-                                `${result.recommended.player.name} (${result.recommended.position}) [${result.recommended.player.job}]` : 
-                                (isAllEligiblePlayersObtained(drop, result.candidates) ? 'フリロ' : '該当者なし')
-                            }
+                            ${(() => {
+                                if (result.recommended) {
+                                    console.log(`推奨者あり: ${result.recommended.player.name} (${result.recommended.position}) [${result.recommended.reason}]`);
+                                    return `${result.recommended.player.name} (${result.recommended.position}) [${result.recommended.player.job}]`;
+                                } else {
+                                    console.log('推奨者なし - フリロ判定開始');
+                                    const isFreeLot = isAllEligiblePlayersObtained(drop, result.candidates);
+                                    return isFreeLot ? 'フリロ' : '該当者なし';
+                                }
+                            })()}
                         </div>
                         
                         <div class="allocation-choice">
@@ -4207,35 +4220,22 @@
             selectedDirectWeapon = selectedWeapon;
             console.log('選択状態を保存:', selectedDirectWeapon);
             
-            if (selectedWeapon) {
-                try {
-                    // 直ドロップ武器の分配を再計算
-                    const drops = getLayerDrops(4);
-                    console.log('4層のドロップアイテム:', drops);
-                    
-                    const weaponDrop = drops.find(d => d.type === 'direct_weapon');
-                    if (weaponDrop) {
-                        weaponDrop.weapon = selectedWeapon;
-                        console.log('武器ドロップ更新:', weaponDrop);
-                        
-                        const allocationResults = calculateAllocation(4, drops);
-                        displayAllocationResults(4, allocationResults);
-                        showSuccess(`${selectedWeapon}を選択しました`);
-                    } else {
-                        console.error('直ドロップ武器アイテムが見つかりません');
-                        console.log('利用可能なドロップタイプ:', drops.map(d => d.type));
-                        showError('直ドロップ武器アイテムが見つかりません');
-                    }
-                } catch (error) {
-                    console.error('武器選択処理エラー:', error);
-                    showError('武器選択処理でエラーが発生しました: ' + error.message);
-                }
-            } else {
-                console.log('武器選択がクリアされました');
-                // 選択がクリアされた場合も画面を更新
+            try {
+                // 直ドロップ武器の分配を再計算
                 const drops = getLayerDrops(4);
+                console.log('4層のドロップアイテム:', drops);
+                
                 const allocationResults = calculateAllocation(4, drops);
                 displayAllocationResults(4, allocationResults);
+                
+                if (selectedWeapon) {
+                    showSuccess(`${selectedWeapon}を選択しました`);
+                } else {
+                    console.log('武器選択がクリアされました');
+                }
+            } catch (error) {
+                console.error('武器選択処理エラー:', error);
+                showError('武器選択処理でエラーが発生しました: ' + error.message);
             }
         }
         

@@ -3776,21 +3776,14 @@
                 
                 // 直ドロ武器の特別処理
                 if (drop.type === 'direct_weapon' && drop.weapon) {
-                    console.log(`直ドロ武器分配計算: ${drop.weapon}`);
-                    
                     // 第一希望者を探す
                     const firstChoiceCandidates = candidates.filter(c => {
                         const weaponWishes = c.player.weaponWishes || [];
-                        const isFirstChoice = weaponWishes[0] === drop.weapon;
-                        console.log(`${c.position}(${c.player.name}): 希望=[${weaponWishes.join(',')}], 第一希望=${isFirstChoice}`);
-                        return isFirstChoice;
+                        return weaponWishes[0] === drop.weapon;
                     });
-                    
-                    console.log(`第一希望者数: ${firstChoiceCandidates.length}`);
                     
                     if (firstChoiceCandidates.length > 0) {
                         // 第一希望者がいる場合は最優先者のみ
-                        console.log(`第一希望者選択: ${firstChoiceCandidates[0].player.name}`);
                         results[drop.slot] = {
                             drop,
                             candidates: allCandidates,
@@ -3801,17 +3794,11 @@
                         // 第一希望者がいない場合、第二希望以降をチェック
                         const otherChoiceCandidates = candidates.filter(c => {
                             const weaponWishes = c.player.weaponWishes || [];
-                            const hasWeapon = weaponWishes.includes(drop.weapon);
-                            const notFirstChoice = weaponWishes[0] !== drop.weapon;
-                            console.log(`${c.position}(${c.player.name}): 希望に含む=${hasWeapon}, 第一希望でない=${notFirstChoice}`);
-                            return hasWeapon && notFirstChoice;
+                            return weaponWishes.includes(drop.weapon) && weaponWishes[0] !== drop.weapon;
                         });
-                        
-                        console.log(`第二希望以降候補者数: ${otherChoiceCandidates.length}`);
                         
                         if (otherChoiceCandidates.length > 1) {
                             // 複数の第二希望以降がある場合
-                            console.log(`複数推奨者: ${otherChoiceCandidates.map(c => c.player.name).join(', ')}`);
                             results[drop.slot] = {
                                 drop,
                                 candidates: allCandidates,
@@ -3821,7 +3808,6 @@
                             };
                         } else {
                             // 単一の第二希望以降
-                            console.log(`単一推奨者: ${otherChoiceCandidates[0]?.player.name || 'なし'}`);
                             results[drop.slot] = {
                                 drop,
                                 candidates: allCandidates,
@@ -4032,11 +4018,9 @@
             // 4層直ドロ武器の特別処理
             if (drop.type === 'direct_weapon') {
                 const weaponType = drop.weapon;
-                console.log('4層直ドロ武器判定:', weaponType);
                 
                 // 武器が選択されていない場合はフリロ
                 if (!weaponType) {
-                    console.log('武器未選択 -> フリロ');
                     return true;
                 }
                 
@@ -4046,11 +4030,8 @@
                     const weaponWishes = player.weaponWishes || [];
                     const weaponStatus = getPlayerEquipmentStatus(position, '武器');
                     
-                    console.log(`${position}(${player.name}): 希望=[${weaponWishes.join(',')}], 状況=${weaponStatus}, 希望に含まれる=${weaponWishes.includes(weaponType)}`);
-                    
                     // この武器を希望していて未取得のプレイヤーがいるかチェック
                     if (weaponStatus === '未取得' && weaponWishes.includes(weaponType)) {
-                        console.log(`${position}: 未取得で希望あり -> 分配対象`);
                         hasEligiblePlayer = true;
                         break;
                     }
@@ -4059,14 +4040,12 @@
                     if (weaponStatus === '断章交換') {
                         const hasUnacquiredRaidPlayer = hasUnacquiredRaidPlayers('武器', position);
                         if (!hasUnacquiredRaidPlayer && weaponWishes.includes(weaponType)) {
-                            console.log(`${position}: 断章交換復活で希望あり -> 分配対象`);
                             hasEligiblePlayer = true;
                             break;
                         }
                     }
                 }
                 
-                console.log(`分配対象者存在: ${hasEligiblePlayer} -> フリロ判定: ${!hasEligiblePlayer}`);
                 // 希望者がいない、または希望者全員が取得済み = フリロ
                 return !hasEligiblePlayer;
             }
@@ -4171,15 +4150,12 @@
                             <strong>予測取得者:</strong> 
                             ${(() => {
                                 if (result.isMultipleRecommended && result.multipleRecommended) {
-                                    console.log(`複数推奨者: ${result.multipleRecommended.map(r => r.player.name).join(', ')}`);
                                     return result.multipleRecommended.map(r => 
                                         `${r.player.name} (${r.position}) [${r.player.job}]`
                                     ).join('<br>');
                                 } else if (result.recommended) {
-                                    console.log(`推奨者あり: ${result.recommended.player.name} (${result.recommended.position}) [${result.recommended.reason}]`);
                                     return `${result.recommended.player.name} (${result.recommended.position}) [${result.recommended.player.job}]`;
                                 } else {
-                                    console.log('推奨者なし - フリロ判定開始');
                                     const isFreeLot = isAllEligiblePlayersObtained(drop, result.candidates);
                                     return isFreeLot ? 'フリロ' : '該当者なし';
                                 }

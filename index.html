@@ -103,12 +103,12 @@
         
         .connection-indicator.online {
             background-color: rgba(39, 174, 96, 0.2);
-            color: #2ecc71;
+            color: white;
         }
         
         .connection-indicator.offline {
             background-color: rgba(149, 165, 166, 0.2);
-            color: #95a5a6;
+            color: white;
         }
         
         .auth-controls {
@@ -200,14 +200,6 @@
             background-color: #219a52;
         }
         
-        .demo-info {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            font-size: 13px;
-            color: #666;
-        }
         
         /* メインコンテンツエリア */
         .main-content {
@@ -1514,7 +1506,7 @@
         <!-- Supabase認証ヘッダー -->
         <div class="supabase-header">
             <div class="supabase-status">
-                <h1 style="margin: 0; font-size: 18px;">FF14 零式装備分配システム</h1>
+                <h1 style="margin: 0; font-size: 18px; color: white;">FF14 零式装備分配システム</h1>
                 <div id="connectionStatus" class="connection-indicator offline">
                     <span>⚫</span>
                     <span>オフライン</span>
@@ -1547,11 +1539,6 @@
                     <button onclick="authenticateTeam()">ログイン</button>
                 </div>
                 
-                <div class="demo-info">
-                    <strong>🎮 デモ用アカウント</strong><br>
-                    チームID: <code>demo-team</code><br>
-                    パスワード: <code>demo123</code>
-                </div>
                 
                 <div style="margin-top: 20px; font-size: 12px; color: #888;">
                     <p><a href="#" onclick="showSignupForm()" style="color: #3498db; text-decoration: none;">新しいチームを作成</a> | 
@@ -1666,9 +1653,7 @@
         // GitHub Actionsによってデプロイ時に認証情報が注入されます
         window.SUPABASE_CONFIG = {
             SUPABASE_URL: 'https://bpzvuwhnjvbfohopeoxr.supabase.co',
-            SUPABASE_ANON_KEY: null, // GitHub Actionsで置換される
-            DEMO_TEAM_ID: 'demo-team',
-            DEMO_PASSWORD: 'demo123'
+            SUPABASE_ANON_KEY: null // GitHub Actionsで置換される
         };
     </script>
     

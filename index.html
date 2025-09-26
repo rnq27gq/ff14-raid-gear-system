@@ -200,6 +200,64 @@
             background-color: #219a52;
         }
         
+        /* Discord認証用スタイル */
+        .auth-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .discord-auth-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #7289da 0%, #5b6eae 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+        
+        .discord-auth-btn:hover {
+            background: linear-gradient(135deg, #5b6eae 0%, #4e5d94 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(114, 137, 218, 0.3);
+        }
+        
+        .discord-icon {
+            width: 20px;
+            height: 20px;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+        
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #ddd;
+        }
+        
+        .auth-divider span {
+            padding: 0 15px;
+        }
+        
         
         /* メインコンテンツエリア */
         .main-content {
@@ -1531,8 +1589,21 @@
         <div id="authScreen" class="auth-screen">
             <div class="auth-card">
                 <h2>🛡️ チーム認証</h2>
-                <p>8人での共同利用には<br>チームIDとパスワードが必要です</p>
+                <p>8人での共同利用には認証が必要です</p>
                 
+                <!-- Discord認証セクション -->
+                <div class="auth-methods">
+                    <button class="discord-auth-btn" onclick="startDiscordAuth()">
+                        <div class="discord-icon"></div>
+                        Discordでログイン
+                    </button>
+                </div>
+                
+                <div class="auth-divider">
+                    <span>または</span>
+                </div>
+                
+                <!-- 従来の認証フォーム -->
                 <div class="auth-form">
                     <input type="text" id="mainTeamIdInput" placeholder="チームID (例: my-raid-team)" maxlength="20">
                     <input type="password" id="mainPasswordInput" placeholder="パスワード" maxlength="20">
@@ -1648,8 +1719,16 @@
         </div>
     </div>
 
-    <!-- Supabase認証情報（GitHub Secrets経由で注入） -->
+    <!-- Discord OAuth2設定 -->
     <script>
+        // Discord OAuth2設定
+        const DISCORD_CONFIG = {
+            client_id: '1330616705325465652', // GitHub Secretsで管理する
+            redirect_uri: window.location.origin + window.location.pathname,
+            scope: 'identify',
+            response_type: 'code'
+        };
+        
         // GitHub Actionsによってデプロイ時に認証情報が注入されます
         window.SUPABASE_CONFIG = {
             SUPABASE_URL: 'https://bpzvuwhnjvbfohopeoxr.supabase.co',
@@ -1752,8 +1831,13 @@
                 // 接続状態更新
                 updateConnectionStatus(true);
                 
-                // 自動ログイン試行
-                await tryAutoLogin();
+                // Discord認証コールバック確認
+                const discordCallbackHandled = await handleDiscordCallback();
+                
+                // Discord認証が処理されなかった場合のみ自動ログイン試行
+                if (!discordCallbackHandled) {
+                    await tryAutoLogin();
+                }
                 
                 console.log('アプリ初期化完了');
                 
@@ -1773,6 +1857,15 @@
         
         // 自動ログイン試行
         async function tryAutoLogin() {
+            // 招待トークンがある場合は特別な処理
+            const urlParams = new URLSearchParams(window.location.search);
+            const inviteToken = urlParams.get('token');
+            
+            if (inviteToken) {
+                await handleInviteTokenAccess(inviteToken);
+                return;
+            }
+            
             const savedTeamId = localStorage.getItem('ff14_team_id');
             if (savedTeamId) {
                 console.log('自動ログイン開始:', savedTeamId);
@@ -1802,6 +1895,234 @@
             }
         }
         
+        // 招待トークンでのアクセス処理
+        async function handleInviteTokenAccess(inviteToken) {
+            try {
+                showMessage('招待リンクを確認中...', 'info');
+                
+                // 招待トークンの検証
+                const { data: team, error } = await window.supabaseClient
+                    .from('teams')
+                    .select('*')
+                    .eq('invite_token', inviteToken)
+                    .gt('token_expires_at', new Date().toISOString())
+                    .single();
+                
+                if (error || !team) {
+                    showError('招待リンクが無効または期限切れです');
+                    return;
+                }
+                
+                // 招待リンク有効時の案内表示
+                showInviteWelcomeScreen(team);
+                
+            } catch (error) {
+                console.error('招待トークンアクセスエラー:', error);
+                showError('招待リンクの処理中にエラーが発生しました');
+            }
+        }
+        
+        // 招待歓迎画面表示
+        function showInviteWelcomeScreen(team) {
+            hideMessage();
+            
+            const authCard = document.querySelector('.auth-card');
+            if (authCard) {
+                authCard.innerHTML = `
+                    <h2>🎮 チーム招待</h2>
+                    <div style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+                        <h3 style="margin: 0 0 10px 0; color: #007bff;">
+                            「${team.team_name}」へようこそ！
+                        </h3>
+                        <p style="margin: 0; color: #666;">
+                            チームリーダー: ${team.creator_name || 'Unknown'}
+                        </p>
+                    </div>
+                    
+                    <div class="auth-methods">
+                        <button class="discord-auth-btn" onclick="startDiscordAuth()">
+                            <div class="discord-icon"></div>
+                            Discordでチームに参加
+                        </button>
+                    </div>
+                    
+                    <div style="margin: 20px 0; padding: 15px; background: #fff3cd; border-radius: 8px; font-size: 14px; color: #856404;">
+                        <strong>📝 ご注意:</strong><br>
+                        • Discord認証でチームに参加します<br>
+                        • 一度参加すると、このDiscordアカウントでログインできます<br>
+                        • チームメンバーとして装備分配に参加できます
+                    </div>
+                    
+                    <div style="margin-top: 20px; font-size: 12px; color: #888;">
+                        <p>従来のチームID・パスワード方式をご希望の場合は、<br>
+                        チームリーダーにお問い合わせください。</p>
+                    </div>
+                `;
+            }
+            
+            // 認証画面を表示
+            const authScreen = document.getElementById('authScreen');
+            if (authScreen) {
+                authScreen.style.display = 'flex';
+            }
+        }
+        
+        // Discord認証開始
+        function startDiscordAuth() {
+            // URLパラメータから招待トークンを確認
+            const urlParams = new URLSearchParams(window.location.search);
+            const inviteToken = urlParams.get('token');
+            
+            if (inviteToken) {
+                // 招待トークン付きDiscord認証
+                startDiscordAuthWithToken(inviteToken);
+            } else {
+                // 通常のDiscord認証（まだチームがない場合）
+                showError('Discord認証は招待リンクからのみ利用できます。\nチームリーダーから招待リンクをもらってアクセスしてください。');
+            }
+        }
+        
+        // 招待トークン付きDiscord認証
+        async function startDiscordAuthWithToken(inviteToken) {
+            try {
+                // 招待トークンの検証
+                showMessage('招待リンクを確認中...', 'info');
+                
+                const { data: tokenValidation, error: tokenError } = await window.supabaseClient
+                    .from('teams')
+                    .select('*')
+                    .eq('invite_token', inviteToken)
+                    .gt('token_expires_at', new Date().toISOString())
+                    .single();
+                
+                if (tokenError || !tokenValidation) {
+                    throw new Error('招待リンクが無効または期限切れです');
+                }
+                
+                // Discord認証URL生成
+                const state = btoa(JSON.stringify({ 
+                    inviteToken: inviteToken,
+                    timestamp: Date.now()
+                }));
+                
+                const discordAuthUrl = `https://discord.com/api/oauth2/authorize?` +
+                    `client_id=${DISCORD_CONFIG.client_id}&` +
+                    `redirect_uri=${encodeURIComponent(DISCORD_CONFIG.redirect_uri)}&` +
+                    `response_type=${DISCORD_CONFIG.response_type}&` +
+                    `scope=${DISCORD_CONFIG.scope}&` +
+                    `state=${encodeURIComponent(state)}`;
+                
+                // Discord認証画面にリダイレクト
+                window.location.href = discordAuthUrl;
+                
+            } catch (error) {
+                console.error('Discord認証開始エラー:', error);
+                showError('Discord認証の開始に失敗しました: ' + error.message);
+            }
+        }
+        
+        // Discord OAuth2コールバック処理
+        async function handleDiscordCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const state = urlParams.get('state');
+            
+            if (!code || !state) return false;
+            
+            try {
+                showMessage('Discord認証処理中...', 'info');
+                
+                // stateデコード
+                const stateData = JSON.parse(atob(state));
+                const { inviteToken } = stateData;
+                
+                // Discordトークン交換
+                const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        client_id: DISCORD_CONFIG.client_id,
+                        client_secret: '', // サーバーサイドで処理する必要がある
+                        grant_type: 'authorization_code',
+                        code: code,
+                        redirect_uri: DISCORD_CONFIG.redirect_uri,
+                    }),
+                });
+                
+                if (!tokenResponse.ok) {
+                    throw new Error('Discordトークン交換に失敗しました');
+                }
+                
+                const tokenData = await tokenResponse.json();
+                
+                // Discordユーザー情報取得
+                const userResponse = await fetch('https://discord.com/api/users/@me', {
+                    headers: {
+                        'Authorization': `Bearer ${tokenData.access_token}`,
+                    },
+                });
+                
+                if (!userResponse.ok) {
+                    throw new Error('Discordユーザー情報取得に失敗しました');
+                }
+                
+                const userData = await userResponse.json();
+                
+                // チーム参加処理
+                await joinTeamWithDiscordAuth(inviteToken, userData, tokenData.access_token);
+                
+                return true;
+                
+            } catch (error) {
+                console.error('Discord認証エラー:', error);
+                showError('Discord認証に失敗しました: ' + error.message);
+                
+                // URLからパラメータをクリア
+                window.history.replaceState({}, document.title, window.location.pathname);
+                return false;
+            }
+        }
+        
+        // Discord認証でチーム参加
+        async function joinTeamWithDiscordAuth(inviteToken, discordUser, accessToken) {
+            try {
+                // Supabaseでチーム参加処理
+                const { data, error } = await window.supabaseClient.rpc('join_team_with_discord', {
+                    p_invite_token: inviteToken,
+                    p_discord_id: discordUser.id,
+                    p_discord_username: discordUser.username,
+                    p_discord_avatar: discordUser.avatar,
+                    p_access_token: accessToken
+                });
+                
+                if (error) {
+                    throw new Error(`チーム参加エラー: ${error.message}`);
+                }
+                
+                if (!data) {
+                    throw new Error('チーム参加に失敗しました');
+                }
+                
+                // 認証成功
+                currentTeamId = data.team_id;
+                localStorage.setItem('ff14_team_id', data.team_id);
+                localStorage.setItem('ff14_discord_auth', 'true');
+                
+                await showAuthenticatedState();
+                showSuccess('Discordアカウントでログインしました！');
+                
+                // URLからパラメータをクリア
+                window.history.replaceState({}, document.title, window.location.pathname);
+                
+            } catch (error) {
+                console.error('チーム参加エラー:', error);
+                showError('チーム参加に失敗しました: ' + error.message);
+                throw error;
+            }
+        }
+
         // チーム認証
         async function authenticateTeam() {
             const teamId = document.getElementById('mainTeamIdInput')?.value;

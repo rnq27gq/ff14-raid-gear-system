@@ -1,0 +1,27 @@
+{
+  "name": "ff14-gear-allocation-discord-bot",
+  "version": "1.0.0",
+  "description": "FF14装備分配システム用Discordボット",
+  "main": "src/bot.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/bot.js",
+    "dev": "node --watch src/bot.js",
+    "test": "node --test test/**/*.test.js"
+  },
+  "keywords": ["discord", "bot", "ff14", "gear", "allocation"],
+  "author": "FF14 Gear Allocation Team",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "@supabase/supabase-js": "^2.39.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "node:test": "latest",
+    "node:assert": "latest"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

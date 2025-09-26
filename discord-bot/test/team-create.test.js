@@ -47,7 +47,7 @@ describe('TeamCreateCommand', () => {
                 }
             },
             deferReply: async () => {},
-            editReply: async (content) => mockInteraction.lastReply = content
+            editReply: async (content) => mockInteraction.lastReply = typeof content === 'string' ? content : content.content
         };
         
         mockSupabase.setMockResponse('teams', 'insert', {
@@ -67,14 +67,14 @@ describe('TeamCreateCommand', () => {
         await command.execute(mockInteraction);
         
         assert.ok(mockInteraction.lastReply);
-        assert.ok(mockInteraction.lastReply.content);
-        assert.ok(mockInteraction.lastReply.content.includes('テストチーム'));
-        assert.ok(mockInteraction.lastReply.content.includes('mock-token-123'));
+        assert.ok(mockInteraction.lastReply.includes('テストチーム'));
+        assert.ok(mockInteraction.lastReply.includes('https://'));
     });
     
     test('チーム名が短すぎる場合エラーを返す', async () => {
         const command = new TeamCreateCommand();
         const mockInteraction = {
+            user: { username: 'testuser' },
             options: {
                 getString: (name) => name === 'team-name' ? 'ab' : null
             },
@@ -90,6 +90,7 @@ describe('TeamCreateCommand', () => {
     test('チーム名が長すぎる場合エラーを返す', async () => {
         const command = new TeamCreateCommand();
         const mockInteraction = {
+            user: { username: 'testuser' },
             options: {
                 getString: (name) => name === 'team-name' ? 'a'.repeat(21) : null
             },

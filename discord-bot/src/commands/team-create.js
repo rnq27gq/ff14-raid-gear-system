@@ -7,62 +7,72 @@ export class TeamCreateCommand {
         this.supabaseClient = supabaseClient;
         this.data = new SlashCommandBuilder()
             .setName('team-create')
-            .setDescription('FF14装備分配チームを作成します')
+            .setDescription('FF14装備分配システムの専用URLを作成します')
             .addStringOption(option =>
                 option
-                    .setName('team-name')
-                    .setDescription('チーム名（3-20文字）')
+                    .setName('scope')
+                    .setDescription('運用範囲を選択してください')
                     .setRequired(true)
-                    .setMinLength(3)
-                    .setMaxLength(20)
-            )
-            .addStringOption(option =>
-                option
-                    .setName('leader-name')
-                    .setDescription('リーダー名（省略時はDiscordユーザー名）')
-                    .setRequired(false)
-                    .setMaxLength(20)
+                    .addChoices(
+                        { name: 'サーバー全体で使用', value: 'server' },
+                        { name: 'このチャンネルのみで使用', value: 'channel' }
+                    )
             );
     }
 
     async execute(interaction) {
-        const teamName = interaction.options.getString('team-name');
-        const leaderName = interaction.options.getString('leader-name') || interaction.user.username;
+        const scope = interaction.options.getString('scope');
+        const guildName = interaction.guild?.name || 'Unknown Server';
+        const channelName = interaction.channel?.name || 'unknown-channel';
+        const leaderName = interaction.user.username;
 
-        if (teamName.length < 3) {
-            await interaction.reply({
-                content: '❌ チーム名は3文字以上で入力してください。',
-                ephemeral: true
-            });
-            return;
-        }
+        // チーム名とIDを設定
+        const teamName = scope === 'server' ? guildName : `${guildName}-${channelName}`;
 
-        if (teamName.length > 20) {
-            await interaction.reply({
-                content: '❌ チーム名は20文字以内で入力してください。',
-                ephemeral: true
-            });
-            return;
+        // 既存のチーム確認
+        const guildId = interaction.guild?.id;
+        const channelId = scope === 'channel' ? interaction.channel?.id : null;
+
+        try {
+            // 既存チーム確認
+            if (this.supabaseClient) {
+                const { data: existingTeam } = await this.supabaseClient
+                    .from('teams')
+                    .select('*')
+                    .eq('discord_guild_id', guildId)
+                    .eq('discord_channel_id', channelId || null)
+                    .single();
+
+                if (existingTeam) {
+                    const scopeText = scope === 'server' ? 'サーバー' : 'チャンネル';
+                    await interaction.reply({
+                        content: `❌ この${scopeText}には既にFF14装備分配システムが設定されています。\n既存のURLを使用してください。`,
+                        ephemeral: true
+                    });
+                    return;
+                }
+            }
+        } catch (error) {
+            // 既存チームなし（正常）
         }
 
         try {
             await interaction.deferReply();
 
             const inviteToken = randomUUID();
-            const expiresAt = this.calculateTokenExpiry();
             const teamId = this.generateTeamId(teamName);
 
-            console.log(`Creating team: ${teamName}, ID: ${teamId}`);
+            console.log(`Creating ${scope} team: ${teamName}, ID: ${teamId}`);
 
             const teamData = {
                 team_id: teamId,
                 team_name: teamName,
                 creator_name: leaderName,
                 creator_discord_id: interaction.user.id,
-                discord_guild_id: interaction.guild?.id || null,
-                discord_channel_id: interaction.channel?.id || null,
+                discord_guild_id: guildId,
+                discord_channel_id: channelId,
                 invite_token: inviteToken,
-                token_expires_at: expiresAt.toISOString(),
+                token_expires_at: null, // 永続化：有効期限なし
                 auth_method: 'discord',
                 created_at: new Date().toISOString()
             };
@@ -84,12 +94,15 @@ export class TeamCreateCommand {
 
             const inviteUrl = this.generateInviteUrl(inviteToken);
 
+            const scopeText = scope === 'server' ? 'サーバー全体' : 'このチャンネル';
             await interaction.editReply({
-                content: `✅ **${teamName}** が作成されました！\n\n` +
-                        `🔗 **参加用URL（クリックしてアクセス）**\n<${inviteUrl}>\n\n` +
-                        `⏰ URL有効期限: 24時間\n` +
-                        `👑 チームリーダー: ${leaderName}\n\n` +
-                        `メンバーは上記URLをクリックしてチームに参加できます。`
+                content: `✅ **FF14装備分配システム** の専用URLを作成しました！\n\n` +
+                        `📋 **チーム名**: ${teamName}\n` +
+                        `🎯 **運用範囲**: ${scopeText}\n` +
+                        `👑 **作成者**: ${leaderName}\n\n` +
+                        `🔗 **専用URL（クリックしてアクセス）**\n<${inviteUrl}>\n\n` +
+                        `✨ このURLは**永続的**に利用できます\n` +
+                        `📌 ブックマークして繰り返しご利用ください`
             });
 
         } catch (error) {

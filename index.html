@@ -1900,16 +1900,21 @@
             try {
                 showMessage('招待リンクを確認中...', 'info');
 
-                // 招待トークンの検証
+                // 招待トークンの検証（永続化対応）
                 const { data: team, error } = await window.supabaseClient
                     .from('teams')
                     .select('*')
                     .eq('invite_token', inviteToken)
-                    .gt('token_expires_at', new Date().toISOString())
                     .single();
 
                 if (error || !team) {
-                    showError('招待リンクが無効または期限切れです');
+                    showError('招待リンクが無効です');
+                    return;
+                }
+
+                // 有効期限チェック（nullの場合は永続）
+                if (team.token_expires_at && new Date(team.token_expires_at) < new Date()) {
+                    showError('招待リンクの有効期限が切れています');
                     return;
                 }
 
@@ -2022,11 +2027,15 @@
                     .from('teams')
                     .select('*')
                     .eq('invite_token', inviteToken)
-                    .gt('token_expires_at', new Date().toISOString())
                     .single();
-                
+
                 if (tokenError || !tokenValidation) {
-                    throw new Error('招待リンクが無効または期限切れです');
+                    throw new Error('招待リンクが無効です');
+                }
+
+                // 有効期限チェック（nullの場合は永続）
+                if (tokenValidation.token_expires_at && new Date(tokenValidation.token_expires_at) < new Date()) {
+                    throw new Error('招待リンクの有効期限が切れています');
                 }
                 
                 // Discord認証URL生成

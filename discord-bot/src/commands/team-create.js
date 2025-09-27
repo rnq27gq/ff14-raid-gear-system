@@ -52,6 +52,8 @@ export class TeamCreateCommand {
             const expiresAt = this.calculateTokenExpiry();
             const teamId = this.generateTeamId(teamName);
 
+            console.log(`Creating team: ${teamName}, ID: ${teamId}`);
+
             const teamData = {
                 team_id: teamId,
                 team_name: teamName,
@@ -66,21 +68,28 @@ export class TeamCreateCommand {
             };
 
             if (this.supabaseClient) {
+                console.log('Inserting team data into Supabase...');
                 const { data, error } = await this.supabaseClient
                     .from('teams')
                     .insert(teamData);
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Supabase error:', error);
+                    throw error;
+                }
+                console.log('Team data inserted successfully');
+            } else {
+                console.log('Using mock Supabase client - team data not saved');
             }
 
             const inviteUrl = this.generateInviteUrl(inviteToken);
 
             await interaction.editReply({
                 content: `✅ **${teamName}** が作成されました！\n\n` +
-                        `🔗 **参加用URL**\n\`\`\`\n${inviteUrl}\n\`\`\`\n\n` +
+                        `🔗 **参加用URL（クリックしてアクセス）**\n${inviteUrl}\n\n` +
                         `⏰ URL有効期限: 24時間\n` +
                         `👑 チームリーダー: ${leaderName}\n\n` +
-                        `メンバーは上記URLからチームに参加できます。`
+                        `メンバーは上記URLをクリックしてチームに参加できます。`
             });
 
         } catch (error) {

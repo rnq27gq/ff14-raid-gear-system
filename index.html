@@ -1938,6 +1938,9 @@
                 await showAuthenticatedState();
                 showSuccess(`「${team.team_name}」にアクセスしました！`);
 
+                // メイン機能の初期化
+                await initializeMainFeatures();
+
                 // URLからトークンパラメータを削除
                 const url = new URL(window.location);
                 url.searchParams.delete('token');

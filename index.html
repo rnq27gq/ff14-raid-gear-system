@@ -1723,7 +1723,7 @@
     <script>
         // Discord OAuth2設定
         const DISCORD_CONFIG = {
-            client_id: '1330616705325465652', // GitHub Secretsで管理する
+            client_id: '1421136327843250286', // 正しいクライアントID
             redirect_uri: window.location.origin + window.location.pathname,
             scope: 'identify',
             response_type: 'code'
@@ -1732,7 +1732,7 @@
         // GitHub Actionsによってデプロイ時に認証情報が注入されます
         window.SUPABASE_CONFIG = {
             SUPABASE_URL: 'https://bpzvuwhnjvbfohopeoxr.supabase.co',
-            SUPABASE_ANON_KEY: null // GitHub Actionsで置換される
+            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwenZ1d2huanZiZm9ob3Blb3hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk4OTMwMDUsImV4cCI6MjA2NTQ2OTAwNX0.FP7tx1uS-xolvYOH6Un9QNqvfFwbkOII3eAnG0qdMZg'
         };
     </script>
     
@@ -2044,7 +2044,7 @@
                     },
                     body: new URLSearchParams({
                         client_id: DISCORD_CONFIG.client_id,
-                        client_secret: '', // サーバーサイドで処理する必要がある
+                        client_secret: 'KbWBwS5AS5T6p-J75GTjOH-0rnXI5HoG', // 一時的にフロントエンドで使用
                         grant_type: 'authorization_code',
                         code: code,
                         redirect_uri: DISCORD_CONFIG.redirect_uri,

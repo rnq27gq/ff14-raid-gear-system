@@ -150,11 +150,15 @@
         
         /* 認証画面 */
         .auth-screen {
-            display: flex;
+            display: none; /* 初期状態では非表示 */
             justify-content: center;
             align-items: center;
             min-height: 60vh;
             flex-direction: column;
+        }
+
+        .auth-screen.show {
+            display: flex;
         }
         
         .auth-card {
@@ -1756,6 +1760,13 @@
             }
             return '';
         }
+
+        // チーム名表示用関数（ハイフン以降を非表示）
+        function getDisplayTeamName(teamName) {
+            if (!teamName) return '';
+            const hyphenIndex = teamName.indexOf('-');
+            return hyphenIndex !== -1 ? teamName.substring(0, hyphenIndex) : teamName;
+        }
         
         // 初期化 - ライブラリ読み込み完了を待つ
         window.addEventListener('load', async function() {
@@ -1941,7 +1952,7 @@
 
                 // 認証状態を表示
                 await showAuthenticatedState();
-                showSuccess(`「${team.team_name}」にアクセスしました！`);
+                showSuccess(`「${getDisplayTeamName(team.team_name)}」にアクセスしました！`);
 
                 // メイン機能の初期化
                 await initializeMainFeatures();
@@ -1967,7 +1978,7 @@
                     <h2>🎮 チーム招待</h2>
                     <div style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
                         <h3 style="margin: 0 0 10px 0; color: #007bff;">
-                            「${team.team_name}」へようこそ！
+                            「${getDisplayTeamName(team.team_name)}」へようこそ！
                         </h3>
                         <p style="margin: 0; color: #666;">
                             チームリーダー: ${team.creator_name || 'Unknown'}
@@ -1998,7 +2009,7 @@
             // 認証画面を表示
             const authScreen = document.getElementById('authScreen');
             if (authScreen) {
-                authScreen.style.display = 'flex';
+                authScreen.classList.add('show');
             }
         }
         
@@ -2339,7 +2350,7 @@
         // 新規登録画面表示
         function showSignupForm() {
             const authScreen = document.getElementById('authScreen');
-            if (authScreen) authScreen.style.display = 'none';
+            if (authScreen) authScreen.classList.remove('show');
             
             const signupScreen = document.getElementById('signupScreen');
             if (signupScreen) signupScreen.style.display = 'block';
@@ -2361,7 +2372,7 @@
         // ログイン画面表示
         function showLoginForm() {
             const authScreen = document.getElementById('authScreen');
-            if (authScreen) authScreen.style.display = 'block';
+            if (authScreen) authScreen.classList.add('show');
             
             const signupScreen = document.getElementById('signupScreen');
             if (signupScreen) signupScreen.style.display = 'none';
@@ -2376,7 +2387,7 @@
         // パスワードリセット画面表示
         function showPasswordResetForm() {
             const authScreen = document.getElementById('authScreen');
-            if (authScreen) authScreen.style.display = 'none';
+            if (authScreen) authScreen.classList.remove('show');
             
             const signupScreen = document.getElementById('signupScreen');
             if (signupScreen) signupScreen.style.display = 'none';
@@ -2397,7 +2408,7 @@
             
             // UI切り替え（安全な要素アクセス）
             const authScreen = document.getElementById('authScreen');
-            if (authScreen) authScreen.style.display = 'none';
+            if (authScreen) authScreen.classList.remove('show');
             
             const mainContent = document.getElementById('mainContent');
             if (mainContent) {
@@ -2409,7 +2420,7 @@
             if (loggedInControls) loggedInControls.style.display = 'flex';
             
             const loggedInTeam = document.getElementById('loggedInTeam');
-            if (loggedInTeam) loggedInTeam.textContent = currentTeamId;
+            if (loggedInTeam) loggedInTeam.textContent = getDisplayTeamName(currentTeamId);
             
             // チーム情報表示
             const teamInfo = document.getElementById('teamInfo');
@@ -2429,7 +2440,7 @@
             
             // UI切り替え（安全な要素アクセス）
             const authScreen = document.getElementById('authScreen');
-            if (authScreen) authScreen.style.display = 'flex';
+            if (authScreen) authScreen.classList.add('show');
             
             const mainContent = document.getElementById('mainContent');
             if (mainContent) mainContent.classList.remove('authenticated');
@@ -2509,7 +2520,7 @@
                 // チーム情報とセキュリティ質問を表示
                 const teamInfoDisplay = document.getElementById('teamInfoDisplay');
                 teamInfoDisplay.innerHTML = `
-                    <strong>チーム名:</strong> ${teamInfo.team_name}<br>
+                    <strong>チーム名:</strong> ${getDisplayTeamName(teamInfo.team_name)}<br>
                     <strong>作成者:</strong> ${teamInfo.created_by || '未設定'}<br>
                     <strong>作成日:</strong> ${new Date(teamInfo.created_at).toLocaleDateString('ja-JP')}
                 `;
@@ -2637,71 +2648,6 @@
             } catch (error) {
                 console.error('パスワードリセットエラー:', error);
                 showError('パスワードリセットに失敗しました: ' + error.message);
-            }
-        }
-        
-        // データベース接続テスト
-        async function testDatabaseConnection() {
-            if (!isAuthenticated) {
-                showError('先にログインしてください');
-                return;
-            }
-            
-            try {
-                showMessage('データベースに接続中...', 'info');
-                
-                // Supabaseクライアント確認
-                if (!window.supabaseClient) {
-                    throw new Error('Supabaseクライアントが初期化されていません');
-                }
-                
-                // テストデータの保存
-                const testData = {
-                    test: true,
-                    timestamp: new Date().toISOString(),
-                    message: 'データベース接続テスト成功'
-                };
-                
-                console.log('テストデータ保存中...');
-                
-                const { data: saveData, error: saveError } = await window.supabaseClient
-                    .from('raid_data')
-                    .upsert({
-                        team_id: currentTeamId,
-                        tier_id: 'test-tier',
-                        data_type: 'settings',
-                        content: testData
-                    });
-                
-                if (saveError) {
-                    throw new Error(`保存エラー: ${saveError.message}`);
-                }
-                
-                console.log('テストデータ読み込み中...');
-                
-                // テストデータの読み込み
-                const { data: loadData, error: loadError } = await window.supabaseClient
-                    .from('raid_data')
-                    .select('*')
-                    .eq('team_id', currentTeamId)
-                    .eq('tier_id', 'test-tier')
-                    .eq('data_type', 'settings');
-                
-                if (loadError) {
-                    throw new Error(`読み込みエラー: ${loadError.message}`);
-                }
-                
-                console.log('読み込み結果:', loadData);
-                
-                if (loadData && loadData.length > 0) {
-                    showSuccess('データベース接続テスト成功！データの保存・読み込みが正常に動作しています。');
-                } else {
-                    throw new Error('データの読み込みに失敗しました');
-                }
-                
-            } catch (error) {
-                console.error('データベーステストエラー:', error);
-                showError('データベーステストに失敗しました: ' + error.message);
             }
         }
         
@@ -2869,20 +2815,9 @@
                     <div class="navigation">
                         <button class="nav-button" onclick="showSystemSettings()">システム設定</button>
                         <button class="nav-button" onclick="exportAllData()">データエクスポート</button>
-                        <button class="nav-button" onclick="testDatabaseConnection()">接続テスト</button>
                     </div>
                 </div>
                 
-                <div class="section" style="background-color: #e8f5e8; border-color: #27ae60;">
-                    <h3>実装完了機能</h3>
-                    <ul style="margin: 10px 0; padding-left: 20px;">
-                        <li>Supabase連携・認証システム</li>
-                        <li>チーム別データ管理</li>
-                        <li>リアルタイムデータ同期</li>
-                        <li>レイドティア管理</li>
-                        <li>プレイヤー・装備管理</li>
-                    </ul>
-                </div>
             `;
             
             // レイドティア一覧を表示

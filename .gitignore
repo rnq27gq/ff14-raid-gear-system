@@ -5,6 +5,7 @@ supabase_credentials.js
 *_credentials.js
 *.env
 .env.*
+deployment-guide.md
 
 # 開発・デバッグファイル
 temp/

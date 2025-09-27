@@ -1899,7 +1899,7 @@
         async function handleInviteTokenAccess(inviteToken) {
             try {
                 showMessage('招待リンクを確認中...', 'info');
-                
+
                 // 招待トークンの検証
                 const { data: team, error } = await window.supabaseClient
                     .from('teams')
@@ -1907,15 +1907,42 @@
                     .eq('invite_token', inviteToken)
                     .gt('token_expires_at', new Date().toISOString())
                     .single();
-                
+
                 if (error || !team) {
                     showError('招待リンクが無効または期限切れです');
                     return;
                 }
-                
-                // 招待リンク有効時の案内表示
-                showInviteWelcomeScreen(team);
-                
+
+                // 招待トークンで直接ログイン
+                showMessage('チームにアクセス中...', 'info');
+
+                // チーム情報を保存
+                currentTeamId = team.team_id;
+                localStorage.setItem('ff14_team_id', team.team_id);
+                localStorage.setItem('ff14_invite_access', 'true');
+
+                // チームコンテキスト設定
+                try {
+                    const { data: contextData, error: contextError } = await window.supabaseClient.rpc('set_team_context', {
+                        team_id: team.team_id
+                    });
+
+                    if (contextError) {
+                        console.error('コンテキスト設定エラー:', contextError);
+                    }
+                } catch (contextErr) {
+                    console.warn('チームコンテキスト設定をスキップ:', contextErr);
+                }
+
+                // 認証状態を表示
+                await showAuthenticatedState();
+                showSuccess(`「${team.team_name}」にアクセスしました！`);
+
+                // URLからトークンパラメータを削除
+                const url = new URL(window.location);
+                url.searchParams.delete('token');
+                window.history.replaceState({}, document.title, url.toString());
+
             } catch (error) {
                 console.error('招待トークンアクセスエラー:', error);
                 showError('招待リンクの処理中にエラーが発生しました');

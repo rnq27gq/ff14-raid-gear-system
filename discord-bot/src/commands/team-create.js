@@ -86,7 +86,7 @@ export class TeamCreateCommand {
 
             await interaction.editReply({
                 content: `✅ **${teamName}** が作成されました！\n\n` +
-                        `🔗 **参加用URL（クリックしてアクセス）**\n${inviteUrl}\n\n` +
+                        `🔗 **参加用URL（クリックしてアクセス）**\n<${inviteUrl}>\n\n` +
                         `⏰ URL有効期限: 24時間\n` +
                         `👑 チームリーダー: ${leaderName}\n\n` +
                         `メンバーは上記URLをクリックしてチームに参加できます。`

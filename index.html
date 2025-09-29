@@ -201,6 +201,15 @@
         let isInitializing = false;
         let isInitialized = false;
         let selectedDirectWeapon = ''; // 直ドロップ武器の選択状態を保持
+
+        // グローバル変数をウィンドウオブジェクトに登録（デバッグ用）
+        function updateGlobalState() {
+            window.isAuthenticated = isAuthenticated;
+            window.currentTeamId = currentTeamId;
+            window.isInitializing = isInitializing;
+            window.isInitialized = isInitialized;
+        }
+        updateGlobalState();
         
         // ユーティリティ関数はjs/utils.jsに分離
         
@@ -239,7 +248,8 @@
             }
             
             isInitializing = true;
-            
+            updateGlobalState();
+
             try {
                 console.log('アプリ初期化開始');
 
@@ -257,6 +267,7 @@
                     console.log('Supabaseクライアント既存のため初期化スキップ');
                     isInitialized = true;
                     isInitializing = false;
+                    updateGlobalState();
                     await tryAutoLogin();
                     return;
                 }
@@ -303,6 +314,7 @@
                 // 初期化完了フラグ設定
                 isInitialized = true;
                 isInitializing = false;
+                updateGlobalState();
                 
             } catch (error) {
                 console.error('アプリ初期化エラー:', error);
@@ -311,9 +323,13 @@
                 
                 // 初期化失敗時はフラグをリセット
                 isInitializing = false;
+                updateGlobalState();
             }
         }
-        
+
+        // initializeApp関数をグローバルに登録
+        window.initializeApp = initializeApp;
+
         // 自動ログイン試行
         async function tryAutoLogin() {
             // 招待トークンがある場合は特別な処理

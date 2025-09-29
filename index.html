@@ -186,6 +186,9 @@
 
     <!-- External Utilities -->
     <script src="js/utils.js"></script>
+
+    <!-- UI Management -->
+    <script src="js/ui.js"></script>
     
     <!-- Supabase設定とメイン機能 -->
     <script>
@@ -1093,33 +1096,7 @@
             }
         }
         
-        // メッセージ表示関数
-        function showError(message) {
-            showMessage(message, 'error');
-        }
-        
-        function showSuccess(message) {
-            showMessage(message, 'success');
-        }
-        
-        function showMessage(message, type) {
-            const errorEl = document.getElementById('errorMessage');
-            const successEl = document.getElementById('successMessage');
-            
-            // 全メッセージを隠す
-            errorEl.style.display = 'none';
-            successEl.style.display = 'none';
-            
-            if (type === 'error') {
-                errorEl.textContent = message;
-                errorEl.style.display = 'block';
-                setTimeout(() => errorEl.style.display = 'none', 5000);
-            } else if (type === 'success') {
-                successEl.textContent = message;
-                successEl.style.display = 'block';
-                setTimeout(() => successEl.style.display = 'none', 3000);
-            }
-        }
+        // メッセージ表示関数はjs/ui.jsに分離
         
         // エラーハンドリング
         window.addEventListener('unhandledrejection', function(event) {

@@ -242,7 +242,16 @@
             
             try {
                 console.log('アプリ初期化開始');
-                
+
+                // デバッグ: 設定値の確認
+                console.log('=== Supabase設定確認 ===');
+                console.log('SUPABASE_CONFIG:', window.SUPABASE_CONFIG);
+                console.log('URL:', window.SUPABASE_CONFIG?.SUPABASE_URL);
+                console.log('KEY length:', window.SUPABASE_CONFIG?.SUPABASE_ANON_KEY?.length);
+                console.log('URL contains placeholder:', window.SUPABASE_CONFIG?.SUPABASE_URL?.includes('{{'));
+                console.log('KEY contains placeholder:', window.SUPABASE_CONFIG?.SUPABASE_ANON_KEY?.includes('{{'));
+                console.log('=========================');
+
                 // Supabaseクライアントが既に存在する場合はスキップ
                 if (window.supabaseClient) {
                     console.log('Supabaseクライアント既存のため初期化スキップ');

@@ -183,6 +183,9 @@
 
     <!-- External Configuration -->
     <script src="js/config.js"></script>
+
+    <!-- External Utilities -->
+    <script src="js/utils.js"></script>
     
     <!-- Supabase設定とメイン機能 -->
     <script>
@@ -193,24 +196,7 @@
         let isInitialized = false;
         let selectedDirectWeapon = ''; // 直ドロップ武器の選択状態を保持
         
-        // ロール判定用共通関数
-        function getPositionRoleClass(position) {
-            if (position === 'MT' || position === 'ST') {
-                return 'tank';
-            } else if (position === 'H1' || position === 'H2') {
-                return 'healer';
-            } else if (position.startsWith('D')) {
-                return 'dps';
-            }
-            return '';
-        }
-
-        // チーム名表示用関数（ハイフン以降を非表示）
-        function getDisplayTeamName(teamName) {
-            if (!teamName) return '';
-            const hyphenIndex = teamName.indexOf('-');
-            return hyphenIndex !== -1 ? teamName.substring(0, hyphenIndex) : teamName;
-        }
+        // ユーティリティ関数はjs/utils.jsに分離
         
         // 初期化 - ライブラリ読み込み完了を待つ
         window.addEventListener('load', async function() {

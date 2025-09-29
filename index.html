@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://*.supabase.co https://supabase.com https://cdn.jsdelivr.net https://infird.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://*.supabase.co https://cdn.jsdelivr.net https://infird.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://analytics.google.com;">
-    <title>FF14 零式装備分配システム (Supabase版)</title>
+    <title>FF14 零式装備分配システム (v2.1-auto-init)</title>
     
     <!-- Supabase JavaScript SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
@@ -220,41 +220,57 @@
         
         // ユーティリティ関数はjs/utils.jsに分離
         
-        // 確実な初期化のための複数タイミング設定
+        // 確実な初期化システム v2 - キャッシュ問題対応版
+        console.log('=== 初期化システム v2 開始 ===');
+
+        // 初期化実行関数
+        async function executeInitialization(trigger) {
+            if (isInitialized || isInitializing) {
+                console.log(`${trigger}: 既に初期化済み/初期化中 - スキップ`);
+                return false;
+            }
+
+            console.log(`${trigger}: 初期化を実行`);
+            try {
+                await initializeApp();
+                console.log(`${trigger}: 初期化成功`);
+                return true;
+            } catch (error) {
+                console.error(`${trigger}: 初期化エラー:`, error);
+                return false;
+            }
+        }
 
         // 1. 即座に初期化を試行
-        setTimeout(async () => {
-            if (!isInitialized && !isInitializing) {
-                console.log('即座初期化を試行');
-                await initializeApp();
-            }
-        }, 50);
+        setTimeout(() => executeInitialization('即座初期化'), 50);
 
         // 2. DOMContentLoaded
-        document.addEventListener('DOMContentLoaded', async function() {
+        document.addEventListener('DOMContentLoaded', () => {
             console.log('DOMContentLoaded: DOM準備完了');
-            if (!isInitialized && !isInitializing) {
-                console.log('DOMContentLoaded初期化を試行');
-                await initializeApp();
-            }
+            executeInitialization('DOMContentLoaded');
         });
 
         // 3. ライブラリ読み込み完了を待つ
-        window.addEventListener('load', async function() {
+        window.addEventListener('load', () => {
             console.log('Window load: 全リソース読み込み完了');
-            if (!isInitialized && !isInitializing) {
-                console.log('Window load初期化を試行');
-                await initializeApp();
-            }
+            executeInitialization('Window load');
         });
 
         // 4. フォールバック（5秒後に強制初期化）
-        setTimeout(async () => {
-            if (!isInitialized && !isInitializing) {
-                console.log('フォールバック初期化を実行');
-                await initializeApp();
-            }
+        setTimeout(() => {
+            console.log('フォールバック初期化チェック');
+            executeInitialization('フォールバック');
         }, 5000);
+
+        // 5. ページ表示後の最終チェック（10秒後）
+        setTimeout(() => {
+            if (!isInitialized) {
+                console.warn('⚠️ 初期化が完了していません。手動初期化を実行します');
+                executeInitialization('最終フォールバック');
+            } else {
+                console.log('✅ 自動初期化が正常に完了しました');
+            }
+        }, 10000);
         
         // アプリ初期化
         async function initializeApp() {

@@ -220,31 +220,41 @@
         
         // ユーティリティ関数はjs/utils.jsに分離
         
-        // 初期化 - ライブラリ読み込み完了を待つ
-        window.addEventListener('load', async function() {
+        // 確実な初期化のための複数タイミング設定
+
+        // 1. 即座に初期化を試行
+        setTimeout(async () => {
             if (!isInitialized && !isInitializing) {
-                // ローディング表示
-                showMessage('システム初期化中...', 'info');
-                
-                // 少し待ってからアプリ初期化
-                setTimeout(async () => {
-                    await initializeApp();
-                }, 100);
+                console.log('即座初期化を試行');
+                await initializeApp();
             }
-        });
-        
-        // DOMContentLoadedでも初期化を試行（ハードリロード対策）
+        }, 50);
+
+        // 2. DOMContentLoaded
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('DOMContentLoaded: DOM準備完了');
-            if (!isInitialized && !isInitializing && !window.supabaseClient) {
-                showMessage('システム初期化中...', 'info');
-                // DOM要素の存在確認
-                setTimeout(async () => {
-                    console.log('DOM要素確認後の初期化開始');
-                    await initializeApp();
-                }, 300);
+            if (!isInitialized && !isInitializing) {
+                console.log('DOMContentLoaded初期化を試行');
+                await initializeApp();
             }
         });
+
+        // 3. ライブラリ読み込み完了を待つ
+        window.addEventListener('load', async function() {
+            console.log('Window load: 全リソース読み込み完了');
+            if (!isInitialized && !isInitializing) {
+                console.log('Window load初期化を試行');
+                await initializeApp();
+            }
+        });
+
+        // 4. フォールバック（5秒後に強制初期化）
+        setTimeout(async () => {
+            if (!isInitialized && !isInitializing) {
+                console.log('フォールバック初期化を実行');
+                await initializeApp();
+            }
+        }, 5000);
         
         // アプリ初期化
         async function initializeApp() {

@@ -263,8 +263,11 @@
                 const supabaseUrl = window.SUPABASE_CONFIG?.SUPABASE_URL;
                 const supabaseKey = window.SUPABASE_CONFIG?.SUPABASE_ANON_KEY;
                 
-                if (!supabaseUrl || !supabaseKey) {
-                    throw new Error('Supabase認証情報が設定されていません。GitHub Secretsの設定を確認してください。');
+                // プレースホルダーチェック
+                if (!supabaseUrl || !supabaseKey ||
+                    supabaseUrl.includes('{{') || supabaseKey.includes('{{')) {
+                    console.error('Supabase設定エラー:', { supabaseUrl, supabaseKey });
+                    throw new Error('Supabase認証情報が正しく設定されていません。GitHub Secretsの設定とデプロイを確認してください。');
                 }
                 
                 window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);

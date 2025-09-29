@@ -27,27 +27,31 @@ jobs:
       
     - name: Replace Supabase credentials
       env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
       run: |
         # デバッグ: Secretsが設定されているか確認
-        if [ -z "$SUPABASE_ANON_KEY" ]; then
-          echo "❌ GitHub Secret SUPABASE_ANON_KEY が設定されていません"
-          echo "リポジトリ Settings → Secrets and variables → Actions で設定してください"
+        if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+          echo "❌ GitHub Secrets が設定されていません"
+          echo "リポジトリ Settings → Secrets and variables → Actions で以下を設定してください:"
+          echo "  - SUPABASE_URL"
+          echo "  - SUPABASE_ANON_KEY"
           exit 1
         fi
-        
-        echo "✅ GitHub Secret が確認されました"
-        
-        # HTMLファイル内のプレースホルダーを置換
-        sed -i "s|SUPABASE_ANON_KEY: null|SUPABASE_ANON_KEY: '${SUPABASE_ANON_KEY}'|g" index.html
-        
+
+        echo "✅ GitHub Secrets が確認されました"
+
+        # js/config.js内のプレースホルダーを置換
+        sed -i "s|{{SUPABASE_URL}}|${SUPABASE_URL}|g" js/config.js
+        sed -i "s|{{SUPABASE_ANON_KEY}}|${SUPABASE_ANON_KEY}|g" js/config.js
+
         # 置換確認
-        if grep -q "SUPABASE_ANON_KEY: 'eyJ" index.html; then
+        if grep -q "https://.*\.supabase\.co" js/config.js && grep -q "eyJ" js/config.js; then
           echo "✅ Supabase credentials replacement successful"
         else
           echo "❌ Supabase credentials replacement failed"
           echo "置換後の内容:"
-          grep -A 2 -B 2 "SUPABASE_ANON_KEY" index.html
+          cat js/config.js
           exit 1
         fi
         

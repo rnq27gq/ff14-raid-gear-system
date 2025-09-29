@@ -181,22 +181,8 @@
         </div>
     </div>
 
-    <!-- Discord OAuth2設定 -->
-    <script>
-        // Discord OAuth2設定
-        const DISCORD_CONFIG = {
-            client_id: '1421136327843250286', // 正しいクライアントID
-            redirect_uri: window.location.origin + window.location.pathname,
-            scope: 'identify',
-            response_type: 'code'
-        };
-        
-        // GitHub Actionsによってデプロイ時に認証情報が注入されます
-        window.SUPABASE_CONFIG = {
-            SUPABASE_URL: 'https://bpzvuwhnjvbfohopeoxr.supabase.co',
-            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwenZ1d2huanZiZm9ob3Blb3hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk4OTMwMDUsImV4cCI6MjA2NTQ2OTAwNX0.FP7tx1uS-xolvYOH6Un9QNqvfFwbkOII3eAnG0qdMZg'
-        };
-    </script>
+    <!-- External Configuration -->
+    <script src="js/config.js"></script>
     
     <!-- Supabase設定とメイン機能 -->
     <script>

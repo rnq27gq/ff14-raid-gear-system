@@ -3210,3 +3210,11 @@
 
             console.log('✅ グローバル関数登録完了 (29関数 + データ変数)');
         }
+
+        } catch (error) {
+            console.error("🚨 メインスクリプト実行エラー:", error);
+            console.error("スタックトレース:", error.stack);
+            alert("システムの初期化でエラーが発生しました: " + error.message);
+        }
+
+        console.log("✅ メインスクリプト実行完了");

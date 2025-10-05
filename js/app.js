@@ -4,24 +4,24 @@
         try {
 
         // グローバル変数
-        let isAuthenticated = false;
-        let currentTeamId = null;
-        let isInitializing = false;
-        let isInitialized = false;
-        let selectedDirectWeapon = ''; // 直ドロップ武器の選択状態を保持
+        let window.isAuthenticated = false;
+        let window.currentTeamId = null;
+        let window.isInitializing = false;
+        let window.isInitialized = false;
+        let window.selectedDirectWeapon = ''; // 直ドロップ武器の選択状態を保持
 
         // 即座にグローバル変数をウィンドウオブジェクトに登録
-        window.isAuthenticated = isAuthenticated;
-        window.currentTeamId = currentTeamId;
-        window.isInitializing = isInitializing;
-        window.isInitialized = isInitialized;
+        window.window.isAuthenticated = window.isAuthenticated;
+        window.window.currentTeamId = window.currentTeamId;
+        window.window.isInitializing = window.isInitializing;
+        window.window.isInitialized = window.isInitialized;
 
         // グローバル変数更新関数
         function updateGlobalState() {
-            window.isAuthenticated = isAuthenticated;
-            window.currentTeamId = currentTeamId;
-            window.isInitializing = isInitializing;
-            window.isInitialized = isInitialized;
+            window.window.isAuthenticated = window.isAuthenticated;
+            window.window.currentTeamId = window.currentTeamId;
+            window.window.isInitializing = window.isInitializing;
+            window.window.isInitialized = window.isInitialized;
         }
         
         // ユーティリティ関数はjs/utils.jsに分離
@@ -56,7 +56,7 @@
 
         // 初期化実行関数
         async function executeInitialization(trigger) {
-            if (isInitialized || isInitializing) {
+            if (window.isInitialized || window.isInitializing) {
                 console.log(`${trigger}: 既に初期化済み/初期化中 - スキップ`);
                 return false;
             }
@@ -95,7 +95,7 @@
 
         // 5. ページ表示後の最終チェック（10秒後）
         setTimeout(() => {
-            if (!isInitialized) {
+            if (!window.isInitialized) {
                 console.warn('⚠️ 初期化が完了していません。手動初期化を実行します');
                 executeInitialization('最終フォールバック');
             } else {
@@ -106,12 +106,12 @@
         // アプリ初期化
         async function initializeApp() {
             // 重複初期化防止
-            if (isInitializing || isInitialized) {
+            if (window.isInitializing || window.isInitialized) {
                 console.log('初期化スキップ: 既に初期化済みまたは初期化中');
                 return;
             }
             
-            isInitializing = true;
+            window.isInitializing = true;
             updateGlobalState();
 
             try {
@@ -127,10 +127,10 @@
                 console.log('=========================');
 
                 // Supabaseクライアントが既に存在する場合はスキップ
-                if (window.supabaseClient) {
+                if (window.window.supabaseClient) {
                     console.log('Supabaseクライアント既存のため初期化スキップ');
-                    isInitialized = true;
-                    isInitializing = false;
+                    window.isInitialized = true;
+                    window.isInitializing = false;
                     updateGlobalState();
                     await tryAutoLogin();
                     return;
@@ -154,9 +154,9 @@
                     throw new Error('Supabase認証情報が正しく設定されていません。GitHub Secretsの設定とデプロイを確認してください。');
                 }
                 
-                window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+                window.window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
                 
-                if (!window.supabaseClient) {
+                if (!window.window.supabaseClient) {
                     throw new Error('Supabaseクライアントの作成に失敗しました');
                 }
                 
@@ -176,8 +176,8 @@
                 console.log('アプリ初期化完了');
                 
                 // 初期化完了フラグ設定
-                isInitialized = true;
-                isInitializing = false;
+                window.isInitialized = true;
+                window.isInitializing = false;
                 updateGlobalState();
                 
             } catch (error) {
@@ -195,7 +195,7 @@
                 updateConnectionStatus(false);
 
                 // 初期化失敗時はフラグをリセット
-                isInitializing = false;
+                window.isInitializing = false;
                 updateGlobalState();
             }
         }
@@ -217,11 +217,11 @@
             const savedTeamId = localStorage.getItem('ff14_team_id');
             if (savedTeamId) {
                 console.log('自動ログイン開始:', savedTeamId);
-                currentTeamId = savedTeamId;
+                window.currentTeamId = savedTeamId;
                 
                 // チームコンテキスト設定
                 try {
-                    const { data: contextData, error: contextError } = await window.supabaseClient.rpc('set_team_context', {
+                    const { data: contextData, error: contextError } = await window.window.supabaseClient.rpc('set_team_context', {
                         team_id: savedTeamId
                     });
                     
@@ -249,7 +249,7 @@
                 showMessage('招待リンクを確認中...', 'info');
 
                 // 招待トークンの検証（永続化対応）
-                const { data: team, error } = await window.supabaseClient
+                const { data: team, error } = await window.window.supabaseClient
                     .from('teams')
                     .select('*')
                     .eq('invite_token', inviteToken)
@@ -270,13 +270,13 @@
                 showMessage('チームにアクセス中...', 'info');
 
                 // チーム情報を保存
-                currentTeamId = team.team_id;
+                window.currentTeamId = team.team_id;
                 localStorage.setItem('ff14_team_id', team.team_id);
                 localStorage.setItem('ff14_invite_access', 'true');
 
                 // チームコンテキスト設定
                 try {
-                    const { data: contextData, error: contextError } = await window.supabaseClient.rpc('set_team_context', {
+                    const { data: contextData, error: contextError } = await window.window.supabaseClient.rpc('set_team_context', {
                         team_id: team.team_id
                     });
 
@@ -371,7 +371,7 @@
                 // 招待トークンの検証
                 showMessage('招待リンクを確認中...', 'info');
                 
-                const { data: tokenValidation, error: tokenError } = await window.supabaseClient
+                const { data: tokenValidation, error: tokenError } = await window.window.supabaseClient
                     .from('teams')
                     .select('*')
                     .eq('invite_token', inviteToken)
@@ -476,7 +476,7 @@
         async function joinTeamWithDiscordAuth(inviteToken, discordUser, accessToken) {
             try {
                 // Supabaseでチーム参加処理
-                const { data, error } = await window.supabaseClient.rpc('join_team_with_discord', {
+                const { data, error } = await window.window.supabaseClient.rpc('join_team_with_discord', {
                     p_invite_token: inviteToken,
                     p_discord_id: discordUser.id,
                     p_discord_username: discordUser.username,
@@ -493,7 +493,7 @@
                 }
                 
                 // 認証成功
-                currentTeamId = data.team_id;
+                window.currentTeamId = data.team_id;
                 localStorage.setItem('ff14_team_id', data.team_id);
                 localStorage.setItem('ff14_discord_auth', 'true');
                 
@@ -524,14 +524,14 @@
                 showMessage('認証中...', 'info');
                 
                 // Supabaseクライアント確認
-                if (!window.supabaseClient) {
+                if (!window.window.supabaseClient) {
                     throw new Error('Supabaseクライアントが初期化されていません');
                 }
                 
                 console.log('認証試行:', teamId);
                 
                 // Supabase認証
-                const { data, error } = await window.supabaseClient.rpc('authenticate_team', {
+                const { data, error } = await window.window.supabaseClient.rpc('authenticate_team', {
                     p_team_id: teamId,
                     p_password: password
                 });
@@ -547,12 +547,12 @@
                 }
                 
                 // 認証成功
-                currentTeamId = teamId;
+                window.currentTeamId = teamId;
                 localStorage.setItem('ff14_team_id', teamId);
                 
                 // チームコンテキスト設定
                 console.log('チームコンテキスト設定中...');
-                const { data: contextData, error: contextError } = await window.supabaseClient.rpc('set_team_context', {
+                const { data: contextData, error: contextError } = await window.window.supabaseClient.rpc('set_team_context', {
                     team_id: teamId
                 });
                 
@@ -633,14 +633,14 @@
                 showMessage('チーム作成中...', 'info');
                 
                 // Supabaseクライアント確認
-                if (!window.supabaseClient) {
+                if (!window.window.supabaseClient) {
                     throw new Error('Supabaseクライアントが初期化されていません');
                 }
                 
                 console.log('チーム作成試行:', teamId);
                 
                 // Supabaseでセキュリティ質問付きチーム作成
-                const { data, error } = await window.supabaseClient.rpc('create_team_with_security', {
+                const { data, error } = await window.window.supabaseClient.rpc('create_team_with_security', {
                     p_team_id: teamId,
                     p_team_name: teamId, // チーム名はチームIDと同じに設定
                     p_password: password,
@@ -741,7 +741,7 @@
         
         // 認証後の状態表示
         async function showAuthenticatedState() {
-            isAuthenticated = true;
+            window.isAuthenticated = true;
             
             // UI切り替え（安全な要素アクセス）
             const authScreen = document.getElementById('authScreen');
@@ -757,20 +757,20 @@
             if (loggedInControls) loggedInControls.style.display = 'flex';
             
             const loggedInTeam = document.getElementById('loggedInTeam');
-            if (loggedInTeam) loggedInTeam.textContent = getDisplayTeamName(currentTeamId);
+            if (loggedInTeam) loggedInTeam.textContent = getDisplayTeamName(window.currentTeamId);
             
             // チーム情報表示
             const teamInfo = document.getElementById('teamInfo');
             if (teamInfo) teamInfo.style.display = 'block';
             
             const currentTeamName = document.getElementById('currentTeamName');
-            if (currentTeamName) currentTeamName.textContent = `チーム: ${currentTeamId}`;
+            if (currentTeamName) currentTeamName.textContent = `チーム: ${window.currentTeamId}`;
         }
         
         // ログアウト
         function logout() {
-            isAuthenticated = false;
-            currentTeamId = null;
+            window.isAuthenticated = false;
+            window.currentTeamId = null;
             
             // ローカルストレージクリア
             localStorage.removeItem('ff14_team_id');
@@ -830,11 +830,11 @@
             try {
                 showMessage('チーム情報を取得中...', 'info');
                 
-                if (!window.supabaseClient) {
+                if (!window.window.supabaseClient) {
                     throw new Error('Supabaseクライアントが初期化されていません');
                 }
                 
-                const { data, error } = await window.supabaseClient.rpc('get_team_reset_info', {
+                const { data, error } = await window.window.supabaseClient.rpc('get_team_reset_info', {
                     p_team_id: teamId
                 });
                 
@@ -890,11 +890,11 @@
             try {
                 showMessage('セキュリティ質問を確認中...', 'info');
                 
-                if (!window.supabaseClient || !window.resetTeamId) {
+                if (!window.window.supabaseClient || !window.resetTeamId) {
                     throw new Error('システムエラーが発生しました');
                 }
                 
-                const { data, error } = await window.supabaseClient.rpc('verify_security_answer', {
+                const { data, error } = await window.window.supabaseClient.rpc('verify_security_answer', {
                     p_team_id: window.resetTeamId,
                     p_answer: answer
                 });
@@ -909,7 +909,7 @@
                 }
                 
                 // リセットトークンを生成
-                const tokenResult = await window.supabaseClient.rpc('generate_reset_token', {
+                const tokenResult = await window.window.supabaseClient.rpc('generate_reset_token', {
                     p_team_id: window.resetTeamId
                 });
                 
@@ -954,11 +954,11 @@
             try {
                 showMessage('パスワードをリセット中...', 'info');
                 
-                if (!window.supabaseClient || !window.resetTeamId || !window.resetToken) {
+                if (!window.window.supabaseClient || !window.resetTeamId || !window.resetToken) {
                     throw new Error('システムエラーが発生しました');
                 }
                 
-                const { data, error } = await window.supabaseClient.rpc('reset_password', {
+                const { data, error } = await window.window.supabaseClient.rpc('reset_password', {
                     p_team_id: window.resetTeamId,
                     p_token: window.resetToken,
                     p_new_password: newPassword
@@ -1011,16 +1011,10 @@
         // ======================
         // メイン機能の実装
         // ======================
-        
-        // グローバル変数
-        let currentRaidTier = null;
-        let appData = {
-            raidTiers: {},
-            players: {},
-            allocations: {},
-            settings: {}
-        };
-        
+
+        // state.jsで定義されたグローバル変数を使用
+        // app.js内ではwindow.appData, window.currentRaidTier等を直接参照
+
         // メイン機能初期化
         async function initializeMainFeatures() {
             try {
@@ -1053,10 +1047,10 @@
         async function loadAllData() {
             try {
                 // Supabaseからデータ読み込み
-                const { data: allData, error } = await window.supabaseClient
+                const { data: allData, error } = await window.window.supabaseClient
                     .from('raid_data')
                     .select('*')
-                    .eq('team_id', currentTeamId);
+                    .eq('team_id', window.currentTeamId);
                 
                 if (error) {
                     throw new Error(`データ読み込みエラー: ${error.message}`);
@@ -1073,29 +1067,29 @@
                             // 設定データの特殊処理
                             if (content.raidTier) {
                                 // レイドティアデータ
-                                if (!appData.raidTiers) appData.raidTiers = {};
-                                appData.raidTiers[tier_id] = content.raidTier;
+                                if (!window.appData.raidTiers) window.appData.raidTiers = {};
+                                window.appData.raidTiers[tier_id] = content.raidTier;
                             } else {
                                 // その他の設定
-                                if (!appData.settings) appData.settings = {};
-                                appData.settings = { ...appData.settings, ...content };
+                                if (!window.appData.settings) window.appData.settings = {};
+                                window.appData.settings = { ...window.appData.settings, ...content };
                             }
                         } else {
                             // その他のデータタイプ
-                            if (!appData[data_type]) {
-                                appData[data_type] = {};
+                            if (!window.appData[data_type]) {
+                                window.appData[data_type] = {};
                             }
-                            appData[data_type][tier_id] = content;
+                            window.appData[data_type][tier_id] = content;
                         }
                     });
                 }
                 
-                console.log('整理済みデータ:', appData);
+                console.log('整理済みデータ:', window.appData);
                 
             } catch (error) {
                 console.error('データ読み込みエラー:', error);
                 // 初期データで継続
-                appData = {
+                window.appData = {
                     raidTiers: {},
                     players: {},
                     allocations: {},
@@ -1110,7 +1104,7 @@
             
             content.innerHTML = `
                 <h1>FF14 零式装備分配システム</h1>
-                <h2>チーム: ${currentTeamId}</h2>
+                <h2>チーム: ${window.currentTeamId}</h2>
                 
                 <div class="section">
                     <h3>レイド選択</h3>
@@ -1140,7 +1134,7 @@
         // レイドティア一覧表示
         function displayRaidTiers() {
             const tierList = document.getElementById('tierList');
-            const tiers = appData.raidTiers || {};
+            const tiers = window.appData.raidTiers || {};
             
             if (Object.keys(tiers).length === 0) {
                 tierList.innerHTML = `
@@ -1153,7 +1147,7 @@
             }
             
             tierList.innerHTML = Object.entries(tiers).map(([tierId, tier]) => `
-                <div class="tier-item ${currentRaidTier?.id === tierId ? 'active' : ''}" 
+                <div class="tier-item ${window.currentRaidTier?.id === tierId ? 'active' : ''}" 
                      onclick="selectRaidTier('${tierId}')">
                     <h3>${tier.name}</h3>
                     <p>${tier.description || '零式レイド'}</p>
@@ -1163,13 +1157,13 @@
         
         // レイドティア選択
         async function selectRaidTier(tierId) {
-            const tier = appData.raidTiers[tierId];
+            const tier = window.appData.raidTiers[tierId];
             if (!tier) {
                 showError('レイドティアが見つかりません');
                 return;
             }
             
-            currentRaidTier = { id: tierId, ...tier };
+            window.currentRaidTier = { id: tierId, ...tier };
             showSuccess(`レイドティア「${tier.name}」を選択しました`);
             
             // ティア固有のダッシュボードを表示
@@ -1178,7 +1172,7 @@
         
         // ティア固有ダッシュボード
         function showTierDashboard() {
-            if (!currentRaidTier) return;
+            if (!window.currentRaidTier) return;
             
             const content = document.getElementById('content');
             
@@ -1187,8 +1181,8 @@
                     <button class="nav-button" onclick="showMainDashboard()">レイド選択画面に戻る</button>
                 </div>
                 
-                <h1>${currentRaidTier.name}</h1>
-                <h2>チーム: ${currentTeamId}</h2>
+                <h1>${window.currentRaidTier.name}</h1>
+                <h2>チーム: ${window.currentTeamId}</h2>
                 
                 <div class="section">
                     <h3>装備分配</h3>
@@ -1211,8 +1205,8 @@
                 
                 <div class="section">
                     <h3>レイド情報</h3>
-                    <p><strong>レイド名:</strong> ${currentRaidTier.name}</p>
-                    <p><strong>説明:</strong> ${currentRaidTier.description || '零式レイド'}</p>
+                    <p><strong>レイド名:</strong> ${window.currentRaidTier.name}</p>
+                    <p><strong>説明:</strong> ${window.currentRaidTier.description || '零式レイド'}</p>
                 </div>
             `;
         }
@@ -1232,7 +1226,7 @@
                 </div>
                 
                 <h1>新しいレイドを作成</h1>
-                <h2>チーム: ${currentTeamId}</h2>
+                <h2>チーム: ${window.currentTeamId}</h2>
                 
                 <div class="section">
                     <h3>レイド情報を入力してください</h3>
@@ -1311,10 +1305,10 @@
                 };
                 
                 // Supabaseに保存
-                const { error } = await window.supabaseClient
+                const { error } = await window.window.supabaseClient
                     .from('raid_data')
                     .insert({
-                        team_id: currentTeamId,
+                        team_id: window.currentTeamId,
                         tier_id: tierId,
                         data_type: 'settings',
                         content: { raidTier: tierData }
@@ -1325,13 +1319,13 @@
                 }
                 
                 // ローカルデータ更新
-                if (!appData.raidTiers) appData.raidTiers = {};
-                appData.raidTiers[tierId] = tierData;
+                if (!window.appData.raidTiers) window.appData.raidTiers = {};
+                window.appData.raidTiers[tierId] = tierData;
                 
                 showSuccess(`レイド「${name}」を作成しました`);
                 
                 // 作成したレイドを選択してダッシュボードに移動
-                currentRaidTier = { id: tierId, ...tierData };
+                window.currentRaidTier = { id: tierId, ...tierData };
                 showTierDashboard();
                 
             } catch (error) {
@@ -1343,7 +1337,7 @@
         // 優先順位管理画面
         function showPriorityManagement() {
             const content = document.getElementById('content');
-            const players = appData.players[currentRaidTier.id] || {};
+            const players = window.appData.players[window.currentRaidTier.id] || {};
             
             if (Object.keys(players).length === 0) {
                 showError('プレイヤー情報が設定されていません。まずメンバー管理から設定してください。');
@@ -1352,7 +1346,7 @@
             
             // 現在の優先順位を取得（デフォルト: D1→D2→D3→D4→MT→ST→H1→H2）
             const defaultPriority = ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
-            const currentPriority = appData.settings?.positionPriority || defaultPriority;
+            const currentPriority = window.appData.settings?.positionPriority || defaultPriority;
             
             content.innerHTML = `
                 <div class="navigation-top-left">
@@ -1360,7 +1354,7 @@
                 </div>
                 
                 <h1>ポジション間優先順位設定</h1>
-                <h2>${currentRaidTier.name}</h2>
+                <h2>${window.currentRaidTier.name}</h2>
                 
                 <div class="section">
                     <h3>ポジション間優先順位設定</h3>
@@ -1507,15 +1501,15 @@
                 const newPriority = Array.from(items).map(item => item.dataset.position);
                 
                 // 設定を保存
-                if (!appData.settings) appData.settings = {};
-                appData.settings.positionPriority = newPriority;
+                if (!window.appData.settings) window.appData.settings = {};
+                window.appData.settings.positionPriority = newPriority;
                 
                 // Supabaseに保存
-                const { error } = await window.supabaseClient
+                const { error } = await window.window.supabaseClient
                     .from('raid_data')
                     .upsert({
-                        team_id: currentTeamId,
-                        tier_id: currentRaidTier.id,
+                        team_id: window.currentTeamId,
+                        tier_id: window.currentRaidTier.id,
                         data_type: 'settings',
                         content: { positionPriority: newPriority }
                     });
@@ -1538,10 +1532,10 @@
                 const defaultPriority = ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
                 
                 // 設定をリセット
-                if (!appData.settings) {
-                    appData.settings = {};
+                if (!window.appData.settings) {
+                    window.appData.settings = {};
                 }
-                appData.settings.positionPriority = defaultPriority;
+                window.appData.settings.positionPriority = defaultPriority;
                 
                 // Supabaseに保存
                 try {
@@ -1573,7 +1567,7 @@
             
             content.innerHTML = `
                 <h1>メンバー・装備設定</h1>
-                <h2>${currentRaidTier.name}</h2>
+                <h2>${window.currentRaidTier.name}</h2>
                 
                 <div class="section">
                     <div class="navigation">
@@ -1612,7 +1606,7 @@
         
         // タブコンテンツ生成
         function getTabContent(tabName) {
-            const players = appData.players[currentRaidTier.id] || {};
+            const players = window.appData.players[window.currentRaidTier.id] || {};
             const positions = ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
             
             if (tabName === 'players') {
@@ -1812,7 +1806,7 @@
                 showSuccess('設定を保存しました');
                 
                 // 全て設定済みかチェックしてダッシュボードへ
-                if (Object.keys(appData.players[currentRaidTier.id] || {}).length > 0) {
+                if (Object.keys(window.appData.players[window.currentRaidTier.id] || {}).length > 0) {
                     showTierDashboard();
                 } else {
                     showError('メンバー情報が設定されていません。');
@@ -1827,8 +1821,8 @@
         async function savePlayersData() {
             const positions = ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
             
-            if (!appData.players[currentRaidTier.id]) {
-                appData.players[currentRaidTier.id] = {};
+            if (!window.appData.players[window.currentRaidTier.id]) {
+                window.appData.players[window.currentRaidTier.id] = {};
             }
             
             for (const position of positions) {
@@ -1845,9 +1839,9 @@
                 }
                 
                 // 既存データがある場合は保持
-                const existingPlayer = appData.players[currentRaidTier.id][position] || {};
+                const existingPlayer = window.appData.players[window.currentRaidTier.id][position] || {};
                 
-                appData.players[currentRaidTier.id][position] = {
+                window.appData.players[window.currentRaidTier.id][position] = {
                     name: name,
                     job: job,
                     position: position,
@@ -1860,12 +1854,12 @@
             }
             
             // Supabaseに保存
-            await saveDataToSupabase('players', appData.players[currentRaidTier.id]);
+            await saveDataToSupabase('players', window.appData.players[window.currentRaidTier.id]);
         }
         
         // 装備方針保存
         async function saveEquipmentPolicyData() {
-            const players = appData.players[currentRaidTier.id];
+            const players = window.appData.players[window.currentRaidTier.id];
             const slots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
             
             for (const [position, player] of Object.entries(players)) {
@@ -1879,7 +1873,7 @@
             }
             
             // Supabaseに保存
-            await saveDataToSupabase('players', appData.players[currentRaidTier.id]);
+            await saveDataToSupabase('players', window.appData.players[window.currentRaidTier.id]);
         }
         
         // タブ専用保存関数
@@ -1915,7 +1909,7 @@
         
         // 武器希望保存
         async function saveWeaponWishesData() {
-            const players = appData.players[currentRaidTier.id];
+            const players = window.appData.players[window.currentRaidTier.id];
             
             for (const [position, player] of Object.entries(players)) {
                 const mainJob = player.job;
@@ -1933,7 +1927,7 @@
             }
             
             // Supabaseに保存
-            await saveDataToSupabase('players', appData.players[currentRaidTier.id]);
+            await saveDataToSupabase('players', window.appData.players[window.currentRaidTier.id]);
         }
         
         // データ移行機能
@@ -2069,7 +2063,7 @@
                 }
                 
                 // データを保存
-                appData.players[currentRaidTier.id] = players;
+                window.appData.players[window.currentRaidTier.id] = players;
                 await saveDataToSupabase('players', players);
                 
                 showSuccess('CSVデータのインポートが完了しました。');
@@ -2102,16 +2096,16 @@
             
             try {
                 // プレイヤーデータのみ削除
-                if (appData.players[currentRaidTier.id]) {
-                    delete appData.players[currentRaidTier.id];
+                if (window.appData.players[window.currentRaidTier.id]) {
+                    delete window.appData.players[window.currentRaidTier.id];
                 }
                 
                 // Supabaseからプレイヤーデータのみ削除
-                await window.supabaseClient
+                await window.window.supabaseClient
                     .from('raid_data')
                     .delete()
-                    .eq('team_id', currentTeamId)
-                    .eq('tier_id', currentRaidTier.id)
+                    .eq('team_id', window.currentTeamId)
+                    .eq('tier_id', window.currentRaidTier.id)
                     .eq('data_type', 'players');
                 
                 showSuccess('プレイヤーデータをリセットしました。');
@@ -2135,19 +2129,19 @@
             
             try {
                 // ローカルデータを削除
-                if (appData.players[currentRaidTier.id]) {
-                    delete appData.players[currentRaidTier.id];
+                if (window.appData.players[window.currentRaidTier.id]) {
+                    delete window.appData.players[window.currentRaidTier.id];
                 }
-                if (appData.allocations[currentRaidTier.id]) {
-                    delete appData.allocations[currentRaidTier.id];
+                if (window.appData.allocations[window.currentRaidTier.id]) {
+                    delete window.appData.allocations[window.currentRaidTier.id];
                 }
                 
                 // Supabaseからも削除
-                await window.supabaseClient
+                await window.window.supabaseClient
                     .from('raid_data')
                     .delete()
-                    .eq('team_id', currentTeamId)
-                    .eq('tier_id', currentRaidTier.id);
+                    .eq('team_id', window.currentTeamId)
+                    .eq('tier_id', window.currentRaidTier.id);
                 
                 showSuccess('レイドティアデータをリセットしました。');
                 showTabbedSetup('players'); // メンバー情報タブに移動
@@ -2203,29 +2197,29 @@
             if (convertedData.type === 'collaborative') {
                 // 現在のティアに対応するデータがある場合はそれを使用
                 const tierData = Object.values(convertedData.players)[0] || {};
-                appData.players[currentRaidTier.id] = tierData;
+                window.appData.players[window.currentRaidTier.id] = tierData;
                 
                 // 分配履歴も移行
                 if (convertedData.allocations) {
                     const allocationData = Object.values(convertedData.allocations)[0] || {};
-                    appData.allocations[currentRaidTier.id] = allocationData;
+                    window.appData.allocations[window.currentRaidTier.id] = allocationData;
                     await saveDataToSupabase('allocations', allocationData);
                 }
             } else if (convertedData.type === 'simple') {
-                appData.players[currentRaidTier.id] = convertedData.players;
+                window.appData.players[window.currentRaidTier.id] = convertedData.players;
             }
             
             // Supabaseに保存
-            await saveDataToSupabase('players', appData.players[currentRaidTier.id]);
+            await saveDataToSupabase('players', window.appData.players[window.currentRaidTier.id]);
         }
         
         // Supabaseデータ保存ヘルパー
         async function saveDataToSupabase(dataType, content) {
-            const { error } = await window.supabaseClient
+            const { error } = await window.window.supabaseClient
                 .from('raid_data')
                 .upsert({
-                    team_id: currentTeamId,
-                    tier_id: currentRaidTier.id,
+                    team_id: window.currentTeamId,
+                    tier_id: window.currentRaidTier.id,
                     data_type: dataType,
                     content: content
                 });
@@ -2240,7 +2234,7 @@
             const content = document.getElementById('content');
             
             // プレイヤーデータの確認
-            const players = appData.players[currentRaidTier.id] || {};
+            const players = window.appData.players[window.currentRaidTier.id] || {};
             const playerCount = Object.keys(players).length;
             
             if (playerCount === 0) {
@@ -2254,7 +2248,7 @@
                 </div>
                 
                 <h1>装備分配システム</h1>
-                <h2>${currentRaidTier.name}</h2>
+                <h2>${window.currentRaidTier.name}</h2>
                 
                 <div class="section" id="allocationResults" style="display: none;">
                     <h3>分配結果</h3>
@@ -2266,7 +2260,7 @@
         // 直接層別分配を実行（ダッシュボードから呼び出し）
         async function showLayerAllocation(layer) {
             // プレイヤーデータの確認
-            const players = appData.players[currentRaidTier.id] || {};
+            const players = window.appData.players[window.currentRaidTier.id] || {};
             const playerCount = Object.keys(players).length;
             
             if (playerCount === 0) {
@@ -2334,7 +2328,7 @@
                 4: [
                     { name: '胴装備', slot: '胴', type: 'equipment', itemLevel: '' },
                     { name: '武器箱', slot: '武器箱', type: 'weapon_box', itemLevel: '' },
-                    { name: '直ドロップ武器', slot: '直ドロップ武器', type: 'direct_weapon', itemLevel: '', weapon: selectedDirectWeapon || null }
+                    { name: '直ドロップ武器', slot: '直ドロップ武器', type: 'direct_weapon', itemLevel: '', weapon: window.selectedDirectWeapon || null }
                 ]
             };
             
@@ -2343,7 +2337,7 @@
         
         // 分配優先度計算
         function calculateAllocation(layer, drops) {
-            const players = appData.players[currentRaidTier.id] || {};
+            const players = window.appData.players[window.currentRaidTier.id] || {};
             const results = {};
             
             drops.forEach(drop => {
@@ -2555,7 +2549,7 @@
         
         // プレイヤーの装備状況取得
         function getPlayerEquipmentStatus(position, slot) {
-            const allocations = appData.allocations[currentRaidTier.id] || [];
+            const allocations = window.appData.allocations[window.currentRaidTier.id] || [];
             const allocation = allocations.find(alloc => 
                 alloc.position === position && alloc.slot === slot
             );
@@ -2574,7 +2568,7 @@
         
         // 同じスロットで零式方針の未取得者がいるかチェック
         function hasUnacquiredRaidPlayers(slot, excludePosition) {
-            const players = appData.players[currentRaidTier.id] || {};
+            const players = window.appData.players[window.currentRaidTier.id] || {};
             
             for (const [position, player] of Object.entries(players)) {
                 if (position === excludePosition) continue;
@@ -2593,7 +2587,7 @@
         
         // 武器箱：未取得者がいるかチェック（武器方針で判定）
         function hasUnacquiredWeaponBoxPlayers(excludePosition) {
-            const players = appData.players[currentRaidTier.id] || {};
+            const players = window.appData.players[window.currentRaidTier.id] || {};
             
             for (const [position, player] of Object.entries(players)) {
                 if (position === excludePosition) continue;
@@ -2612,7 +2606,7 @@
         
         // 分配対象の全員が取得済みまたは断章交換・箱取得済かを判定
         function isAllEligiblePlayersObtained(drop, candidates) {
-            const players = appData.players[currentRaidTier.id] || {};
+            const players = window.appData.players[window.currentRaidTier.id] || {};
             
             // 4層直ドロ武器の特別処理
             if (drop.type === 'direct_weapon') {
@@ -2674,7 +2668,7 @@
         // ポジション間優先順位取得（装備・素材共通）
         function getPositionPriority(position) {
             // 設定された優先順位を取得（デフォルト: D1D2D3D4MTSTH1H2）
-            const savedPriority = appData.settings?.positionPriority || ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
+            const savedPriority = window.appData.settings?.positionPriority || ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
             const positionIndex = savedPriority.indexOf(position);
             return 800 - (positionIndex * 50); // 高い順位ほど高スコア
         }
@@ -2702,28 +2696,28 @@
                     <div class="weapon-selection">
                         <h5>直ドロップ武器選択:</h5>
                         <select id="directWeaponSelect" onchange="updateDirectWeapon()" style="width: 100%; padding: 5px;">
-                            <option value="" ${selectedDirectWeapon === '' ? 'selected' : ''}>武器を選択してください</option>
-                            <option value="ナイト" ${selectedDirectWeapon === 'ナイト' ? 'selected' : ''}>ナイト武器</option>
-                            <option value="戦士" ${selectedDirectWeapon === '戦士' ? 'selected' : ''}>戦士武器</option>
-                            <option value="暗黒騎士" ${selectedDirectWeapon === '暗黒騎士' ? 'selected' : ''}>暗黒騎士武器</option>
-                            <option value="ガンブレイカー" ${selectedDirectWeapon === 'ガンブレイカー' ? 'selected' : ''}>ガンブレイカー武器</option>
-                            <option value="白魔道士" ${selectedDirectWeapon === '白魔道士' ? 'selected' : ''}>白魔道士武器</option>
-                            <option value="学者" ${selectedDirectWeapon === '学者' ? 'selected' : ''}>学者武器</option>
-                            <option value="占星術士" ${selectedDirectWeapon === '占星術士' ? 'selected' : ''}>占星術士武器</option>
-                            <option value="賢者" ${selectedDirectWeapon === '賢者' ? 'selected' : ''}>賢者武器</option>
-                            <option value="モンク" ${selectedDirectWeapon === 'モンク' ? 'selected' : ''}>モンク武器</option>
-                            <option value="竜騎士" ${selectedDirectWeapon === '竜騎士' ? 'selected' : ''}>竜騎士武器</option>
-                            <option value="忍者" ${selectedDirectWeapon === '忍者' ? 'selected' : ''}>忍者武器</option>
-                            <option value="侍" ${selectedDirectWeapon === '侍' ? 'selected' : ''}>侍武器</option>
-                            <option value="リーパー" ${selectedDirectWeapon === 'リーパー' ? 'selected' : ''}>リーパー武器</option>
-                            <option value="ヴァイパー" ${selectedDirectWeapon === 'ヴァイパー' ? 'selected' : ''}>ヴァイパー武器</option>
-                            <option value="黒魔道士" ${selectedDirectWeapon === '黒魔道士' ? 'selected' : ''}>黒魔道士武器</option>
-                            <option value="召喚士" ${selectedDirectWeapon === '召喚士' ? 'selected' : ''}>召喚士武器</option>
-                            <option value="赤魔道士" ${selectedDirectWeapon === '赤魔道士' ? 'selected' : ''}>赤魔道士武器</option>
-                            <option value="ピクトマンサー" ${selectedDirectWeapon === 'ピクトマンサー' ? 'selected' : ''}>ピクトマンサー武器</option>
-                            <option value="吟遊詩人" ${selectedDirectWeapon === '吟遊詩人' ? 'selected' : ''}>吟遊詩人武器</option>
-                            <option value="機工士" ${selectedDirectWeapon === '機工士' ? 'selected' : ''}>機工士武器</option>
-                            <option value="踊り子" ${selectedDirectWeapon === '踊り子' ? 'selected' : ''}>踊り子武器</option>
+                            <option value="" ${window.selectedDirectWeapon === '' ? 'selected' : ''}>武器を選択してください</option>
+                            <option value="ナイト" ${window.selectedDirectWeapon === 'ナイト' ? 'selected' : ''}>ナイト武器</option>
+                            <option value="戦士" ${window.selectedDirectWeapon === '戦士' ? 'selected' : ''}>戦士武器</option>
+                            <option value="暗黒騎士" ${window.selectedDirectWeapon === '暗黒騎士' ? 'selected' : ''}>暗黒騎士武器</option>
+                            <option value="ガンブレイカー" ${window.selectedDirectWeapon === 'ガンブレイカー' ? 'selected' : ''}>ガンブレイカー武器</option>
+                            <option value="白魔道士" ${window.selectedDirectWeapon === '白魔道士' ? 'selected' : ''}>白魔道士武器</option>
+                            <option value="学者" ${window.selectedDirectWeapon === '学者' ? 'selected' : ''}>学者武器</option>
+                            <option value="占星術士" ${window.selectedDirectWeapon === '占星術士' ? 'selected' : ''}>占星術士武器</option>
+                            <option value="賢者" ${window.selectedDirectWeapon === '賢者' ? 'selected' : ''}>賢者武器</option>
+                            <option value="モンク" ${window.selectedDirectWeapon === 'モンク' ? 'selected' : ''}>モンク武器</option>
+                            <option value="竜騎士" ${window.selectedDirectWeapon === '竜騎士' ? 'selected' : ''}>竜騎士武器</option>
+                            <option value="忍者" ${window.selectedDirectWeapon === '忍者' ? 'selected' : ''}>忍者武器</option>
+                            <option value="侍" ${window.selectedDirectWeapon === '侍' ? 'selected' : ''}>侍武器</option>
+                            <option value="リーパー" ${window.selectedDirectWeapon === 'リーパー' ? 'selected' : ''}>リーパー武器</option>
+                            <option value="ヴァイパー" ${window.selectedDirectWeapon === 'ヴァイパー' ? 'selected' : ''}>ヴァイパー武器</option>
+                            <option value="黒魔道士" ${window.selectedDirectWeapon === '黒魔道士' ? 'selected' : ''}>黒魔道士武器</option>
+                            <option value="召喚士" ${window.selectedDirectWeapon === '召喚士' ? 'selected' : ''}>召喚士武器</option>
+                            <option value="赤魔道士" ${window.selectedDirectWeapon === '赤魔道士' ? 'selected' : ''}>赤魔道士武器</option>
+                            <option value="ピクトマンサー" ${window.selectedDirectWeapon === 'ピクトマンサー' ? 'selected' : ''}>ピクトマンサー武器</option>
+                            <option value="吟遊詩人" ${window.selectedDirectWeapon === '吟遊詩人' ? 'selected' : ''}>吟遊詩人武器</option>
+                            <option value="機工士" ${window.selectedDirectWeapon === '機工士' ? 'selected' : ''}>機工士武器</option>
+                            <option value="踊り子" ${window.selectedDirectWeapon === '踊り子' ? 'selected' : ''}>踊り子武器</option>
                         </select>
                     </div>
                 `;
@@ -2866,8 +2860,8 @@
             console.log('プルダウンの全選択肢:', weaponSelect.options.length);
             
             // グローバル変数に選択状態を保存
-            selectedDirectWeapon = selectedWeapon;
-            console.log('選択状態を保存:', selectedDirectWeapon);
+            window.selectedDirectWeapon = selectedWeapon;
+            console.log('選択状態を保存:', window.selectedDirectWeapon);
             
             try {
                 // 直ドロップ武器の分配を再計算
@@ -2931,7 +2925,7 @@
                     const position = select.value;
                     
                     if (position && position !== 'discard' && position !== 'フリロ') {
-                        const player = appData.players[currentRaidTier.id][position];
+                        const player = window.appData.players[window.currentRaidTier.id][position];
                         const drops = getLayerDrops(layer);
                         const drop = drops.find(d => d.slot === itemKey || d.name.includes(itemKey));
                         
@@ -2951,7 +2945,7 @@
                                 },
                                 timestamp: new Date().toISOString(),
                                 week: getCurrentWeek(),
-                                raidTier: currentRaidTier.name,
+                                raidTier: window.currentRaidTier.name,
                                 // 詳細情報
                                 itemType: drop.type,
                                 equipmentName: drop.name,
@@ -2971,15 +2965,15 @@
                 }
                 
                 // 分配履歴に記録
-                if (!appData.allocations[currentRaidTier.id]) {
-                    appData.allocations[currentRaidTier.id] = [];
+                if (!window.appData.allocations[window.currentRaidTier.id]) {
+                    window.appData.allocations[window.currentRaidTier.id] = [];
                 }
                 
                 allocations.forEach(allocation => {
-                    appData.allocations[currentRaidTier.id].push(allocation);
+                    window.appData.allocations[window.currentRaidTier.id].push(allocation);
                     
                     // プレイヤーの装備状況更新
-                    const player = appData.players[currentRaidTier.id][allocation.position];
+                    const player = window.appData.players[window.currentRaidTier.id][allocation.position];
                     if (player) {
                         // 現在装備の更新
                         if (!player.currentEquipment) player.currentEquipment = {};
@@ -3004,8 +2998,8 @@
                 await updateTomeExchangeStatus(allocations);
                 
                 // Supabaseに保存
-                await saveDataToSupabase('allocations', appData.allocations[currentRaidTier.id]);
-                await saveDataToSupabase('players', appData.players[currentRaidTier.id]);
+                await saveDataToSupabase('allocations', window.appData.allocations[window.currentRaidTier.id]);
+                await saveDataToSupabase('players', window.appData.players[window.currentRaidTier.id]);
                 
                 showSuccess(`${layer}層の装備分配を確定しました。${allocations.length}件の装備が分配されました。`);
                 showEquipmentAllocation(); // 装備分配画面に戻る
@@ -3048,7 +3042,7 @@
         // 断章交換者の自動ステータス更新
         async function updateTomeExchangeStatus(allocations) {
             try {
-                const currentAllocations = appData.allocations[currentRaidTier.id] || [];
+                const currentAllocations = window.appData.allocations[window.currentRaidTier.id] || [];
                 let hasUpdates = false;
                 
                 // 各装備スロットについて断章交換者をチェック
@@ -3060,7 +3054,7 @@
                     
                     if (slotAllocations.length > 0) {
                         // このスロットで断章交換ステータスの人をチェック
-                        const players = appData.players[currentRaidTier.id] || {};
+                        const players = window.appData.players[window.currentRaidTier.id] || {};
                         
                         for (const [position, player] of Object.entries(players)) {
                             const currentStatus = getPlayerEquipmentStatus(position, slot);
@@ -3088,7 +3082,7 @@
                 
                 if (hasUpdates) {
                     // 更新があった場合は再保存
-                    await saveDataToSupabase('allocations', appData.allocations[currentRaidTier.id]);
+                    await saveDataToSupabase('allocations', window.appData.allocations[window.currentRaidTier.id]);
                     console.log('断章交換ステータスの自動更新が完了しました');
                 }
                 
@@ -3105,7 +3099,7 @@
         // ======================
         function showSystemSettings() {
             try {
-                if (!appData.currentTier) {
+                if (!window.appData.currentTier) {
                     showError('tierを選択してください');
                     return;
                 }
@@ -3122,9 +3116,9 @@
                             </div>
                             <div class="setting-group">
                                 <h3>チーム情報</h3>
-                                <p><strong>チームID:</strong> ${appData.teamId || '未設定'}</p>
-                                <p><strong>現在のTier:</strong> ${currentRaidTier.name || '未設定'}</p>
-                                <p><strong>登録プレイヤー数:</strong> ${appData.players?.[currentRaidTier.id]?.length || 0}名</p>
+                                <p><strong>チームID:</strong> ${window.appData.teamId || '未設定'}</p>
+                                <p><strong>現在のTier:</strong> ${window.currentRaidTier.name || '未設定'}</p>
+                                <p><strong>登録プレイヤー数:</strong> ${window.appData.players?.[window.currentRaidTier.id]?.length || 0}名</p>
                             </div>
                         </div>
                     </div>
@@ -3137,17 +3131,17 @@
 
         function exportAllData() {
             try {
-                if (!appData.currentTier) {
+                if (!window.appData.currentTier) {
                     showError('tierを選択してください');
                     return;
                 }
 
                 const exportData = {
-                    teamId: appData.teamId,
-                    tier: currentRaidTier,
-                    players: appData.players[currentRaidTier.id] || [],
-                    allocations: appData.allocations[currentRaidTier.id] || [],
-                    prioritySettings: appData.prioritySettings || {},
+                    teamId: window.appData.teamId,
+                    tier: window.currentRaidTier,
+                    players: window.appData.players[window.currentRaidTier.id] || [],
+                    allocations: window.appData.allocations[window.currentRaidTier.id] || [],
+                    prioritySettings: window.appData.prioritySettings || {},
                     exportDate: new Date().toISOString()
                 };
 
@@ -3156,7 +3150,7 @@
                 const url = URL.createObjectURL(dataBlob);
                 const link = document.createElement('a');
                 link.href = url;
-                link.download = `ff14_gear_allocation_${currentRaidTier.id}_${new Date().toISOString().split('T')[0]}.json`;
+                link.download = `ff14_gear_allocation_${window.currentRaidTier.id}_${new Date().toISOString().split('T')[0]}.json`;
                 link.click();
                 URL.revokeObjectURL(url);
 
@@ -3172,8 +3166,8 @@
         // ======================
         if (typeof window !== 'undefined') {
             // データ・状態変数の公開（statistics.js等で参照）
-            window.appData = appData;
-            window.currentRaidTier = currentRaidTier;
+            window.window.appData = window.appData;
+            window.window.currentRaidTier = window.currentRaidTier;
             window.supabase = supabase;
 
             // ヘルパー関数の公開

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://*.supabase.co https://supabase.com https://cdn.jsdelivr.net https://infird.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://*.supabase.co https://cdn.jsdelivr.net https://infird.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://analytics.google.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://*.supabase.co https://supabase.com https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://*.supabase.co https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://analytics.google.com;">
     <title>FF14 零式装備分配システム (v2.1-auto-init)</title>
     
     <!-- Supabase JavaScript SDK -->
@@ -3375,7 +3375,6 @@
 
             // ヘルパー関数の公開
             window.saveDataToSupabase = saveDataToSupabase;
-            window.loadDataFromSupabase = loadDataFromSupabase;
 
             // UI関数（onclick用）
             window.authenticateTeam = authenticateTeam;

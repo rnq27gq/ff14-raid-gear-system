@@ -12,6 +12,15 @@ function showStatistics() {
             return;
         }
 
+        // グローバルスコープから参照
+        const appData = window.appData;
+        const currentRaidTier = window.currentRaidTier;
+
+        if (!appData || !currentRaidTier) {
+            showError('アプリケーションデータが初期化されていません');
+            return;
+        }
+
         const players = appData.players[currentRaidTier.id] || {};
         const allocations = appData.allocations[currentRaidTier.id] || [];
 
@@ -222,6 +231,16 @@ async function saveStatistics() {
     try {
         showMessage('統計情報を保存中...', 'info');
 
+        // グローバルスコープから参照
+        const appData = window.appData;
+        const currentRaidTier = window.currentRaidTier;
+        const saveDataToSupabase = window.saveDataToSupabase;
+
+        if (!appData || !currentRaidTier) {
+            showError('アプリケーションデータが初期化されていません');
+            return;
+        }
+
         // 編集内容を収集
         const newAllocations = [];
         const checkboxes = document.querySelectorAll('.player-stats-table.editable input[type="checkbox"]');
@@ -285,6 +304,15 @@ function showStatisticsEditMode() {
             return;
         }
 
+        // グローバルスコープから参照
+        const appData = window.appData;
+        const currentRaidTier = window.currentRaidTier;
+
+        if (!appData || !currentRaidTier) {
+            showError('アプリケーションデータが初期化されていません');
+            return;
+        }
+
         const players = appData.players[currentRaidTier.id] || {};
         const allocations = appData.allocations[currentRaidTier.id] || [];
 
@@ -325,6 +353,15 @@ function showAllocationHistory() {
         if (!content) {
             console.error('Content element not found');
             showError('画面要素が見つかりません');
+            return;
+        }
+
+        // グローバルスコープから参照
+        const appData = window.appData;
+        const currentRaidTier = window.currentRaidTier;
+
+        if (!appData || !currentRaidTier) {
+            showError('アプリケーションデータが初期化されていません');
             return;
         }
 
@@ -461,6 +498,15 @@ function filterAllocationHistory() {
         const layerFilter = document.getElementById('layerFilter').value;
         const playerFilter = document.getElementById('playerFilter').value;
         const slotFilter = document.getElementById('slotFilter').value;
+
+        // グローバルスコープから参照
+        const appData = window.appData;
+        const currentRaidTier = window.currentRaidTier;
+
+        if (!appData || !currentRaidTier) {
+            showError('アプリケーションデータが初期化されていません');
+            return;
+        }
 
         const allocations = appData.allocations[currentRaidTier.id] || [];
         const players = appData.players[currentRaidTier.id] || {};

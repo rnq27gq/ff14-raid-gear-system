@@ -3368,6 +3368,16 @@
         // グローバル関数登録（onclick用）
         // ======================
         if (typeof window !== 'undefined') {
+            // データ・状態変数の公開（statistics.js等で参照）
+            window.appData = appData;
+            window.currentRaidTier = currentRaidTier;
+            window.supabase = supabase;
+
+            // ヘルパー関数の公開
+            window.saveDataToSupabase = saveDataToSupabase;
+            window.loadDataFromSupabase = loadDataFromSupabase;
+
+            // UI関数（onclick用）
             window.authenticateTeam = authenticateTeam;
             window.logout = logout;
             window.startDiscordAuth = startDiscordAuth;
@@ -3395,7 +3405,8 @@
             window.resetPrioritySettings = resetPrioritySettings;
             window.showSystemSettings = showSystemSettings;
             window.exportAllData = exportAllData;
-            console.log('✅ グローバル関数登録完了 (29関数)');
+
+            console.log('✅ グローバル関数登録完了 (29関数 + データ変数)');
         }
 
         } catch (error) {

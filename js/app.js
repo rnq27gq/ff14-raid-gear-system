@@ -11,17 +11,17 @@
         let window.selectedDirectWeapon = ''; // 直ドロップ武器の選択状態を保持
 
         // 即座にグローバル変数をウィンドウオブジェクトに登録
-        window.window.isAuthenticated = window.isAuthenticated;
-        window.window.currentTeamId = window.currentTeamId;
-        window.window.isInitializing = window.isInitializing;
-        window.window.isInitialized = window.isInitialized;
+        window.isAuthenticated = window.isAuthenticated;
+        window.currentTeamId = window.currentTeamId;
+        window.isInitializing = window.isInitializing;
+        window.isInitialized = window.isInitialized;
 
         // グローバル変数更新関数
         function updateGlobalState() {
-            window.window.isAuthenticated = window.isAuthenticated;
-            window.window.currentTeamId = window.currentTeamId;
-            window.window.isInitializing = window.isInitializing;
-            window.window.isInitialized = window.isInitialized;
+            window.isAuthenticated = window.isAuthenticated;
+            window.currentTeamId = window.currentTeamId;
+            window.isInitializing = window.isInitializing;
+            window.isInitialized = window.isInitialized;
         }
         
         // ユーティリティ関数はjs/utils.jsに分離
@@ -127,7 +127,7 @@
                 console.log('=========================');
 
                 // Supabaseクライアントが既に存在する場合はスキップ
-                if (window.window.supabaseClient) {
+                if (window.supabaseClient) {
                     console.log('Supabaseクライアント既存のため初期化スキップ');
                     window.isInitialized = true;
                     window.isInitializing = false;
@@ -154,9 +154,9 @@
                     throw new Error('Supabase認証情報が正しく設定されていません。GitHub Secretsの設定とデプロイを確認してください。');
                 }
                 
-                window.window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+                window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
                 
-                if (!window.window.supabaseClient) {
+                if (!window.supabaseClient) {
                     throw new Error('Supabaseクライアントの作成に失敗しました');
                 }
                 
@@ -221,7 +221,7 @@
                 
                 // チームコンテキスト設定
                 try {
-                    const { data: contextData, error: contextError } = await window.window.supabaseClient.rpc('set_team_context', {
+                    const { data: contextData, error: contextError } = await window.supabaseClient.rpc('set_team_context', {
                         team_id: savedTeamId
                     });
                     
@@ -249,7 +249,7 @@
                 showMessage('招待リンクを確認中...', 'info');
 
                 // 招待トークンの検証（永続化対応）
-                const { data: team, error } = await window.window.supabaseClient
+                const { data: team, error } = await window.supabaseClient
                     .from('teams')
                     .select('*')
                     .eq('invite_token', inviteToken)
@@ -276,7 +276,7 @@
 
                 // チームコンテキスト設定
                 try {
-                    const { data: contextData, error: contextError } = await window.window.supabaseClient.rpc('set_team_context', {
+                    const { data: contextData, error: contextError } = await window.supabaseClient.rpc('set_team_context', {
                         team_id: team.team_id
                     });
 
@@ -371,7 +371,7 @@
                 // 招待トークンの検証
                 showMessage('招待リンクを確認中...', 'info');
                 
-                const { data: tokenValidation, error: tokenError } = await window.window.supabaseClient
+                const { data: tokenValidation, error: tokenError } = await window.supabaseClient
                     .from('teams')
                     .select('*')
                     .eq('invite_token', inviteToken)
@@ -476,7 +476,7 @@
         async function joinTeamWithDiscordAuth(inviteToken, discordUser, accessToken) {
             try {
                 // Supabaseでチーム参加処理
-                const { data, error } = await window.window.supabaseClient.rpc('join_team_with_discord', {
+                const { data, error } = await window.supabaseClient.rpc('join_team_with_discord', {
                     p_invite_token: inviteToken,
                     p_discord_id: discordUser.id,
                     p_discord_username: discordUser.username,
@@ -524,14 +524,14 @@
                 showMessage('認証中...', 'info');
                 
                 // Supabaseクライアント確認
-                if (!window.window.supabaseClient) {
+                if (!window.supabaseClient) {
                     throw new Error('Supabaseクライアントが初期化されていません');
                 }
                 
                 console.log('認証試行:', teamId);
                 
                 // Supabase認証
-                const { data, error } = await window.window.supabaseClient.rpc('authenticate_team', {
+                const { data, error } = await window.supabaseClient.rpc('authenticate_team', {
                     p_team_id: teamId,
                     p_password: password
                 });
@@ -552,7 +552,7 @@
                 
                 // チームコンテキスト設定
                 console.log('チームコンテキスト設定中...');
-                const { data: contextData, error: contextError } = await window.window.supabaseClient.rpc('set_team_context', {
+                const { data: contextData, error: contextError } = await window.supabaseClient.rpc('set_team_context', {
                     team_id: teamId
                 });
                 
@@ -633,14 +633,14 @@
                 showMessage('チーム作成中...', 'info');
                 
                 // Supabaseクライアント確認
-                if (!window.window.supabaseClient) {
+                if (!window.supabaseClient) {
                     throw new Error('Supabaseクライアントが初期化されていません');
                 }
                 
                 console.log('チーム作成試行:', teamId);
                 
                 // Supabaseでセキュリティ質問付きチーム作成
-                const { data, error } = await window.window.supabaseClient.rpc('create_team_with_security', {
+                const { data, error } = await window.supabaseClient.rpc('create_team_with_security', {
                     p_team_id: teamId,
                     p_team_name: teamId, // チーム名はチームIDと同じに設定
                     p_password: password,
@@ -830,11 +830,11 @@
             try {
                 showMessage('チーム情報を取得中...', 'info');
                 
-                if (!window.window.supabaseClient) {
+                if (!window.supabaseClient) {
                     throw new Error('Supabaseクライアントが初期化されていません');
                 }
                 
-                const { data, error } = await window.window.supabaseClient.rpc('get_team_reset_info', {
+                const { data, error } = await window.supabaseClient.rpc('get_team_reset_info', {
                     p_team_id: teamId
                 });
                 
@@ -890,11 +890,11 @@
             try {
                 showMessage('セキュリティ質問を確認中...', 'info');
                 
-                if (!window.window.supabaseClient || !window.resetTeamId) {
+                if (!window.supabaseClient || !window.resetTeamId) {
                     throw new Error('システムエラーが発生しました');
                 }
                 
-                const { data, error } = await window.window.supabaseClient.rpc('verify_security_answer', {
+                const { data, error } = await window.supabaseClient.rpc('verify_security_answer', {
                     p_team_id: window.resetTeamId,
                     p_answer: answer
                 });
@@ -909,7 +909,7 @@
                 }
                 
                 // リセットトークンを生成
-                const tokenResult = await window.window.supabaseClient.rpc('generate_reset_token', {
+                const tokenResult = await window.supabaseClient.rpc('generate_reset_token', {
                     p_team_id: window.resetTeamId
                 });
                 
@@ -954,11 +954,11 @@
             try {
                 showMessage('パスワードをリセット中...', 'info');
                 
-                if (!window.window.supabaseClient || !window.resetTeamId || !window.resetToken) {
+                if (!window.supabaseClient || !window.resetTeamId || !window.resetToken) {
                     throw new Error('システムエラーが発生しました');
                 }
                 
-                const { data, error } = await window.window.supabaseClient.rpc('reset_password', {
+                const { data, error } = await window.supabaseClient.rpc('reset_password', {
                     p_team_id: window.resetTeamId,
                     p_token: window.resetToken,
                     p_new_password: newPassword
@@ -1047,7 +1047,7 @@
         async function loadAllData() {
             try {
                 // Supabaseからデータ読み込み
-                const { data: allData, error } = await window.window.supabaseClient
+                const { data: allData, error } = await window.supabaseClient
                     .from('raid_data')
                     .select('*')
                     .eq('team_id', window.currentTeamId);
@@ -1305,7 +1305,7 @@
                 };
                 
                 // Supabaseに保存
-                const { error } = await window.window.supabaseClient
+                const { error } = await window.supabaseClient
                     .from('raid_data')
                     .insert({
                         team_id: window.currentTeamId,
@@ -1505,7 +1505,7 @@
                 window.appData.settings.positionPriority = newPriority;
                 
                 // Supabaseに保存
-                const { error } = await window.window.supabaseClient
+                const { error } = await window.supabaseClient
                     .from('raid_data')
                     .upsert({
                         team_id: window.currentTeamId,
@@ -2101,7 +2101,7 @@
                 }
                 
                 // Supabaseからプレイヤーデータのみ削除
-                await window.window.supabaseClient
+                await window.supabaseClient
                     .from('raid_data')
                     .delete()
                     .eq('team_id', window.currentTeamId)
@@ -2137,7 +2137,7 @@
                 }
                 
                 // Supabaseからも削除
-                await window.window.supabaseClient
+                await window.supabaseClient
                     .from('raid_data')
                     .delete()
                     .eq('team_id', window.currentTeamId)
@@ -2215,7 +2215,7 @@
         
         // Supabaseデータ保存ヘルパー
         async function saveDataToSupabase(dataType, content) {
-            const { error } = await window.window.supabaseClient
+            const { error } = await window.supabaseClient
                 .from('raid_data')
                 .upsert({
                     team_id: window.currentTeamId,
@@ -3166,8 +3166,8 @@
         // ======================
         if (typeof window !== 'undefined') {
             // データ・状態変数の公開（statistics.js等で参照）
-            window.window.appData = window.appData;
-            window.window.currentRaidTier = window.currentRaidTier;
+            window.appData = window.appData;
+            window.currentRaidTier = window.currentRaidTier;
             window.supabase = supabase;
 
             // ヘルパー関数の公開

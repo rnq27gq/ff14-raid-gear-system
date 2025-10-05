@@ -3285,7 +3285,40 @@
         }
         
         // 統計情報表示機能はjs/statistics.jsに分離
-        
+
+        // ======================
+        // グローバル関数登録（onclick用）
+        // ======================
+        if (typeof window !== 'undefined') {
+            window.authenticateTeam = authenticateTeam;
+            window.logout = logout;
+            window.startDiscordAuth = startDiscordAuth;
+            window.createNewTeam = createNewTeam;
+            window.showLoginForm = showLoginForm;
+            window.showSignupForm = showSignupForm;
+            window.showPasswordResetForm = showPasswordResetForm;
+            window.getSecurityQuestion = getSecurityQuestion;
+            window.verifySecurityAnswer = verifySecurityAnswer;
+            window.executePasswordReset = executePasswordReset;
+            window.showMainDashboard = showMainDashboard;
+            window.showTierDashboard = showTierDashboard;
+            window.selectRaidTier = selectRaidTier;
+            window.createNewTier = createNewTier;
+            window.submitCreateTier = submitCreateTier;
+            window.showPlayerManagement = showPlayerManagement;
+            window.showTabbedSetup = showTabbedSetup;
+            window.saveCurrentTab = saveCurrentTab;
+            window.saveCurrentTabAndContinue = saveCurrentTabAndContinue;
+            window.showLayerAllocation = showLayerAllocation;
+            window.confirmAllocation = confirmAllocation;
+            window.toggleJudgment = toggleJudgment;
+            window.showPriorityManagement = showPriorityManagement;
+            window.savePrioritySettings = savePrioritySettings;
+            window.resetPrioritySettings = resetPrioritySettings;
+            window.showSystemSettings = showSystemSettings;
+            window.exportAllData = exportAllData;
+            console.log('✅ グローバル関数登録完了 (29関数)');
+        }
 
         } catch (error) {
             console.error("🚨 メインスクリプト実行エラー:", error);

@@ -24,16 +24,17 @@ let appData = {
 // Supabaseクライアント（initializeAppで初期化）
 let supabaseClient = null;
 
-// 状態更新関数
+// 状態更新関数（逆方向: windowから読み取る）
 function updateGlobalState() {
-    window.isAuthenticated = isAuthenticated;
-    window.currentTeamId = currentTeamId;
-    window.isInitializing = isInitializing;
-    window.isInitialized = isInitialized;
-    window.selectedDirectWeapon = selectedDirectWeapon;
-    window.currentRaidTier = currentRaidTier;
-    window.appData = appData;
-    window.supabaseClient = supabaseClient;
+    // windowオブジェクトの値が優先される
+    isAuthenticated = window.isAuthenticated ?? isAuthenticated;
+    currentTeamId = window.currentTeamId ?? currentTeamId;
+    isInitializing = window.isInitializing ?? isInitializing;
+    isInitialized = window.isInitialized ?? isInitialized;
+    selectedDirectWeapon = window.selectedDirectWeapon ?? selectedDirectWeapon;
+    currentRaidTier = window.currentRaidTier ?? currentRaidTier;
+    appData = window.appData ?? appData;
+    supabaseClient = window.supabaseClient ?? supabaseClient;
 }
 
 // グローバルスコープに即座に公開

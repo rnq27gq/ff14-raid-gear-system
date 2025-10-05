@@ -135,7 +135,12 @@
                 }
                 
                 window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-                
+
+                // state.jsの setState を使って同期
+                if (window.setState) {
+                    window.setState({ supabaseClient: window.supabaseClient });
+                }
+
                 if (!window.supabaseClient) {
                     throw new Error('Supabaseクライアントの作成に失敗しました');
                 }

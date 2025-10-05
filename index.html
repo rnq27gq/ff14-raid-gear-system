@@ -53,9 +53,12 @@
         <!-- 認証画面 -->
         <div id="authScreen" class="auth-screen">
             <div class="auth-card">
-                <h2>🛡️ チーム認証</h2>
-                <p>8人での共同利用には認証が必要です</p>
-                
+                <h2>FF14 零式装備分配システム</h2>
+                <p style="margin-bottom: 30px; color: #666;">
+                    Discordサーバーで<strong>/team-create</strong>コマンドを実行して<br>
+                    招待URLを取得してください
+                </p>
+
                 <!-- Discord認証セクション -->
                 <div class="auth-methods">
                     <button class="discord-auth-btn" onclick="startDiscordAuth()">
@@ -63,115 +66,13 @@
                         Discordでログイン
                     </button>
                 </div>
-                
-                <div class="auth-divider">
-                    <span>または</span>
-                </div>
-                
-                <!-- 従来の認証フォーム -->
-                <div class="auth-form">
-                    <input type="text" id="mainTeamIdInput" placeholder="チームID (例: my-raid-team)" maxlength="20">
-                    <input type="password" id="mainPasswordInput" placeholder="パスワード" maxlength="20">
-                    <button onclick="authenticateTeam()">ログイン</button>
-                </div>
-                
-                
-                <div style="margin-top: 20px; font-size: 12px; color: #888;">
-                    <p><a href="#" onclick="showSignupForm()" style="color: #3498db; text-decoration: none;">新しいチームを作成</a> | 
-                    <a href="#" onclick="showPasswordResetForm()" style="color: #e74c3c; text-decoration: none;">パスワードを忘れた場合</a></p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 新規登録画面 -->
-        <div id="signupScreen" class="auth-screen" style="display: none;">
-            <div class="auth-container">
-                <h1>🛡️ 新しいチーム作成</h1>
-                <p style="margin-bottom: 30px; color: #666;">
-                    FF14零式装備分配システム用の<br>新しいチームを作成します
-                </p>
-                
-                <div class="auth-form">
-                    <input type="text" id="signupTeamIdInput" placeholder="チームID (英数字、3-20文字)" maxlength="20">
-                    <input type="text" id="signupCreatedByInput" placeholder="作成者名 (パスワードリセット時に使用)" maxlength="50">
-                    <input type="password" id="signupPasswordInput" placeholder="パスワード (6文字以上)" maxlength="20">
-                    <input type="password" id="signupPasswordConfirmInput" placeholder="パスワード確認" maxlength="20">
-                    
-                    <div style="margin: 15px 0; text-align: left;">
-                        <label style="display: block; margin-bottom: 5px; color: #666; font-size: 0.9rem;">セキュリティ質問 (パスワードリセット用)</label>
-                        <select id="signupSecurityQuestionSelect" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
-                            <option value="">セキュリティ質問を選択してください</option>
-                            <option value="favorite_job">好きなジョブは何ですか？</option>
-                            <option value="first_datacenter">最初にプレイしたデータセンターは？</option>
-                            <option value="main_character">メインキャラクターの名前は？</option>
-                            <option value="favorite_raid">好きな零式レイドは？</option>
-                            <option value="fc_name">所属FCの名前は？</option>
-                            <option value="custom">カスタム質問を入力</option>
-                        </select>
-                    </div>
-                    
-                    <input type="text" id="signupCustomQuestionInput" placeholder="カスタム質問を入力してください" style="display: none;" maxlength="100">
-                    <input type="text" id="signupSecurityAnswerInput" placeholder="セキュリティ質問の答え" maxlength="50">
-                    
-                    <button onclick="createNewTeam()">チーム作成</button>
-                </div>
-                
-                <div style="margin-top: 20px; font-size: 12px; color: #888;">
-                    <p><a href="#" onclick="showLoginForm()" style="color: #3498db; text-decoration: none;">既存チームでログイン</a></p>
-                </div>
-                
-                <div style="margin-top: 20px; font-size: 11px; color: #999; line-height: 1.4;">
-                    <p>・チームIDは他のチームと重複できません<br>
-                    ・パスワードは安全に管理してください<br>
-                    ・作成後は8人で共有してご利用ください</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- パスワードリセット画面 -->
-        <div id="passwordResetScreen" class="auth-screen" style="display: none;">
-            <div class="auth-container">
-                <h1>🔑 パスワードリセット</h1>
-                <p style="margin-bottom: 30px; color: #666;">
-                    セキュリティ質問に答えて<br>パスワードをリセットします
-                </p>
-                
-                <!-- ステップ1: チームIDとセキュリティ質問確認 -->
-                <div id="resetStep1" class="auth-form">
-                    <input type="text" id="resetTeamIdInput" placeholder="チームID" maxlength="20">
-                    <button onclick="getSecurityQuestion()">セキュリティ質問を取得</button>
-                </div>
-                
-                <!-- ステップ2: セキュリティ質問回答 -->
-                <div id="resetStep2" class="auth-form" style="display: none;">
-                    <div id="teamInfoDisplay" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px; text-align: left;">
-                        <!-- チーム情報がここに表示される -->
-                    </div>
-                    <div id="securityQuestionDisplay" style="margin-bottom: 15px; color: #666; font-weight: bold;">
-                        <!-- セキュリティ質問がここに表示される -->
-                    </div>
-                    <input type="text" id="resetSecurityAnswerInput" placeholder="セキュリティ質問の答え" maxlength="50">
-                    <button onclick="verifySecurityAnswer()">答えを確認</button>
-                </div>
-                
-                <!-- ステップ3: 新しいパスワード設定 -->
-                <div id="resetStep3" class="auth-form" style="display: none;">
-                    <div style="margin-bottom: 20px; color: #27ae60; font-weight: bold;">
-                        ✅ セキュリティ質問の確認が完了しました
-                    </div>
-                    <input type="password" id="resetNewPasswordInput" placeholder="新しいパスワード (6文字以上)" maxlength="20">
-                    <input type="password" id="resetNewPasswordConfirmInput" placeholder="新しいパスワード確認" maxlength="20">
-                    <button onclick="executePasswordReset()">パスワードを変更</button>
-                </div>
-                
-                <div style="margin-top: 20px; font-size: 12px; color: #888;">
-                    <p><a href="#" onclick="showLoginForm()" style="color: #3498db; text-decoration: none;">ログイン画面に戻る</a></p>
-                </div>
-                
-                <div style="margin-top: 20px; font-size: 11px; color: #999; line-height: 1.4;">
-                    <p>・チーム作成時に設定したセキュリティ質問が必要です<br>
-                    ・セキュリティ質問の答えを忘れた場合は、チーム作成者に相談してください<br>
-                    ・パスワードリセット後は新しいパスワードでログインしてください</p>
+
+                <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; text-align: left; font-size: 14px; color: #666; line-height: 1.6;">
+                    <strong>使い方:</strong><br>
+                    1. Discordサーバーで <code style="background: #e9ecef; padding: 2px 6px; border-radius: 3px;">/team-create</code> を実行<br>
+                    2. 生成された招待URLにアクセス<br>
+                    3. 「Discordでログイン」をクリック<br>
+                    4. チームメンバーと装備分配を開始
                 </div>
             </div>
         </div>

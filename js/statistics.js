@@ -154,6 +154,126 @@ function calculateStatistics(players, allocations) {
 }
 
 /**
+ * 編集可能なプレイヤー統計を生成
+ */
+function generateEditablePlayerStatistics(players, allocations) {
+    try {
+        const positions = ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
+        const equipmentSlots = ['武器箱', '第一希望武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+        const materialSlots = ['武器石', '硬化薬', '強化薬', '強化繊維'];
+
+        let html = '<div class="player-stats-table editable">';
+
+        // ヘッダー
+        html += `
+            <div class="stats-header">
+                <div class="player-name-col">プレイヤー</div>
+                ${equipmentSlots.map(slot => `<div class="slot-col">${slot}</div>`).join('')}
+                ${materialSlots.map(slot => `<div class="slot-col">${slot}</div>`).join('')}
+            </div>
+        `;
+
+        // 各プレイヤーの行
+        positions.forEach(position => {
+            const player = players[position];
+            if (!player) return;
+
+            html += `
+                <div class="stats-row">
+                    <div class="player-name-col">
+                        <span class="player-name">${player.name}</span>
+                        <span class="position-tag ${getPositionRoleClass(position)}">${position}</span>
+                    </div>
+            `;
+
+            // 装備スロット
+            equipmentSlots.forEach(slot => {
+                const allocation = allocations.find(a => a.position === position && a.slot === slot);
+                const checked = allocation ? 'checked' : '';
+                html += `<div class="slot-col">
+                    <input type="checkbox" ${checked} data-position="${position}" data-slot="${slot}">
+                </div>`;
+            });
+
+            // 素材スロット（カウンター）
+            materialSlots.forEach(slot => {
+                const count = allocations.filter(a => a.position === position && a.slot === slot).length;
+                html += `<div class="slot-col">
+                    <input type="number" min="0" max="99" value="${count}"
+                           data-position="${position}" data-slot="${slot}" style="width: 50px;">
+                </div>`;
+            });
+
+            html += '</div>';
+        });
+
+        html += '</div>';
+        return html;
+    } catch (error) {
+        console.error('編集可能統計生成エラー:', error);
+        return '<div class="error">統計情報の生成に失敗しました</div>';
+    }
+}
+
+/**
+ * 統計情報を保存
+ */
+async function saveStatistics() {
+    try {
+        showMessage('統計情報を保存中...', 'info');
+
+        // 編集内容を収集
+        const newAllocations = [];
+        const checkboxes = document.querySelectorAll('.player-stats-table.editable input[type="checkbox"]');
+        const numberInputs = document.querySelectorAll('.player-stats-table.editable input[type="number"]');
+
+        // チェックボックス（装備）
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                newAllocations.push({
+                    position: checkbox.dataset.position,
+                    slot: checkbox.dataset.slot,
+                    layer: 1, // デフォルト値
+                    week: 1,  // デフォルト値
+                    timestamp: new Date().toISOString()
+                });
+            }
+        });
+
+        // 数値入力（素材）
+        numberInputs.forEach(input => {
+            const count = parseInt(input.value) || 0;
+            for (let i = 0; i < count; i++) {
+                newAllocations.push({
+                    position: input.dataset.position,
+                    slot: input.dataset.slot,
+                    layer: 1,
+                    week: 1,
+                    timestamp: new Date().toISOString()
+                });
+            }
+        });
+
+        // データを更新
+        appData.allocations[currentRaidTier.id] = newAllocations;
+
+        // Supabaseに保存
+        if (typeof saveDataToSupabase === 'function') {
+            await saveDataToSupabase('allocations', newAllocations);
+        }
+
+        showSuccess('統計情報を保存しました');
+
+        // 統計表示に戻る
+        setTimeout(() => showStatistics(), 1000);
+
+    } catch (error) {
+        console.error('統計保存エラー:', error);
+        showError('統計情報の保存に失敗しました: ' + error.message);
+    }
+}
+
+/**
  * 統計編集モードを表示
  */
 function showStatisticsEditMode() {
@@ -380,6 +500,8 @@ if (typeof window !== 'undefined') {
     window.generatePlayerStatistics = generatePlayerStatistics;
     window.calculateStatistics = calculateStatistics;
     window.showStatisticsEditMode = showStatisticsEditMode;
+    window.generateEditablePlayerStatistics = generateEditablePlayerStatistics;
+    window.saveStatistics = saveStatistics;
     window.showAllocationHistory = showAllocationHistory;
     window.generateHistoryTable = generateHistoryTable;
     window.filterAllocationHistory = filterAllocationHistory;

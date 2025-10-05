@@ -3,28 +3,8 @@
 
         try {
 
-        // グローバル変数
-        let window.isAuthenticated = false;
-        let window.currentTeamId = null;
-        let window.isInitializing = false;
-        let window.isInitialized = false;
-        let window.selectedDirectWeapon = ''; // 直ドロップ武器の選択状態を保持
-
-        // 即座にグローバル変数をウィンドウオブジェクトに登録
-        window.isAuthenticated = window.isAuthenticated;
-        window.currentTeamId = window.currentTeamId;
-        window.isInitializing = window.isInitializing;
-        window.isInitialized = window.isInitialized;
-
-        // グローバル変数更新関数
-        function updateGlobalState() {
-            window.isAuthenticated = window.isAuthenticated;
-            window.currentTeamId = window.currentTeamId;
-            window.isInitializing = window.isInitializing;
-            window.isInitialized = window.isInitialized;
-        }
-        
-        // ユーティリティ関数はjs/utils.jsに分離
+        // グローバル変数はstate.jsで定義済み
+        // window.isAuthenticated, window.currentTeamId等を使用
         
         // 確実な初期化システム v2 - キャッシュ問題対応版
         console.log('=== 初期化システム v2 開始 ===');

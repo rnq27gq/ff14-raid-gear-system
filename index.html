@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://*.supabase.co https://supabase.com https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://*.supabase.co https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://analytics.google.com;">
-    <title>FF14 零式装備分配システム (v2.1-auto-init)</title>
+    <title>FF14 零式装備分配システム (v2.2-scope-fix)</title>
     
     <!-- Supabase JavaScript SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
@@ -195,7 +198,7 @@
     
     <!-- Supabase設定とメイン機能 -->
     <script>
-        console.log('🚀 メインスクリプト開始 - v2.1');
+        console.log('🚀 メインスクリプト開始 - v2.2-scope-fix');
         console.log('実行時刻:', new Date().toLocaleTimeString());
 
         try {

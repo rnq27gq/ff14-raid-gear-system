@@ -1004,13 +1004,16 @@
         async function initializeMainFeatures() {
             try {
                 console.log('メイン機能初期化開始');
-                
+
+                // チーム情報からレイドティアを自動生成
+                await initializeDefaultRaidTier();
+
                 // データ読み込み
                 await loadAllData();
-                
-                // ダッシュボード表示
-                showMainDashboard();
-                
+
+                // 直接ティアダッシュボードを表示（メインダッシュボードをスキップ）
+                showTierDashboard();
+
                 console.log('メイン機能初期化完了');
             } catch (error) {
                 console.error('メイン機能初期化エラー:', error);
@@ -1020,11 +1023,61 @@
                 console.log('フォールバック: 空のデータでダッシュボード表示（初回起動またはデータなし）');
 
                 try {
-                    showMainDashboard();
+                    // フォールバック時もティアダッシュボードを表示
+                    await initializeDefaultRaidTier();
+                    showTierDashboard();
                 } catch (fallbackError) {
                     console.error('フォールバック処理エラー:', fallbackError);
                     showError('ダッシュボードの表示に失敗しました');
                 }
+            }
+        }
+
+        // デフォルトレイドティア自動初期化
+        async function initializeDefaultRaidTier() {
+            try {
+                // チーム情報を取得
+                const { data: teamData, error } = await window.supabaseClient
+                    .from('teams')
+                    .select('*')
+                    .eq('team_id', window.currentTeamId)
+                    .single();
+
+                if (error) {
+                    console.warn('チーム情報取得エラー:', error);
+                    // フォールバック: チームIDから基本情報を生成
+                    window.currentRaidTier = {
+                        id: window.currentTeamId,
+                        name: window.currentTeamId,
+                        description: '零式レイド',
+                        created_at: new Date().toISOString()
+                    };
+                } else {
+                    // チーム情報からレイドティアを生成
+                    window.currentRaidTier = {
+                        id: window.currentTeamId,
+                        name: teamData.team_name || window.currentTeamId,
+                        description: '零式レイド',
+                        created_at: teamData.created_at || new Date().toISOString()
+                    };
+                }
+
+                console.log('✅ レイドティア自動初期化完了:', window.currentRaidTier);
+
+                // state.jsと同期
+                if (window.setState) {
+                    window.setState({ currentRaidTier: window.currentRaidTier });
+                }
+
+            } catch (error) {
+                console.error('レイドティア初期化エラー:', error);
+                // 最小限のフォールバック
+                window.currentRaidTier = {
+                    id: window.currentTeamId,
+                    name: window.currentTeamId,
+                    description: '零式レイド',
+                    created_at: new Date().toISOString()
+                };
             }
         }
         
@@ -1084,91 +1137,20 @@
         }
         
         // メインダッシュボード表示
-        function showMainDashboard() {
-            const content = document.getElementById('content');
-            
-            content.innerHTML = `
-                <h1>FF14 零式装備分配システム</h1>
-                <h2>チーム: ${window.currentTeamId}</h2>
-                
-                <div class="section">
-                    <h3>レイド選択</h3>
-                    <div class="tier-list" id="tierList">
-                        <!-- レイドティア一覧がここに表示されます -->
-                    </div>
-                    
-                    <div class="navigation">
-                        <button class="nav-button" onclick="createNewTier()">新しいレイドティアを作成</button>
-                    </div>
-                </div>
-                
-                <div class="section">
-                    <h3>管理機能</h3>
-                    <div class="navigation">
-                        <button class="nav-button" onclick="showSystemSettings()">システム設定</button>
-                        <button class="nav-button" onclick="exportAllData()">データエクスポート</button>
-                    </div>
-                </div>
-                
-            `;
-            
-            // レイドティア一覧を表示
-            displayRaidTiers();
-        }
-        
-        // レイドティア一覧表示
-        function displayRaidTiers() {
-            const tierList = document.getElementById('tierList');
-            const tiers = window.appData.raidTiers || {};
-            
-            if (Object.keys(tiers).length === 0) {
-                tierList.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #666;">
-                        <p>まだレイドティアが作成されていません。</p>
-                        <p>「新しいレイドティアを作成」ボタンから始めてください。</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            tierList.innerHTML = Object.entries(tiers).map(([tierId, tier]) => `
-                <div class="tier-item ${window.currentRaidTier?.id === tierId ? 'active' : ''}" 
-                     onclick="selectRaidTier('${tierId}')">
-                    <h3>${tier.name}</h3>
-                    <p>${tier.description || '零式レイド'}</p>
-                </div>
-            `).join('');
-        }
-        
-        // レイドティア選択
-        async function selectRaidTier(tierId) {
-            const tier = window.appData.raidTiers[tierId];
-            if (!tier) {
-                showError('レイドティアが見つかりません');
-                return;
-            }
-            
-            window.currentRaidTier = { id: tierId, ...tier };
-            showSuccess(`レイドティア「${tier.name}」を選択しました`);
-            
-            // ティア固有のダッシュボードを表示
-            showTierDashboard();
-        }
-        
         // ティア固有ダッシュボード
         function showTierDashboard() {
             if (!window.currentRaidTier) return;
-            
+
             const content = document.getElementById('content');
-            
+
             content.innerHTML = `
                 <div class="navigation-top-left">
-                    <button class="nav-button" onclick="showMainDashboard()">レイド選択画面に戻る</button>
+                    <button class="nav-button" onclick="showTierDashboard()">ホーム</button>
                 </div>
-                
+
                 <h1>${window.currentRaidTier.name}</h1>
                 <h2>チーム: ${window.currentTeamId}</h2>
-                
+
                 <div class="section">
                     <h3>装備分配</h3>
                     <div class="dashboard-layer-grid">
@@ -1178,7 +1160,7 @@
                         <button class="dashboard-layer-button" onclick="showLayerAllocation(4)">4層</button>
                     </div>
                 </div>
-                
+
                 <div class="section">
                     <div class="navigation">
                         <button class="nav-button" onclick="showPlayerManagement()">メンバー管理</button>
@@ -1187,136 +1169,21 @@
                         <button class="nav-button" onclick="showAllocationHistory()">配布履歴</button>
                     </div>
                 </div>
-                
+
+                <div class="section">
+                    <h3>管理機能</h3>
+                    <div class="navigation">
+                        <button class="nav-button" onclick="showSystemSettings()">システム設定</button>
+                        <button class="nav-button" onclick="exportAllData()">データエクスポート</button>
+                    </div>
+                </div>
+
                 <div class="section">
                     <h3>レイド情報</h3>
                     <p><strong>レイド名:</strong> ${window.currentRaidTier.name}</p>
                     <p><strong>説明:</strong> ${window.currentRaidTier.description || '零式レイド'}</p>
                 </div>
             `;
-        }
-        
-        // 新しいレイド作成画面を表示
-        function createNewTier() {
-            showCreateTierForm();
-        }
-        
-        // レイド作成フォーム表示
-        function showCreateTierForm() {
-            const content = document.getElementById('content');
-            
-            content.innerHTML = `
-                <div class="navigation-top-left">
-                    <button class="nav-button" onclick="showMainDashboard()">レイド選択画面に戻る</button>
-                </div>
-                
-                <h1>新しいレイドを作成</h1>
-                <h2>チーム: ${window.currentTeamId}</h2>
-                
-                <div class="section">
-                    <h3>レイド情報を入力してください</h3>
-                    
-                    <div class="form-grid" style="max-width: 600px;">
-                        <div class="form-group">
-                            <label for="tierName">レイド名（必須）:</label>
-                            <input type="text" id="tierName" 
-                                   placeholder="例：7.1 アークガーディアン零式" 
-                                   style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px;">
-                            <small style="color: #666; margin-top: 5px; display: block;">
-                                パッチ番号やボス名を含めると分かりやすくなります
-                            </small>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="tierDescription">説明（省略可）:</label>
-                            <textarea id="tierDescription" 
-                                      placeholder="例：新パッチの零式コンテンツ、IL730装備がドロップ" 
-                                      style="width: 100%; height: 80px; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; resize: vertical;"></textarea>
-                            <small style="color: #666; margin-top: 5px; display: block;">
-                                空欄の場合は「零式レイド」が設定されます
-                            </small>
-                        </div>
-                        
-                        <div class="form-actions" style="margin-top: 30px;">
-                            <button onclick="submitCreateTier()" class="primary-btn" style="margin-right: 15px;">
-                                レイドを作成
-                            </button>
-                            <button onclick="showMainDashboard()" class="secondary-btn">
-                                キャンセル
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="section" style="background-color: #f8f9fa; border-left: 4px solid #17a2b8;">
-                    <h4>💡 作成後の流れ</h4>
-                    <ol style="margin: 10px 0; padding-left: 20px;">
-                        <li>レイドを作成すると、そのレイド専用のダッシュボードに移動します</li>
-                        <li>まずは「メンバー管理」から8人のメンバー情報を登録してください</li>
-                        <li>装備方針や武器希望を設定して、装備分配を開始できます</li>
-                    </ol>
-                </div>
-            `;
-            
-            // フォーカスを名前入力欄に設定
-            setTimeout(() => {
-                const nameInput = document.getElementById('tierName');
-                if (nameInput) nameInput.focus();
-            }, 100);
-        }
-        
-        // レイド作成実行
-        async function submitCreateTier() {
-            const nameInput = document.getElementById('tierName');
-            const descriptionInput = document.getElementById('tierDescription');
-            
-            const name = nameInput.value.trim();
-            const description = descriptionInput.value.trim() || '零式レイド';
-            
-            if (!name) {
-                showError('レイド名を入力してください。');
-                nameInput.focus();
-                return;
-            }
-            
-            try {
-                showMessage('レイドを作成中...', 'info');
-                
-                const tierId = 'tier_' + Date.now();
-                const tierData = {
-                    name: name,
-                    description: description,
-                    createdAt: new Date().toISOString()
-                };
-                
-                // Supabaseに保存
-                const { error } = await window.supabaseClient
-                    .from('raid_data')
-                    .insert({
-                        team_id: window.currentTeamId,
-                        tier_id: tierId,
-                        data_type: 'settings',
-                        content: { raidTier: tierData }
-                    });
-                
-                if (error) {
-                    throw new Error(`保存エラー: ${error.message}`);
-                }
-                
-                // ローカルデータ更新
-                if (!window.appData.raidTiers) window.appData.raidTiers = {};
-                window.appData.raidTiers[tierId] = tierData;
-                
-                showSuccess(`レイド「${name}」を作成しました`);
-                
-                // 作成したレイドを選択してダッシュボードに移動
-                window.currentRaidTier = { id: tierId, ...tierData };
-                showTierDashboard();
-                
-            } catch (error) {
-                console.error('レイド作成エラー:', error);
-                showError('レイドの作成に失敗しました: ' + error.message);
-            }
         }
         
         // 優先順位管理画面
@@ -3169,11 +3036,7 @@
             window.getSecurityQuestion = getSecurityQuestion;
             window.verifySecurityAnswer = verifySecurityAnswer;
             window.executePasswordReset = executePasswordReset;
-            window.showMainDashboard = showMainDashboard;
             window.showTierDashboard = showTierDashboard;
-            window.selectRaidTier = selectRaidTier;
-            window.createNewTier = createNewTier;
-            window.submitCreateTier = submitCreateTier;
             window.showPlayerManagement = showPlayerManagement;
             window.showTabbedSetup = showTabbedSetup;
             window.saveCurrentTab = saveCurrentTab;
@@ -3187,7 +3050,7 @@
             window.showSystemSettings = showSystemSettings;
             window.exportAllData = exportAllData;
 
-            console.log('✅ グローバル関数登録完了 (29関数 + データ変数)');
+            console.log('✅ グローバル関数登録完了 (25関数 + データ変数)');
         }
 
         } catch (error) {

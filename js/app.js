@@ -782,7 +782,27 @@
             
             showSuccess('ログアウトしました');
         }
-        
+
+        // 設定メニュー切り替え
+        function toggleSettingsMenu() {
+            const menu = document.getElementById('settingsMenu');
+            if (menu) {
+                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        // 設定メニュー外クリックで閉じる
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('settingsMenu');
+            const settingsBtn = document.querySelector('.settings-btn');
+
+            if (menu && settingsBtn && menu.style.display === 'block') {
+                if (!menu.contains(event.target) && !settingsBtn.contains(event.target)) {
+                    menu.style.display = 'none';
+                }
+            }
+        });
+
         // パスワードリセット関連関数
         
         // パスワードリセットフォームの初期化
@@ -1167,14 +1187,6 @@
                         <button class="nav-button" onclick="showPriorityManagement()">優先順位設定</button>
                         <button class="nav-button" onclick="showStatistics()">統計情報</button>
                         <button class="nav-button" onclick="showAllocationHistory()">配布履歴</button>
-                    </div>
-                </div>
-
-                <div class="section">
-                    <h3>管理機能</h3>
-                    <div class="navigation">
-                        <button class="nav-button" onclick="showSystemSettings()">システム設定</button>
-                        <button class="nav-button" onclick="exportAllData()">データエクスポート</button>
                     </div>
                 </div>
 
@@ -3028,6 +3040,7 @@
             // UI関数（onclick用）
             window.authenticateTeam = authenticateTeam;
             window.logout = logout;
+            window.toggleSettingsMenu = toggleSettingsMenu;
             window.startDiscordAuth = startDiscordAuth;
             window.createNewTeam = createNewTeam;
             window.showLoginForm = showLoginForm;

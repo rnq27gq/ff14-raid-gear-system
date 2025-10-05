@@ -655,6 +655,13 @@ input:focus, select:focus {
     font-size: 0.8rem;
 }
 
+.slot-col.allocated {
+    background-color: #d4edda;
+    color: #28a745;
+    font-size: 20px;
+    font-weight: bold;
+}
+
 .slot-col.acquired {
     background-color: #d4edda;
     color: #155724;
@@ -1554,4 +1561,51 @@ input:focus, select:focus {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* 設定メニュー */
+.settings-dropdown {
+    position: relative;
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.settings-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 5px 10px;
+    transition: transform 0.2s;
+}
+
+.settings-btn:hover {
+    transform: scale(1.1);
+}
+
+.settings-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    border-radius: 8px;
+    overflow: hidden;
+    z-index: 1000;
+    min-width: 180px;
+    margin-top: 5px;
+}
+
+.settings-menu a {
+    display: block;
+    padding: 12px 20px;
+    color: #333;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.settings-menu a:hover {
+    background-color: #f0f0f0;
 }

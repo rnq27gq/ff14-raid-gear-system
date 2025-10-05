@@ -92,13 +92,15 @@ function generatePlayerStatistics(players, allocations) {
             // 装備スロット
             equipmentSlots.forEach(slot => {
                 const allocation = allocations.find(a => a.position === position && a.slot === slot);
-                html += `<div class="slot-col">${allocation ? '●' : ''}</div>`;
+                const allocatedClass = allocation ? 'allocated' : '';
+                html += `<div class="slot-col ${allocatedClass}">${allocation ? '●' : ''}</div>`;
             });
 
             // 素材スロット
             materialSlots.forEach(slot => {
                 const allocationCount = allocations.filter(a => a.position === position && a.slot === slot).length;
-                html += `<div class="slot-col">${allocationCount > 0 ? allocationCount : ''}</div>`;
+                const allocatedClass = allocationCount > 0 ? 'allocated' : '';
+                html += `<div class="slot-col ${allocatedClass}">${allocationCount > 0 ? allocationCount : ''}</div>`;
             });
 
             html += '</div>';

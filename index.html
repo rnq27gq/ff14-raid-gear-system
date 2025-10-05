@@ -39,9 +39,16 @@
                 </div>
             </div>
             
-            
+
             <div class="auth-controls" id="loggedInControls" style="display: none;">
                 <span id="loggedInTeam">demo-team</span>
+                <div class="settings-dropdown">
+                    <button class="settings-btn" onclick="toggleSettingsMenu()">⚙️</button>
+                    <div class="settings-menu" id="settingsMenu" style="display: none;">
+                        <a onclick="showSystemSettings(); toggleSettingsMenu();">システム設定</a>
+                        <a onclick="exportAllData(); toggleSettingsMenu();">データエクスポート</a>
+                    </div>
+                </div>
                 <button class="auth-btn logout" onclick="logout()">ログアウト</button>
             </div>
         </div>

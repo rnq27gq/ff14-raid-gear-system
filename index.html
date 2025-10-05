@@ -50,29 +50,13 @@
         <div id="errorMessage" class="error-message"></div>
         <div id="successMessage" class="success-message"></div>
         
-        <!-- 認証画面 -->
-        <div id="authScreen" class="auth-screen">
+        <!-- 読み込み中画面 -->
+        <div id="loadingScreen" class="auth-screen">
             <div class="auth-card">
                 <h2>FF14 零式装備分配システム</h2>
-                <p style="margin-bottom: 30px; color: #666;">
-                    Discordサーバーで<strong>/team-create</strong>コマンドを実行して<br>
-                    招待URLを取得してください
-                </p>
-
-                <!-- Discord認証セクション -->
-                <div class="auth-methods">
-                    <button class="discord-auth-btn" onclick="startDiscordAuth()">
-                        <div class="discord-icon"></div>
-                        Discordでログイン
-                    </button>
-                </div>
-
-                <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; text-align: left; font-size: 14px; color: #666; line-height: 1.6;">
-                    <strong>使い方:</strong><br>
-                    1. Discordサーバーで <code style="background: #e9ecef; padding: 2px 6px; border-radius: 3px;">/team-create</code> を実行<br>
-                    2. 生成された招待URLにアクセス<br>
-                    3. 「Discordでログイン」をクリック<br>
-                    4. チームメンバーと装備分配を開始
+                <div style="text-align: center; padding: 40px 20px;">
+                    <div class="loading-spinner" style="margin: 0 auto 20px;"></div>
+                    <p id="loadingMessage" style="color: #666; font-size: 16px;">認証情報を確認中...</p>
                 </div>
             </div>
         </div>

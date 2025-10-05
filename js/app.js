@@ -3197,3 +3197,148 @@
         }
 
         console.log("✅ メインスクリプト実行完了");
+
+        // 自動Discord認証処理
+        (async function autoDiscordAuth() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const inviteToken = urlParams.get('token');
+                const teamId = urlParams.get('team');
+                const discordCode = urlParams.get('code');
+                const discordState = urlParams.get('state');
+
+                console.log('🔍 URL パラメータ確認:', { inviteToken, teamId, discordCode, discordState });
+
+                // Discord認証コールバック処理
+                if (discordCode && discordState) {
+                    console.log('🎯 Discord認証コールバック検出');
+                    updateLoadingMessage('Discord認証を処理中...');
+
+                    try {
+                        const savedState = sessionStorage.getItem('discord_oauth_state');
+                        const savedToken = sessionStorage.getItem('invite_token');
+
+                        if (savedState !== discordState) {
+                            throw new Error('認証状態が一致しません。セキュリティエラーの可能性があります。');
+                        }
+
+                        // Discord認証処理
+                        await handleDiscordCallback(discordCode, savedToken);
+                        return;
+
+                    } catch (error) {
+                        console.error('❌ Discord認証エラー:', error);
+                        showError('Discord認証に失敗しました: ' + error.message);
+                        hideLoadingScreen();
+                        return;
+                    }
+                }
+
+                // 招待URL経由の初回アクセス
+                if (inviteToken && teamId) {
+                    console.log('✅ 招待URL検出 - 自動Discord認証開始');
+                    updateLoadingMessage('招待リンクを確認中...');
+
+                    // 招待トークンの検証
+                    const { data: tokenValidation, error: tokenError } = await window.supabaseClient
+                        .from('team_invite_tokens')
+                        .select('team_id, expires_at')
+                        .eq('token', inviteToken)
+                        .single();
+
+                    if (tokenError || !tokenValidation) {
+                        throw new Error('招待リンクが無効です。チームリーダーに新しい招待リンクを依頼してください。');
+                    }
+
+                    // トークン期限確認
+                    if (new Date(tokenValidation.expires_at) < new Date()) {
+                        throw new Error('招待リンクの有効期限が切れています。チームリーダーに新しい招待リンクを依頼してください。');
+                    }
+
+                    if (tokenValidation.team_id !== teamId) {
+                        throw new Error('招待リンクのチーム情報が一致しません。');
+                    }
+
+                    console.log('✅ 招待トークン検証成功 - Discord認証へリダイレクト');
+                    updateLoadingMessage('Discord認証画面に移動します...');
+
+                    // Discord OAuth開始
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // UX向上のための1秒待機
+                    startDiscordAuthWithToken(inviteToken);
+                    return;
+                }
+
+                // 招待トークンなし - エラー表示
+                console.warn('⚠️ 招待トークンがありません');
+                hideLoadingScreen();
+                showError(
+                    'このシステムは招待リンク経由でのみアクセスできます。\n\n' +
+                    'Discord サーバーで /team-create コマンドを実行して\n' +
+                    '招待リンクを取得してください。'
+                );
+
+            } catch (error) {
+                console.error('❌ 自動認証エラー:', error);
+                hideLoadingScreen();
+                showError('認証処理でエラーが発生しました: ' + error.message);
+            }
+        })();
+
+        // ローディング画面更新ヘルパー
+        function updateLoadingMessage(message) {
+            const loadingMessage = document.getElementById('loadingMessage');
+            if (loadingMessage) {
+                loadingMessage.textContent = message;
+            }
+        }
+
+        // ローディング画面非表示
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            if (loadingScreen) {
+                loadingScreen.classList.remove('show');
+                loadingScreen.style.display = 'none';
+            }
+        }
+
+        // Discord認証コールバック処理
+        async function handleDiscordCallback(code, inviteToken) {
+            try {
+                console.log('🔐 Discord認証コールバック処理開始');
+
+                // バックエンドでDiscordトークン交換
+                const response = await fetch('https://your-backend-url/api/discord/callback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        code: code,
+                        invite_token: inviteToken
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Discord認証に失敗しました');
+                }
+
+                const { user, team } = await response.json();
+
+                // チーム情報を保存
+                window.currentTeamId = team.id;
+                sessionStorage.setItem('currentTeamId', team.id);
+                sessionStorage.setItem('discordUser', JSON.stringify(user));
+
+                // 認証成功
+                window.isAuthenticated = true;
+                console.log('✅ Discord認証成功:', user.username);
+
+                // URLをクリーンアップ
+                window.history.replaceState({}, document.title, window.location.pathname);
+
+                // メイン画面を表示
+                await initializeApp();
+
+            } catch (error) {
+                console.error('❌ Discord認証コールバックエラー:', error);
+                throw error;
+            }
+        }

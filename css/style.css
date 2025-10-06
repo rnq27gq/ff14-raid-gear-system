@@ -1644,13 +1644,13 @@ input:focus, select:focus {
     background: #3498db;
     color: white;
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 2fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr 2fr 2fr 1fr;
     gap: 1px;
 }
 
 .history-row {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 2fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr 2fr 2fr 1fr;
     gap: 1px;
     background: white;
     border-bottom: 1px solid #e9ecef;
@@ -1663,6 +1663,34 @@ input:focus, select:focus {
 .history-cell {
     padding: 10px;
     text-align: center;
+}
+
+.history-header > div,
+.history-row > div {
+    padding: 12px 8px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.col-action {
+    justify-content: center;
+}
+
+.delete-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background-color 0.2s;
+}
+
+.delete-btn:hover {
+    background-color: #c82333;
 }
 
 .no-data {

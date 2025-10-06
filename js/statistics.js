@@ -58,8 +58,8 @@ function showStatistics() {
  */
 function generatePlayerStatistics(players, allocations) {
     try {
-        // ポジション順序を固定化 (D1→D2→D3→D4→MT→ST→H1→H2)
-        const positions = ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
+        // ポジション順序を固定化 (MT→ST→D1→D2→D3→D4→H1→H2)
+        const positions = ['MT', 'ST', 'D1', 'D2', 'D3', 'D4', 'H1', 'H2'];
 
         // 装備部位順序を固定化 (武器箱→第一希望武器→頭→胴→手→脚→足→耳→首→腕→指)
         const equipmentSlots = ['武器箱', '第一希望武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
@@ -169,7 +169,7 @@ function calculateStatistics(players, allocations) {
  */
 function generateEditablePlayerStatistics(players, allocations) {
     try {
-        const positions = ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
+        const positions = ['MT', 'ST', 'D1', 'D2', 'D3', 'D4', 'H1', 'H2'];
         const equipmentSlots = ['武器箱', '第一希望武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
         const materialSlots = ['武器石', '硬化薬', '強化薬', '強化繊維'];
 
@@ -382,6 +382,17 @@ function showAllocationHistory() {
                 <h3>フィルター</h3>
                 <div class="filter-controls">
                     <div class="filter-group">
+                        <label>週:</label>
+                        <select id="weekFilter" onchange="filterAllocationHistory()">
+                            <option value="">全て</option>
+                            ${(() => {
+                                const weeks = [...new Set(allocations.map(a => a.week))].sort((a, b) => a - b);
+                                return weeks.map(week => `<option value="${week}">${week}週目</option>`).join('');
+                            })()}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
                         <label>層:</label>
                         <select id="layerFilter" onchange="filterAllocationHistory()">
                             <option value="">全て</option>
@@ -504,6 +515,7 @@ function generateHistoryTable(allocations, players) {
  */
 function filterAllocationHistory() {
     try {
+        const weekFilter = document.getElementById('weekFilter').value;
         const layerFilter = document.getElementById('layerFilter').value;
         const playerFilter = document.getElementById('playerFilter').value;
         const slotFilter = document.getElementById('slotFilter').value;
@@ -521,6 +533,9 @@ function filterAllocationHistory() {
         const players = appData.players[currentRaidTier.id] || {};
 
         let filteredAllocations = allocations.filter(allocation => {
+            if (weekFilter && allocation.week.toString() !== weekFilter) {
+                return false;
+            }
             if (layerFilter && allocation.layer.toString() !== layerFilter) {
                 return false;
             }

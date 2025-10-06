@@ -1160,7 +1160,7 @@
                     ${renderIntegratedMemberTable(players, positions)}
                 </div>
 
-                <div class="section" id="navigationSection">
+                <div class="section">
                     <div class="navigation">
                         <button class="nav-button" onclick="showPriorityManagement()">優先順位設定</button>
                         <button class="nav-button" onclick="showStatistics()">統計情報</button>
@@ -1168,20 +1168,6 @@
                     </div>
                 </div>
             `;
-
-            // デバッグ: ナビゲーションセクションの位置を表示
-            setTimeout(() => {
-                const navSection = document.getElementById('navigationSection');
-                if (navSection) {
-                    const rect = navSection.getBoundingClientRect();
-                    console.log('=== ナビゲーションセクション位置情報 ===');
-                    console.log('上端Y座標:', rect.top);
-                    console.log('下端Y座標:', rect.bottom);
-                    console.log('高さ:', rect.height);
-                    console.log('ビューポート高さ:', window.innerHeight);
-                    console.log('スクロール必要:', rect.bottom > window.innerHeight);
-                }
-            }, 100);
         }
 
         // ポジションからロールクラスを取得

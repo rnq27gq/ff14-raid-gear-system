@@ -695,30 +695,30 @@ input:focus, select:focus {
 
 /* 一体化メンバーテーブル */
 .integrated-table-container {
-    overflow-x: auto;
+    overflow-x: hidden;
     margin: 8px 0;
 }
 
 .integrated-member-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 13px;
     background-color: white;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .integrated-member-table th {
     background-color: #f8f9fa;
-    padding: 5px 3px;
+    padding: 6px 4px;
     border: 1px solid #dee2e6;
     font-weight: 600;
     color: #495057;
     text-align: center;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .integrated-member-table td {
-    padding: 4px 2px;
+    padding: 5px 3px;
     border: 1px solid #dee2e6;
     text-align: center;
     vertical-align: middle;
@@ -727,7 +727,7 @@ input:focus, select:focus {
 .position-cell {
     font-weight: bold;
     color: white;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .position-cell.tank {
@@ -744,25 +744,25 @@ input:focus, select:focus {
 
 .table-input {
     width: 100%;
-    padding: 3px 4px;
+    padding: 4px 5px;
     border: 1px solid #ced4da;
-    border-radius: 2px;
-    font-size: 11px;
+    border-radius: 3px;
+    font-size: 12px;
     box-sizing: border-box;
 }
 
 .table-input:focus {
     outline: none;
     border-color: #80bdff;
-    box-shadow: 0 0 0 0.1rem rgba(0,123,255,.15);
+    box-shadow: 0 0 0 0.15rem rgba(0,123,255,.2);
 }
 
 .table-select {
     width: 100%;
-    padding: 3px 2px;
+    padding: 4px 3px;
     border: 1px solid #ced4da;
-    border-radius: 2px;
-    font-size: 10px;
+    border-radius: 3px;
+    font-size: 11px;
     background-color: white;
     cursor: pointer;
     box-sizing: border-box;
@@ -771,16 +771,16 @@ input:focus, select:focus {
 .table-select:focus {
     outline: none;
     border-color: #80bdff;
-    box-shadow: 0 0 0 0.1rem rgba(0,123,255,.15);
+    box-shadow: 0 0 0 0.15rem rgba(0,123,255,.2);
 }
 
 .policy-cell {
     cursor: pointer;
     user-select: none;
     transition: background-color 0.2s;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: normal;
-    min-width: 28px;
+    min-width: 30px;
 }
 
 .policy-cell:hover {

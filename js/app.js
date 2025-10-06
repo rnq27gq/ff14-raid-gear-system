@@ -1174,12 +1174,14 @@
         // 一体化メンバーテーブルのレンダリング
         function renderIntegratedMemberTable(players, positions) {
             const slots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+            // ポジション順（MT, ST, D1-D4, H1, H2）に並べ替え
             const allWeapons = [
-                'ナイト', '戦士', '暗黒騎士', 'ガンブレイカー',
-                '白魔道士', '占星術士', '学者', '賢者',
-                'モンク', '竜騎士', '忍者', '侍', 'リーパー', 'ヴァイパー',
-                '黒魔道士', '召喚士', '赤魔道士', 'ピクトマンサー',
-                '吟遊詩人', '機工士', '踊り子'
+                'ナイト', '戦士', '暗黒騎士', 'ガンブレイカー', // MT, ST
+                'モンク', '竜騎士', '忍者', '侍', 'リーパー', 'ヴァイパー', // D1, D2
+                '吟遊詩人', '機工士', '踊り子', // D3
+                '黒魔道士', '召喚士', '赤魔道士', 'ピクトマンサー', // D4
+                '白魔道士', '占星術士', // H1
+                '学者', '賢者' // H2
             ];
 
             const roleJobs = {
@@ -1725,12 +1727,14 @@
                     `;
                 }
                 
+                // ポジション順（MT, ST, D1-D4, H1, H2）に並べ替え
                 const allWeapons = [
-                    'ナイト', '戦士', '暗黒騎士', 'ガンブレイカー',
-                    '白魔道士', '占星術士', '学者', '賢者',
-                    'モンク', '竜騎士', '忍者', '侍', 'リーパー', 'ヴァイパー',
-                    '黒魔道士', '召喚士', '赤魔道士', 'ピクトマンサー',
-                    '吟遊詩人', '機工士', '踊り子'
+                    'ナイト', '戦士', '暗黒騎士', 'ガンブレイカー', // MT, ST
+                    'モンク', '竜騎士', '忍者', '侍', 'リーパー', 'ヴァイパー', // D1, D2
+                    '吟遊詩人', '機工士', '踊り子', // D3
+                    '黒魔道士', '召喚士', '赤魔道士', 'ピクトマンサー', // D4
+                    '白魔道士', '占星術士', // H1
+                    '学者', '賢者' // H2
                 ];
                 
                 return `
@@ -3032,10 +3036,20 @@
         
         // 現在の週番号取得
         function getCurrentWeek() {
+            // レイドパッチ開始日を基準に週数を計算
+            const patchStartDate = window.currentRaidTier?.startDate;
+            if (!patchStartDate) {
+                // 開始日が設定されていない場合は1週目とする
+                return 1;
+            }
+
             const now = new Date();
-            const yearStart = new Date(now.getFullYear(), 0, 1);
-            const weekNumber = Math.ceil(((now - yearStart) / 86400000 + yearStart.getDay() + 1) / 7);
-            return weekNumber;
+            const startDate = new Date(patchStartDate);
+            const diffTime = now - startDate;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            const weekNumber = Math.floor(diffDays / 7) + 1; // 1週目から開始
+
+            return Math.max(1, weekNumber); // 最低でも1週目
         }
         
         // アイテム優先度取得

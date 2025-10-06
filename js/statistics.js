@@ -456,6 +456,7 @@ function generateHistoryTable(allocations, players) {
                     <div class="col-slot">部位</div>
                     <div class="col-player">取得者</div>
                     <div class="col-date">日時</div>
+                    <div class="col-action">操作</div>
                 </div>
         `;
 
@@ -464,14 +465,17 @@ function generateHistoryTable(allocations, players) {
             new Date(b.timestamp || 0) - new Date(a.timestamp || 0)
         );
 
-        sortedAllocations.forEach(allocation => {
+        sortedAllocations.forEach((allocation, index) => {
             const player = players[allocation.position];
             const playerName = player ? player.name : allocation.position;
             const date = allocation.timestamp ?
                 new Date(allocation.timestamp).toLocaleString('ja-JP') : '不明';
 
+            // 削除用のユニークID生成（position_layer_slot_timestamp）
+            const allocationId = `${allocation.position}_${allocation.layer}_${allocation.slot}_${allocation.timestamp}`;
+
             html += `
-                <div class="history-row">
+                <div class="history-row" data-allocation-id="${allocationId}">
                     <div class="col-week">${allocation.week}週目</div>
                     <div class="col-layer">${allocation.layer}層</div>
                     <div class="col-slot">${allocation.slot}</div>
@@ -480,6 +484,9 @@ function generateHistoryTable(allocations, players) {
                         <span class="position-tag ${getPositionRoleClass(allocation.position)}">${allocation.position}</span>
                     </div>
                     <div class="col-date">${date}</div>
+                    <div class="col-action">
+                        <button class="delete-btn" onclick="deleteAllocationRecord('${allocationId}', '${allocation.position}', ${allocation.layer}, '${allocation.slot}')">削除</button>
+                    </div>
                 </div>
             `;
         });
@@ -542,6 +549,51 @@ function filterAllocationHistory() {
     }
 }
 
+/**
+ * 配布履歴レコードを削除
+ */
+async function deleteAllocationRecord(allocationId, position, layer, slot) {
+    try {
+        if (!confirm(`${position}の${layer}層 ${slot} の配布記録を削除しますか？\n\nこの操作は元に戻せません。`)) {
+            return;
+        }
+
+        const appData = window.appData;
+        const currentRaidTier = window.currentRaidTier;
+
+        if (!appData || !currentRaidTier) {
+            showError('アプリケーションデータが初期化されていません');
+            return;
+        }
+
+        // 該当する配布記録を検索して削除
+        const allocations = appData.allocations[currentRaidTier.id] || [];
+        const targetIndex = allocations.findIndex(alloc => {
+            const id = `${alloc.position}_${alloc.layer}_${alloc.slot}_${alloc.timestamp}`;
+            return id === allocationId;
+        });
+
+        if (targetIndex === -1) {
+            showError('削除対象の記録が見つかりませんでした');
+            return;
+        }
+
+        // 配列から削除
+        allocations.splice(targetIndex, 1);
+
+        // Supabaseに保存
+        await saveDataToSupabase('allocations', allocations);
+
+        // 画面を再描画
+        showAllocationHistory();
+
+        showSuccess('配布記録を削除しました');
+    } catch (error) {
+        console.error('配布記録削除エラー:', error);
+        showError('配布記録の削除に失敗しました: ' + error.message);
+    }
+}
+
 // グローバルスコープに関数を登録（下位互換性のため）
 if (typeof window !== 'undefined') {
     window.showStatistics = showStatistics;
@@ -550,6 +602,7 @@ if (typeof window !== 'undefined') {
     window.showStatisticsEditMode = showStatisticsEditMode;
     window.generateEditablePlayerStatistics = generateEditablePlayerStatistics;
     window.saveStatistics = saveStatistics;
+    window.deleteAllocationRecord = deleteAllocationRecord;
     window.showAllocationHistory = showAllocationHistory;
     window.generateHistoryTable = generateHistoryTable;
     window.filterAllocationHistory = filterAllocationHistory;

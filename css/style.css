@@ -510,29 +510,31 @@ body {
 h1 {
     text-align: center;
     color: #2c3e50;
-    margin-bottom: 20px;
+    margin-bottom: 8px;
     font-weight: 600;
-    font-size: 1.8rem;
+    font-size: 1.3rem;
 }
 h2 {
     color: #2c3e50;
     font-weight: 500;
-    margin-bottom: 12px;
-    font-size: 1.3rem;
+    margin-bottom: 6px;
+    font-size: 1.1rem;
     border-bottom: 2px solid #3498db;
-    padding-bottom: 8px;
+    padding-bottom: 4px;
 }
 h3 {
     color: #2c3e50;
     font-weight: 500;
+    font-size: 1rem;
+    margin-bottom: 6px;
 }
 .section {
     background-color: #f8f9fa;
-    padding: 15px;
-    margin-bottom: 15px;
-    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 6px;
     border: 1px solid #e9ecef;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 button {
     background-color: #5a9fd4;
@@ -607,40 +609,40 @@ input:focus, select:focus {
 .navigation {
     display: flex;
     justify-content: center;
-    gap: 15px;
-    margin: 20px 0;
+    gap: 8px;
+    margin: 8px 0;
     flex-wrap: wrap;
 }
 
 .navigation-top-left {
     display: flex;
     justify-content: flex-start;
-    margin: 10px 0 20px 0;
+    margin: 8px 0;
 }
 
 .dashboard-layer-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin: 20px 0;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin: 8px 0;
 }
 
 .dashboard-layer-button {
     background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
     color: white;
     border: none;
-    border-radius: 10px;
-    padding: 20px;
+    border-radius: 6px;
+    padding: 10px 15px;
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: center;
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     font-weight: 600;
 }
 
 .dashboard-layer-button:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 16px rgba(52, 152, 219, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
 }
 
 /* 統計情報用スタイル */
@@ -694,28 +696,29 @@ input:focus, select:focus {
 /* 一体化メンバーテーブル */
 .integrated-table-container {
     overflow-x: auto;
-    margin: 15px 0;
+    margin: 8px 0;
 }
 
 .integrated-member-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: 11px;
     background-color: white;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .integrated-member-table th {
     background-color: #f8f9fa;
-    padding: 8px 4px;
+    padding: 4px 3px;
     border: 1px solid #dee2e6;
     font-weight: 600;
     color: #495057;
     text-align: center;
+    font-size: 10px;
 }
 
 .integrated-member-table td {
-    padding: 6px 4px;
+    padding: 3px 2px;
     border: 1px solid #dee2e6;
     text-align: center;
     vertical-align: middle;
@@ -724,7 +727,7 @@ input:focus, select:focus {
 .position-cell {
     font-weight: bold;
     color: white;
-    font-size: 12px;
+    font-size: 10px;
 }
 
 .position-cell.tank {
@@ -741,25 +744,25 @@ input:focus, select:focus {
 
 .table-input {
     width: 100%;
-    padding: 4px 6px;
+    padding: 2px 4px;
     border: 1px solid #ced4da;
-    border-radius: 3px;
-    font-size: 12px;
+    border-radius: 2px;
+    font-size: 10px;
     box-sizing: border-box;
 }
 
 .table-input:focus {
     outline: none;
     border-color: #80bdff;
-    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    box-shadow: 0 0 0 0.1rem rgba(0,123,255,.15);
 }
 
 .table-select {
     width: 100%;
-    padding: 4px 6px;
+    padding: 2px 4px;
     border: 1px solid #ced4da;
-    border-radius: 3px;
-    font-size: 12px;
+    border-radius: 2px;
+    font-size: 10px;
     background-color: white;
     cursor: pointer;
     box-sizing: border-box;
@@ -768,16 +771,16 @@ input:focus, select:focus {
 .table-select:focus {
     outline: none;
     border-color: #80bdff;
-    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    box-shadow: 0 0 0 0.1rem rgba(0,123,255,.15);
 }
 
 .policy-cell {
     cursor: pointer;
     user-select: none;
     transition: background-color 0.2s;
-    font-size: 11px;
+    font-size: 9px;
     font-weight: normal;
-    min-width: 30px;
+    min-width: 25px;
 }
 
 .policy-cell:hover {
@@ -1089,18 +1092,19 @@ input:focus, select:focus {
     background-color: #5a9fd4;
     color: white;
     border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
+    padding: 8px 16px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
     font-weight: 500;
     text-decoration: none;
     display: inline-block;
+    font-size: 0.9rem;
 }
 .nav-button:hover {
     background-color: #4a8bb8;
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 
 /* エラーメッセージ */
@@ -1581,11 +1585,11 @@ input:focus, select:focus {
 .save-btn {
     background: #28a745;
     color: white;
-    padding: 10px 20px;
+    padding: 6px 12px;
     border: none;
-    border-radius: 5px;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 600;
 }
 

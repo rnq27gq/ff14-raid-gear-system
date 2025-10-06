@@ -3308,8 +3308,18 @@
                     return;
                 }
 
-                // 招待トークンなし - エラー表示
-                console.warn('⚠️ 招待トークンがありません');
+                // 招待トークンなし - localStorageに保存済みteam_idを確認
+                const savedTeamId = localStorage.getItem('ff14_team_id');
+                if (savedTeamId) {
+                    console.log('✅ 保存済みteam_id検出 - 自動ログイン実行');
+                    updateLoadingMessage('ログイン情報を確認中...');
+                    // tryAutoLoginを実行（既にinitializeMainFeaturesで呼ばれている）
+                    hideLoadingScreen();
+                    return;
+                }
+
+                // 保存済みログイン情報もない - エラー表示
+                console.warn('⚠️ 招待トークンも保存済みログイン情報もありません');
                 hideLoadingScreen();
                 showError(
                     'このシステムは招待リンク経由でのみアクセスできます。\n\n' +

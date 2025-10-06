@@ -92,8 +92,24 @@ function generatePlayerStatistics(players, allocations) {
             // 装備スロット
             equipmentSlots.forEach(slot => {
                 const allocation = allocations.find(a => a.position === position && a.slot === slot);
-                const allocatedClass = allocation ? 'allocated' : '';
-                html += `<div class="slot-col ${allocatedClass}">${allocation ? '●' : ''}</div>`;
+                let statusClass = '';
+                let symbol = '';
+
+                if (allocation) {
+                    const status = allocation.status || '取得済';
+                    if (status === '断章交換') {
+                        statusClass = 'tome-exchange';
+                        symbol = '▲';
+                    } else if (status === '断章交換・箱取得済') {
+                        statusClass = 'tome-exchange-completed';
+                        symbol = '■';
+                    } else {
+                        statusClass = 'allocated';
+                        symbol = '●';
+                    }
+                }
+
+                html += `<div class="slot-col ${statusClass}">${symbol}</div>`;
             });
 
             // 素材スロット
@@ -200,9 +216,14 @@ function generateEditablePlayerStatistics(players, allocations) {
             // 装備スロット
             equipmentSlots.forEach(slot => {
                 const allocation = allocations.find(a => a.position === position && a.slot === slot);
-                const checked = allocation ? 'checked' : '';
+                const status = allocation ? (allocation.status || '取得済') : '';
                 html += `<div class="slot-col">
-                    <input type="checkbox" ${checked} data-position="${position}" data-slot="${slot}">
+                    <select data-position="${position}" data-slot="${slot}" class="status-select">
+                        <option value="">未取得</option>
+                        <option value="取得済" ${status === '取得済' ? 'selected' : ''}>取得済</option>
+                        <option value="断章交換" ${status === '断章交換' ? 'selected' : ''}>断章交換</option>
+                        <option value="断章交換・箱取得済" ${status === '断章交換・箱取得済' ? 'selected' : ''}>断章交換・箱取得済</option>
+                    </select>
                 </div>`;
             });
 
@@ -245,15 +266,17 @@ async function saveStatistics() {
 
         // 編集内容を収集
         const newAllocations = [];
-        const checkboxes = document.querySelectorAll('.player-stats-table.editable input[type="checkbox"]');
+        const statusSelects = document.querySelectorAll('.player-stats-table.editable select.status-select');
         const numberInputs = document.querySelectorAll('.player-stats-table.editable input[type="number"]');
 
-        // チェックボックス（装備）
-        checkboxes.forEach(checkbox => {
-            if (checkbox.checked) {
+        // セレクトボックス（装備）
+        statusSelects.forEach(select => {
+            const status = select.value;
+            if (status) {
                 newAllocations.push({
-                    position: checkbox.dataset.position,
-                    slot: checkbox.dataset.slot,
+                    position: select.dataset.position,
+                    slot: select.dataset.slot,
+                    status: status,
                     layer: 1, // デフォルト値
                     week: 1,  // デフォルト値
                     timestamp: new Date().toISOString()

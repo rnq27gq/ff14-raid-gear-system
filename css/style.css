@@ -723,6 +723,18 @@ input:focus, select:focus {
     box-sizing: border-box;
 }
 
+.slot-col select.status-select {
+    width: 100%;
+    max-width: 120px;
+    padding: 3px;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
 .slot-col.allocated {
     background-color: #d4edda;
     color: #28a745;
@@ -862,12 +874,14 @@ input:focus, select:focus {
 .slot-col.tome-exchange {
     background-color: #fff3cd;
     color: #856404;
+    font-size: 18px;
     font-weight: bold;
 }
 
 .slot-col.tome-exchange-completed {
     background-color: #f8d7da;
     color: #721c24;
+    font-size: 18px;
     font-weight: bold;
 }
 

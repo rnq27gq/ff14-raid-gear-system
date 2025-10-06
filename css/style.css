@@ -11,8 +11,10 @@ body {
 .container {
     max-width: 1800px;
     margin: 0 auto;
-    height: calc(100vh - 20px);
-    overflow-y: auto;
+    height: 100vh;
+    overflow-y: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 /* シンプルヘッダー */
@@ -510,9 +512,9 @@ body {
 h1 {
     text-align: center;
     color: #2c3e50;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     font-weight: 600;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
 }
 h2 {
     color: #2c3e50;
@@ -525,16 +527,33 @@ h2 {
 h3 {
     color: #2c3e50;
     font-weight: 500;
-    font-size: 1rem;
-    margin-bottom: 6px;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
 }
 .section {
     background-color: #f8f9fa;
-    padding: 10px;
-    margin-bottom: 8px;
+    padding: 8px;
+    margin-bottom: 6px;
     border-radius: 6px;
     border: 1px solid #e9ecef;
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* ダッシュボードコントロール（上部20%） */
+.dashboard-controls {
+    flex: 0 0 auto;
+    padding: 6px;
+    margin-bottom: 4px;
+}
+
+/* メンバー設定セクション（下部80%） */
+.member-section {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 6px;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
 }
 button {
     background-color: #5a9fd4;
@@ -631,12 +650,12 @@ input:focus, select:focus {
     background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
     color: white;
     border: none;
-    border-radius: 6px;
-    padding: 10px 15px;
+    border-radius: 4px;
+    padding: 6px 10px;
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: center;
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     font-weight: 600;
 }
 

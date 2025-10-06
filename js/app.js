@@ -1145,27 +1145,21 @@
             content.innerHTML = `
                 <h1>${window.currentRaidTier.name}</h1>
 
-                <div class="section">
-                    <h3>装備分配・優先順位</h3>
+                <div class="section dashboard-controls">
                     <div class="dashboard-layer-grid">
                         <button class="dashboard-layer-button" onclick="showLayerAllocation(1)">1層</button>
                         <button class="dashboard-layer-button" onclick="showLayerAllocation(2)">2層</button>
                         <button class="dashboard-layer-button" onclick="showLayerAllocation(3)">3層</button>
                         <button class="dashboard-layer-button" onclick="showLayerAllocation(4)">4層</button>
                         <button class="dashboard-layer-button" onclick="showPriorityManagement()">優先順位設定</button>
+                        <button class="dashboard-layer-button" onclick="showStatistics()">統計情報</button>
+                        <button class="dashboard-layer-button" onclick="showAllocationHistory()">配布履歴</button>
                     </div>
                 </div>
 
-                <div class="section">
+                <div class="section member-section">
                     <h3>メンバー設定</h3>
                     ${renderIntegratedMemberTable(players, positions)}
-                </div>
-
-                <div class="section">
-                    <div class="navigation">
-                        <button class="nav-button" onclick="showStatistics()">統計情報</button>
-                        <button class="nav-button" onclick="showAllocationHistory()">配布履歴</button>
-                    </div>
                 </div>
             `;
         }

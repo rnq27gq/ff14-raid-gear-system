@@ -1043,19 +1043,23 @@
                 if (error) {
                     console.warn('チーム情報取得エラー:', error);
                     // フォールバック: チームIDから基本情報を生成
+                    const createdAt = new Date().toISOString();
                     window.currentRaidTier = {
                         id: window.currentTeamId,
                         name: window.currentTeamId,
                         description: '零式レイド',
-                        created_at: new Date().toISOString()
+                        created_at: createdAt,
+                        startDate: createdAt
                     };
                 } else {
                     // チーム情報からレイドティアを生成
+                    const createdAt = teamData.created_at || new Date().toISOString();
                     window.currentRaidTier = {
                         id: window.currentTeamId,
                         name: teamData.team_name || window.currentTeamId,
                         description: '零式レイド',
-                        created_at: teamData.created_at || new Date().toISOString()
+                        created_at: createdAt,
+                        startDate: createdAt
                     };
                 }
 

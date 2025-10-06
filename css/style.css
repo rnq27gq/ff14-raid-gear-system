@@ -744,11 +744,16 @@ input:focus, select:focus {
 
 .table-input {
     width: 100%;
-    padding: 4px 5px;
+    padding: 6px 6px;
     border: 1px solid #ced4da;
     border-radius: 3px;
     font-size: 12px;
     box-sizing: border-box;
+}
+
+/* input要素を含むセルはpaddingを削除 */
+.integrated-member-table td:has(.table-input) {
+    padding: 0;
 }
 
 .table-input:focus {
@@ -759,8 +764,8 @@ input:focus, select:focus {
 
 .table-select {
     width: 100%;
-    padding: 4px 2px;
-    padding-right: 20px;
+    padding: 6px 4px;
+    padding-right: 22px;
     border: 1px solid #ced4da;
     border-radius: 3px;
     font-size: 11px;
@@ -770,6 +775,11 @@ input:focus, select:focus {
     appearance: auto;
     -webkit-appearance: menulist;
     -moz-appearance: menulist;
+}
+
+/* select要素を含むセルはpaddingを削除 */
+.integrated-member-table td:has(.table-select) {
+    padding: 0;
 }
 
 .table-select:focus {

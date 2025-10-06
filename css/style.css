@@ -879,8 +879,8 @@ input:focus, select:focus {
 }
 
 .slot-col.tome-exchange-completed {
-    background-color: #f8d7da;
-    color: #721c24;
+    background-color: #cfe2ff;
+    color: #084298;
     font-size: 0.7rem;
     font-weight: bold;
 }

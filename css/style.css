@@ -763,7 +763,9 @@ input:focus, select:focus {
 }
 
 .table-select {
-    width: 100%;
+    width: calc(100% - 8px);
+    margin-right: 4px;
+    margin-left: 4px;
     padding: 6px 4px;
     padding-right: 22px;
     border: 1px solid #ced4da;

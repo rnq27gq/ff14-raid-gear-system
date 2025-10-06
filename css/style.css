@@ -703,6 +703,24 @@ input:focus, select:focus {
     padding: 8px 4px;
     text-align: center;
     font-size: 0.8rem;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.slot-col input[type="checkbox"] {
+    margin: 0;
+    width: auto;
+    cursor: pointer;
+}
+
+.slot-col input[type="number"] {
+    width: 40px;
+    padding: 2px;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    box-sizing: border-box;
 }
 
 .slot-col.allocated {

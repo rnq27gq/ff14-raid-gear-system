@@ -404,16 +404,6 @@ function showAllocationHistory() {
                     </div>
 
                     <div class="filter-group">
-                        <label>取得者:</label>
-                        <select id="playerFilter" onchange="filterAllocationHistory()">
-                            <option value="">全て</option>
-                            ${Object.entries(players).map(([position, player]) => `
-                                <option value="${position}">${player.name} (${position})</option>
-                            `).join('')}
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
                         <label>装備部位:</label>
                         <select id="slotFilter" onchange="filterAllocationHistory()">
                             <option value="">全て</option>
@@ -432,6 +422,16 @@ function showAllocationHistory() {
                             <option value="硬化薬">硬化薬</option>
                             <option value="強化薬">強化薬</option>
                             <option value="強化繊維">強化繊維</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>取得者:</label>
+                        <select id="playerFilter" onchange="filterAllocationHistory()">
+                            <option value="">全て</option>
+                            ${Object.entries(players).map(([position, player]) => `
+                                <option value="${position}">${player.name} (${position})</option>
+                            `).join('')}
                         </select>
                     </div>
                 </div>

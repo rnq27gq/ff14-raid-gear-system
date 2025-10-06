@@ -93,23 +93,23 @@ function generatePlayerStatistics(players, allocations) {
             equipmentSlots.forEach(slot => {
                 const allocation = allocations.find(a => a.position === position && a.slot === slot);
                 let statusClass = '';
-                let symbol = '';
+                let statusText = '';
 
                 if (allocation) {
                     const status = allocation.status || '取得済';
                     if (status === '断章交換') {
                         statusClass = 'tome-exchange';
-                        symbol = '▲';
+                        statusText = '断章交換';
                     } else if (status === '断章交換・箱取得済') {
                         statusClass = 'tome-exchange-completed';
-                        symbol = '■';
+                        statusText = '断章交換・箱取得済';
                     } else {
                         statusClass = 'allocated';
-                        symbol = '●';
+                        statusText = '取得済';
                     }
                 }
 
-                html += `<div class="slot-col ${statusClass}">${symbol}</div>`;
+                html += `<div class="slot-col ${statusClass}">${statusText}</div>`;
             });
 
             // 素材スロット

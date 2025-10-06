@@ -738,7 +738,7 @@ input:focus, select:focus {
 .slot-col.allocated {
     background-color: #d4edda;
     color: #28a745;
-    font-size: 20px;
+    font-size: 0.7rem;
     font-weight: bold;
 }
 
@@ -874,14 +874,14 @@ input:focus, select:focus {
 .slot-col.tome-exchange {
     background-color: #fff3cd;
     color: #856404;
-    font-size: 18px;
+    font-size: 0.7rem;
     font-weight: bold;
 }
 
 .slot-col.tome-exchange-completed {
     background-color: #f8d7da;
     color: #721c24;
-    font-size: 18px;
+    font-size: 0.7rem;
     font-weight: bold;
 }
 

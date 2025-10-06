@@ -26,21 +26,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- シンプルヘッダー -->
-        <div class="simple-header" id="mainHeader" style="display: none;">
-            <div class="header-title">
-                <h1>FF14 零式装備分配システム</h1>
-                <span id="teamNameDisplay" class="team-name"></span>
-            </div>
-            <div class="settings-dropdown">
-                <button class="settings-btn" onclick="toggleSettingsMenu()">⚙️</button>
-                <div class="settings-menu" id="settingsMenu" style="display: none;">
-                    <a onclick="showSystemSettings(); toggleSettingsMenu();">システム設定</a>
-                    <a onclick="exportAllData(); toggleSettingsMenu();">データエクスポート</a>
-                </div>
-            </div>
-        </div>
-        
         <!-- エラー・成功メッセージ -->
         <div id="errorMessage" class="error-message"></div>
         <div id="successMessage" class="success-message"></div>

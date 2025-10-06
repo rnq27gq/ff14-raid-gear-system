@@ -737,13 +737,6 @@
                 mainContent.classList.add('authenticated');
                 mainContent.style.display = 'block'; // Override inline style from showLoginForm
             }
-            
-            // 新しいシンプルヘッダーを表示
-            const mainHeader = document.getElementById('mainHeader');
-            if (mainHeader) mainHeader.style.display = 'flex';
-
-            const teamNameDisplay = document.getElementById('teamNameDisplay');
-            if (teamNameDisplay) teamNameDisplay.textContent = `- ${getDisplayTeamName(window.currentTeamId)}`;
         }
         
         // ログアウト（Discord OAuth利用時は基本的に不要）
@@ -762,9 +755,6 @@
 
             const mainContent = document.getElementById('mainContent');
             if (mainContent) mainContent.classList.remove('authenticated');
-
-            const mainHeader = document.getElementById('mainHeader');
-            if (mainHeader) mainHeader.style.display = 'none';
 
             // 入力欄クリア
             const mainTeamIdInput = document.getElementById('mainTeamIdInput');
@@ -1150,13 +1140,9 @@
 
             const content = document.getElementById('content');
             const players = window.appData.players[window.currentRaidTier.id] || {};
-            const positions = ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
+            const positions = ['MT', 'ST', 'D1', 'D2', 'D3', 'D4', 'H1', 'H2'];
 
             content.innerHTML = `
-                <div class="navigation-top-left">
-                    <button class="nav-button" onclick="showTierDashboard()">ホーム</button>
-                </div>
-
                 <h1>${window.currentRaidTier.name}</h1>
 
                 <div class="section">
@@ -1255,7 +1241,7 @@
                                                     onclick="togglePolicyCell('${position}', '${slot}')"
                                                     data-position="${position}"
                                                     data-slot="${slot}">
-                                                    ${isRaid ? '〇' : ''}
+                                                    ${isRaid ? '零式' : ''}
                                                 </td>
                                             `;
                                         }).join('')}
@@ -1299,14 +1285,14 @@
                 cell.textContent = '';
             } else {
                 cell.classList.add('policy-raid');
-                cell.textContent = '〇';
+                cell.textContent = '零式';
             }
         }
 
         // 一体化テーブルのデータ保存
         async function saveIntegratedMemberData() {
             try {
-                const positions = ['D1', 'D2', 'D3', 'D4', 'MT', 'ST', 'H1', 'H2'];
+                const positions = ['MT', 'ST', 'D1', 'D2', 'D3', 'D4', 'H1', 'H2'];
                 const slots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
                 const players = {};
 

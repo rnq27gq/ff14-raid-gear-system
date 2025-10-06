@@ -2364,7 +2364,7 @@
                 const allCandidates = [];
                 
                 Object.entries(players).forEach(([position, player]) => {
-                    const priority = calculatePlayerPriority(player, drop);
+                    const priority = calculatePlayerPriority(player, drop, position);
                     allCandidates.push({
                         position,
                         player,
@@ -2438,24 +2438,24 @@
         }
         
         // プレイヤー優先度計算
-        function calculatePlayerPriority(player, drop) {
+        function calculatePlayerPriority(player, drop, position) {
             let score = 0;
             let canReceive = false;
             let reason = 'Pass';
             let type = 'pass';
-            
+
             if (drop.type === 'equipment') {
                 // 装備の場合
                 const policy = player.equipmentPolicy?.[drop.slot] || 'トームストーン';
-                
+
                 // 現在の装備状況を取得（分配履歴から）
-                const equipmentStatus = getPlayerEquipmentStatus(player.position, drop.slot);
-                
+                const equipmentStatus = getPlayerEquipmentStatus(position, drop.slot);
+
                 // 断章交換者の特別処理
                 if (equipmentStatus === '断章交換') {
                     // 未取得者がいるかチェック
-                    const hasUnacquiredRaidPlayer = hasUnacquiredRaidPlayers(drop.slot, player.position);
-                    
+                    const hasUnacquiredRaidPlayer = hasUnacquiredRaidPlayers(drop.slot, position);
+
                     if (hasUnacquiredRaidPlayer) {
                         // 未取得者がいる場合は分配対象外
                         type = 'pass';
@@ -2464,7 +2464,7 @@
                         // 未取得者がいない場合は復活
                         canReceive = true;
                         type = 'need';
-                        score = 1000 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
+                        score = 1000 + getPositionPriority(position) - (player.dynamicPriority || 0);
                         reason = 'Need (断章交換 - 復活)';
                     }
                 } else if (equipmentStatus === '断章交換・箱取得済') {
@@ -2474,12 +2474,12 @@
                 } else if (policy === '零式' && equipmentStatus === '未取得') {
                     canReceive = true;
                     type = 'need';
-                    score = 1000 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
+                    score = 1000 + getPositionPriority(position) - (player.dynamicPriority || 0);
                     reason = 'Need (零式)';
                 } else if (equipmentStatus === '未取得') {
                     canReceive = true;
                     type = 'greed';
-                    score = 500 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
+                    score = 500 + getPositionPriority(position) - (player.dynamicPriority || 0);
                     reason = 'Greed (トーム可)';
                 } else {
                     type = 'pass';
@@ -2487,8 +2487,8 @@
                 }
             } else if (drop.type === 'material') {
                 // 強化素材の場合（分配優先度設定に基づく）
-                const materialStatus = getPlayerEquipmentStatus(player.position, drop.slot);
-                
+                const materialStatus = getPlayerEquipmentStatus(position, drop.slot);
+
                 // 断章交換素材の特別処理
                 if (materialStatus === '断章交換') {
                     type = 'pass';
@@ -2499,7 +2499,7 @@
                 } else if (materialStatus === '未取得') {
                     canReceive = true;
                     type = 'need';
-                    score = getPositionPriority(player.position) - (player.dynamicPriority || 0);
+                    score = getPositionPriority(position) - (player.dynamicPriority || 0);
                     reason = 'Need (素材)';
                 } else {
                     type = 'pass';
@@ -2507,20 +2507,20 @@
                 }
             } else if (drop.type === 'weapon_box') {
                 // 武器箱の場合（装備方針は「武器」スロットを参照）
-                const weaponBoxStatus = getPlayerEquipmentStatus(player.position, '武器箱');
+                const weaponBoxStatus = getPlayerEquipmentStatus(position, '武器箱');
                 const weaponPolicy = player.equipmentPolicy?.['武器'] || 'トームストーン';
-                
+
                 if (weaponBoxStatus === '断章交換') {
                     // 未取得者がいるかチェック（武器方針で判定）
-                    const hasUnacquiredRaidPlayer = hasUnacquiredWeaponBoxPlayers(player.position);
-                    
+                    const hasUnacquiredRaidPlayer = hasUnacquiredWeaponBoxPlayers(position);
+
                     if (hasUnacquiredRaidPlayer) {
                         type = 'pass';
                         reason = 'Pass (断章交換 - 他に未取得者あり)';
                     } else {
                         canReceive = true;
                         type = 'need';
-                        score = 2000 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
+                        score = 2000 + getPositionPriority(position) - (player.dynamicPriority || 0);
                         reason = 'Need (断章交換 - 復活)';
                     }
                 } else if (weaponBoxStatus === '断章交換・箱取得済') {
@@ -2529,12 +2529,12 @@
                 } else if (weaponPolicy === '零式' && weaponBoxStatus === '未取得') {
                     canReceive = true;
                     type = 'need';
-                    score = 2000 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
+                    score = 2000 + getPositionPriority(position) - (player.dynamicPriority || 0);
                     reason = 'Need (武器箱)';
                 } else if (weaponBoxStatus === '未取得') {
                     canReceive = true;
                     type = 'greed';
-                    score = 500 + getPositionPriority(player.position) - (player.dynamicPriority || 0);
+                    score = 500 + getPositionPriority(position) - (player.dynamicPriority || 0);
                     reason = 'Greed (武器箱 - トーム可)';
                 } else {
                     type = 'pass';
@@ -2543,9 +2543,9 @@
             } else if (drop.type === 'direct_weapon') {
                 // 直ドロップ武器の場合（武器希望に基づく）
                 const weaponWishes = player.weaponWishes || [];
-                const firstChoiceWeaponStatus = getPlayerEquipmentStatus(player.position, '直ドロップ武器');
+                const firstChoiceWeaponStatus = getPlayerEquipmentStatus(position, '直ドロップ武器');
                 const weaponType = drop.weapon; // 選択された武器種
-                
+
                 // 第一希望武器を既に取得済みの場合はPass
                 if (firstChoiceWeaponStatus === '取得済み') {
                     type = 'pass';
@@ -2555,7 +2555,7 @@
                     canReceive = true;
                     type = 'need';
                     const wishIndex = weaponWishes.indexOf(weaponType);
-                    score = 3000 + getPositionPriority(player.position) - (wishIndex * 100) - (player.dynamicPriority || 0);
+                    score = 3000 + getPositionPriority(position) - (wishIndex * 100) - (player.dynamicPriority || 0);
                     reason = `Need (第${wishIndex + 1}希望)`;
                 } else {
                     // 希望していない武器の場合はPass

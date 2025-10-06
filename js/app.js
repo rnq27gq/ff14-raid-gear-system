@@ -1206,10 +1206,10 @@
                             <tr>
                                 <th style="width: 45px;">ロール</th>
                                 <th style="width: 120px;">名前</th>
-                                <th style="width: 100px;">ジョブ</th>
+                                <th style="width: 130px;">ジョブ</th>
                                 <th colspan="10" style="text-align: center;">装備方針（零式=〇、トームストーン=空白）</th>
-                                <th style="width: 100px;">武器第2希望</th>
-                                <th style="width: 100px;">武器第3希望</th>
+                                <th style="width: 130px;">武器第2希望</th>
+                                <th style="width: 130px;">武器第3希望</th>
                             </tr>
                             <tr>
                                 <th colspan="3"></th>

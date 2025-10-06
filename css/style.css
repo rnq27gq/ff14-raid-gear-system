@@ -709,16 +709,16 @@ input:focus, select:focus {
 
 .integrated-member-table th {
     background-color: #f8f9fa;
-    padding: 6px 4px;
+    padding: 8px 4px;
     border: 1px solid #dee2e6;
     font-weight: 600;
     color: #495057;
     text-align: center;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .integrated-member-table td {
-    padding: 2px 2px;
+    padding: 7px 2px;
     border: 1px solid #dee2e6;
     text-align: center;
     vertical-align: middle;
@@ -744,10 +744,10 @@ input:focus, select:focus {
 
 .table-input {
     width: 100%;
-    padding: 3px 4px;
+    padding: 4px 5px;
     border: 1px solid #ced4da;
     border-radius: 3px;
-    font-size: 11px;
+    font-size: 12px;
     box-sizing: border-box;
 }
 
@@ -759,11 +759,11 @@ input:focus, select:focus {
 
 .table-select {
     width: 100%;
-    padding: 3px 1px;
-    padding-right: 18px;
+    padding: 4px 2px;
+    padding-right: 20px;
     border: 1px solid #ced4da;
     border-radius: 3px;
-    font-size: 10px;
+    font-size: 11px;
     background-color: white;
     cursor: pointer;
     box-sizing: border-box;
@@ -782,7 +782,7 @@ input:focus, select:focus {
     cursor: pointer;
     user-select: none;
     transition: background-color 0.2s;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: normal;
     min-width: 30px;
 }

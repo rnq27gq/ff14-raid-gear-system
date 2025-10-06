@@ -26,30 +26,18 @@
 </head>
 <body>
     <div class="container">
-        <!-- Supabase認証ヘッダー -->
-        <div class="supabase-header">
-            <div class="supabase-status">
-                <h1 style="margin: 0; font-size: 18px; color: white;">FF14 零式装備分配システム</h1>
-                <div id="connectionStatus" class="connection-indicator offline">
-                    <span>⚫</span>
-                    <span>オフライン</span>
-                </div>
-                <div id="teamInfo" style="display: none;">
-                    <span id="currentTeamName">チーム名</span>
-                </div>
+        <!-- シンプルヘッダー -->
+        <div class="simple-header" id="mainHeader" style="display: none;">
+            <div class="header-title">
+                <h1>FF14 零式装備分配システム</h1>
+                <span id="teamNameDisplay" class="team-name"></span>
             </div>
-            
-
-            <div class="auth-controls" id="loggedInControls" style="display: none;">
-                <span id="loggedInTeam">demo-team</span>
-                <div class="settings-dropdown">
-                    <button class="settings-btn" onclick="toggleSettingsMenu()">⚙️</button>
-                    <div class="settings-menu" id="settingsMenu" style="display: none;">
-                        <a onclick="showSystemSettings(); toggleSettingsMenu();">システム設定</a>
-                        <a onclick="exportAllData(); toggleSettingsMenu();">データエクスポート</a>
-                    </div>
+            <div class="settings-dropdown">
+                <button class="settings-btn" onclick="toggleSettingsMenu()">⚙️</button>
+                <div class="settings-menu" id="settingsMenu" style="display: none;">
+                    <a onclick="showSystemSettings(); toggleSettingsMenu();">システム設定</a>
+                    <a onclick="exportAllData(); toggleSettingsMenu();">データエクスポート</a>
                 </div>
-                <button class="auth-btn logout" onclick="logout()">ログアウト</button>
             </div>
         </div>
         

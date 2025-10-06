@@ -15,7 +15,36 @@ body {
     overflow-y: auto;
 }
 
-/* Supabase認証用のヘッダー */
+/* シンプルヘッダー */
+.simple-header {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    padding: 8px 20px;
+    margin: -10px -10px 10px -10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-title h1 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.team-name {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+/* 旧ヘッダー（互換性のため残す） */
 .supabase-header {
     background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
     color: white;
@@ -660,6 +689,92 @@ input:focus, select:focus {
     color: #28a745;
     font-size: 20px;
     font-weight: bold;
+}
+
+/* 一体化メンバーテーブル */
+.integrated-table-container {
+    overflow-x: auto;
+    margin: 15px 0;
+}
+
+.integrated-member-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.integrated-member-table th {
+    background-color: #f8f9fa;
+    padding: 8px 4px;
+    border: 1px solid #dee2e6;
+    font-weight: 600;
+    color: #495057;
+    text-align: center;
+}
+
+.integrated-member-table td {
+    padding: 6px 4px;
+    border: 1px solid #dee2e6;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.position-cell {
+    font-weight: bold;
+    color: white;
+    font-size: 12px;
+}
+
+.table-input {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    font-size: 12px;
+    box-sizing: border-box;
+}
+
+.table-input:focus {
+    outline: none;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.table-select {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    font-size: 12px;
+    background-color: white;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.table-select:focus {
+    outline: none;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.policy-cell {
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s;
+    font-size: 16px;
+    font-weight: bold;
+    min-width: 30px;
+}
+
+.policy-cell:hover {
+    background-color: #e9ecef;
+}
+
+.policy-cell.policy-raid {
+    background-color: #d4edda;
+    color: #28a745;
 }
 
 .slot-col.acquired {

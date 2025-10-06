@@ -986,16 +986,10 @@
             }
         }
         
-        // 接続状態更新
+        // 接続状態更新（シンプルヘッダーでは表示しない）
         function updateConnectionStatus(isOnline) {
-            const indicator = document.getElementById('connectionStatus');
-            if (isOnline) {
-                indicator.className = 'connection-indicator online';
-                indicator.innerHTML = '<span>🟢</span><span>オンライン</span>';
-            } else {
-                indicator.className = 'connection-indicator offline';
-                indicator.innerHTML = '<span>⚫</span><span>オフライン</span>';
-            }
+            // シンプルヘッダーには接続ステータス表示がないため何もしない
+            console.log('Supabase接続状態:', isOnline ? 'オンライン' : 'オフライン');
         }
         
         // メッセージ表示関数はjs/ui.jsに分離

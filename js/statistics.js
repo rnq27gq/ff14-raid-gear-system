@@ -102,7 +102,7 @@ function generatePlayerStatistics(players, allocations) {
                         statusText = '断章交換';
                     } else if (status === '断章交換・箱取得済') {
                         statusClass = 'tome-exchange-completed';
-                        statusText = '断章交換・箱取得済';
+                        statusText = '断章交換・<br>箱取得済';
                     } else {
                         statusClass = 'allocated';
                         statusText = '取得済';

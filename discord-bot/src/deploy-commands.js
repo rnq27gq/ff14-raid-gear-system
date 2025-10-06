@@ -1,6 +1,6 @@
 import { REST, Routes } from 'discord.js';
 import { config } from 'dotenv';
-import { TeamCreateCommand } from './commands/team-create.js';
+import { ShareCommand } from './commands/share.js';
 
 config();
 
@@ -9,9 +9,9 @@ async function deployCommands() {
         console.log('🚀 Started refreshing application (/) commands.');
 
         const commands = [];
-        
-        const teamCreateCommand = new TeamCreateCommand();
-        commands.push(teamCreateCommand.data.toJSON());
+
+        const shareCommand = new ShareCommand();
+        commands.push(shareCommand.data.toJSON());
 
         const rest = new REST().setToken(process.env.DISCORD_TOKEN);
 

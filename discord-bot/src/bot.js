@@ -1,7 +1,7 @@
 import { Client, GatewayIntentBits, Collection } from 'discord.js';
 import { createClient } from '@supabase/supabase-js';
 import { config } from 'dotenv';
-import { TeamCreateCommand } from './commands/team-create.js';
+import { ShareCommand } from './commands/share.js';
 
 config();
 
@@ -25,8 +25,8 @@ class FF14GearAllocationBot {
     }
 
     setupCommands() {
-        const teamCreateCommand = new TeamCreateCommand(this.supabaseClient);
-        this.commands.set('team-create', teamCreateCommand);
+        const shareCommand = new ShareCommand(this.supabaseClient);
+        this.commands.set('share', shareCommand);
     }
 
     setupEventHandlers() {

@@ -1170,6 +1170,13 @@
             `;
         }
 
+        // ポジションからロールクラスを取得
+        function getPositionRoleClass(position) {
+            if (position === 'MT' || position === 'ST') return 'tank';
+            if (position === 'H1' || position === 'H2') return 'healer';
+            return 'dps';
+        }
+
         // 一体化メンバーテーブルのレンダリング
         function renderIntegratedMemberTable(players, positions) {
             const slots = ['武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];

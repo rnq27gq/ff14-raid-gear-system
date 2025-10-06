@@ -727,6 +727,18 @@ input:focus, select:focus {
     font-size: 12px;
 }
 
+.position-cell.tank {
+    background-color: #3498db;
+}
+
+.position-cell.healer {
+    background-color: #27ae60;
+}
+
+.position-cell.dps {
+    background-color: #e67e22;
+}
+
 .table-input {
     width: 100%;
     padding: 4px 6px;

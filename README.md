@@ -4,8 +4,6 @@
 
 **FF14の零式レイドで装備を公平に分配するためのWebアプリケーション**
 
-[![Discord](https://img.shields.io/badge/Discord-Bot-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com)
-
 </div>
 
 ---

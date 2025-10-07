@@ -1,5 +1,3 @@
-        console.log('🚀 メインスクリプト開始 - v2.2-scope-fix');
-        console.log('実行時刻:', new Date().toLocaleTimeString());
 
         try {
 
@@ -7,21 +5,13 @@
         // window.isAuthenticated, window.currentTeamId等を使用
         
         // 確実な初期化システム v2 - キャッシュ問題対応版
-        console.log('=== 初期化システム v2 開始 ===');
-        console.log('スクリプト実行確認: OK');
 
         // 外部スクリプト依存チェック
         setTimeout(() => {
-            console.log('外部スクリプト状況:');
-            console.log('- showMessage:', typeof showMessage);
-            console.log('- showError:', typeof showError);
-            console.log('- SUPABASE_CONFIG:', typeof window.SUPABASE_CONFIG);
 
             if (typeof showMessage === 'undefined') {
-                console.warn('⚠️ UI関数が読み込まれていません。フォールバック実装します');
                 // フォールバック実装
                 window.showMessage = function(msg, type) {
-                    console.log(`${type}: ${msg}`);
                     const el = document.getElementById(type === 'error' ? 'errorMessage' : 'successMessage');
                     if (el) {
                         el.textContent = msg;
@@ -37,14 +27,11 @@
         // 初期化実行関数
         async function executeInitialization(trigger) {
             if (window.isInitialized || window.isInitializing) {
-                console.log(`${trigger}: 既に初期化済み/初期化中 - スキップ`);
                 return false;
             }
 
-            console.log(`${trigger}: 初期化を実行`);
             try {
                 await initializeApp();
-                console.log(`${trigger}: 初期化成功`);
                 return true;
             } catch (error) {
                 console.error(`${trigger}: 初期化エラー:`, error);
@@ -57,29 +44,24 @@
 
         // 2. DOMContentLoaded
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOMContentLoaded: DOM準備完了');
             executeInitialization('DOMContentLoaded');
         });
 
         // 3. ライブラリ読み込み完了を待つ
         window.addEventListener('load', () => {
-            console.log('Window load: 全リソース読み込み完了');
             executeInitialization('Window load');
         });
 
         // 4. フォールバック（5秒後に強制初期化）
         setTimeout(() => {
-            console.log('フォールバック初期化チェック');
             executeInitialization('フォールバック');
         }, 5000);
 
         // 5. ページ表示後の最終チェック（10秒後）
         setTimeout(() => {
             if (!window.isInitialized) {
-                console.warn('⚠️ 初期化が完了していません。手動初期化を実行します');
                 executeInitialization('最終フォールバック');
             } else {
-                console.log('✅ 自動初期化が正常に完了しました');
             }
         }, 10000);
         
@@ -87,7 +69,6 @@
         async function initializeApp() {
             // 重複初期化防止
             if (window.isInitializing || window.isInitialized) {
-                console.log('初期化スキップ: 既に初期化済みまたは初期化中');
                 return;
             }
             
@@ -95,20 +76,11 @@
             updateGlobalState();
 
             try {
-                console.log('アプリ初期化開始');
 
                 // デバッグ: 設定値の確認
-                console.log('=== Supabase設定確認 ===');
-                console.log('SUPABASE_CONFIG:', window.SUPABASE_CONFIG);
-                console.log('URL:', window.SUPABASE_CONFIG?.SUPABASE_URL);
-                console.log('KEY length:', window.SUPABASE_CONFIG?.SUPABASE_ANON_KEY?.length);
-                console.log('URL contains placeholder:', window.SUPABASE_CONFIG?.SUPABASE_URL?.includes('{{'));
-                console.log('KEY contains placeholder:', window.SUPABASE_CONFIG?.SUPABASE_ANON_KEY?.includes('{{'));
-                console.log('=========================');
 
                 // Supabaseクライアントが既に存在する場合はスキップ
                 if (window.supabaseClient) {
-                    console.log('Supabaseクライアント既存のため初期化スキップ');
                     window.isInitialized = true;
                     window.isInitializing = false;
                     updateGlobalState();
@@ -121,7 +93,6 @@
                     throw new Error('Supabase JavaScriptライブラリが読み込まれていません');
                 }
                 
-                console.log('Supabaseライブラリ確認完了');
                 
                 // Supabaseクライアント作成（機密情報は外部ファイルから）
                 const supabaseUrl = window.SUPABASE_CONFIG?.SUPABASE_URL;
@@ -145,7 +116,6 @@
                     throw new Error('Supabaseクライアントの作成に失敗しました');
                 }
                 
-                console.log('Supabaseクライアント作成完了');
                 
                 // 接続状態更新
                 updateConnectionStatus(true);
@@ -158,7 +128,6 @@
                     await tryAutoLogin();
                 }
                 
-                console.log('アプリ初期化完了');
                 
                 // 初期化完了フラグ設定
                 window.isInitialized = true;
@@ -170,7 +139,6 @@
 
                 // Supabase接続エラーなど重大な問題のみユーザーに通知
                 if (error.message && !error.message.includes('No rows')) {
-                    console.warn('初期化エラー（非致命的）:', error.message);
                     // 重大なエラーのみ表示
                     if (error.message.includes('Supabase') || error.message.includes('認証情報')) {
                         showError('システムの初期化に失敗しました: ' + error.message);
@@ -201,7 +169,6 @@
             
             const savedTeamId = localStorage.getItem('ff14_team_id');
             if (savedTeamId) {
-                console.log('自動ログイン開始:', savedTeamId);
                 window.currentTeamId = savedTeamId;
                 
                 // チームコンテキスト設定
@@ -213,7 +180,6 @@
                     if (contextError) {
                         console.error('コンテキスト設定エラー:', contextError);
                     } else {
-                        console.log('チームコンテキスト設定完了');
                     }
                 } catch (error) {
                     console.error('自動ログイン中のコンテキスト設定エラー:', error);
@@ -224,7 +190,6 @@
                 // メイン機能の初期化
                 await initializeMainFeatures();
                 
-                console.log('自動ログイン完了');
             }
         }
         
@@ -269,7 +234,6 @@
                         console.error('コンテキスト設定エラー:', contextError);
                     }
                 } catch (contextErr) {
-                    console.warn('チームコンテキスト設定をスキップ:', contextErr);
                 }
 
                 // 認証状態を表示
@@ -513,7 +477,6 @@
                     throw new Error('Supabaseクライアントが初期化されていません');
                 }
                 
-                console.log('認証試行:', teamId);
                 
                 // Supabase認証
                 const { data, error } = await window.supabaseClient.rpc('authenticate_team', {
@@ -521,7 +484,6 @@
                     p_password: password
                 });
                 
-                console.log('認証結果:', { data, error });
                 
                 if (error) {
                     throw new Error(`認証エラー: ${error.message}`);
@@ -536,7 +498,6 @@
                 localStorage.setItem('ff14_team_id', teamId);
                 
                 // チームコンテキスト設定
-                console.log('チームコンテキスト設定中...');
                 const { data: contextData, error: contextError } = await window.supabaseClient.rpc('set_team_context', {
                     team_id: teamId
                 });
@@ -544,7 +505,6 @@
                 if (contextError) {
                     console.error('コンテキスト設定エラー:', contextError);
                 } else {
-                    console.log('チームコンテキスト設定完了');
                 }
                 
                 await showAuthenticatedState();
@@ -622,7 +582,6 @@
                     throw new Error('Supabaseクライアントが初期化されていません');
                 }
                 
-                console.log('チーム作成試行:', teamId);
                 
                 // Supabaseでセキュリティ質問付きチーム作成
                 const { data, error } = await window.supabaseClient.rpc('create_team_with_security', {
@@ -634,7 +593,6 @@
                     p_security_answer: securityAnswer
                 });
                 
-                console.log('チーム作成結果:', { data, error });
                 
                 if (error) {
                     if (error.message.includes('already exists') || error.message.includes('duplicate')) {
@@ -979,7 +937,6 @@
         // 接続状態更新（シンプルヘッダーでは表示しない）
         function updateConnectionStatus(isOnline) {
             // シンプルヘッダーには接続ステータス表示がないため何もしない
-            console.log('Supabase接続状態:', isOnline ? 'オンライン' : 'オフライン');
         }
         
         // メッセージ表示関数はjs/ui.jsに分離
@@ -1000,7 +957,6 @@
         // メイン機能初期化
         async function initializeMainFeatures() {
             try {
-                console.log('メイン機能初期化開始');
 
                 // チーム情報からレイドティアを自動生成
                 await initializeDefaultRaidTier();
@@ -1011,13 +967,11 @@
                 // 直接ティアダッシュボードを表示（メインダッシュボードをスキップ）
                 showTierDashboard();
 
-                console.log('メイン機能初期化完了');
             } catch (error) {
                 console.error('メイン機能初期化エラー:', error);
 
                 // データ読み込みエラーは通常の状態（初回起動時など）
                 // エラーメッセージを表示せず、空のデータでダッシュボードを表示
-                console.log('フォールバック: 空のデータでダッシュボード表示（初回起動またはデータなし）');
 
                 try {
                     // フォールバック時もティアダッシュボードを表示
@@ -1041,7 +995,6 @@
                     .single();
 
                 if (error) {
-                    console.warn('チーム情報取得エラー:', error);
                     // フォールバック: チームIDから基本情報を生成
                     const createdAt = new Date().toISOString();
                     window.currentRaidTier = {
@@ -1063,7 +1016,6 @@
                     };
                 }
 
-                console.log('✅ レイドティア自動初期化完了:', window.currentRaidTier);
 
                 // state.jsと同期
                 if (window.setState) {
@@ -1095,7 +1047,6 @@
                     throw new Error(`データ読み込みエラー: ${error.message}`);
                 }
                 
-                console.log('読み込みデータ:', allData);
                 
                 // データ種別ごとに分類
                 if (allData && allData.length > 0) {
@@ -1123,7 +1074,6 @@
                     });
                 }
                 
-                console.log('整理済みデータ:', window.appData);
                 
             } catch (error) {
                 console.error('データ読み込みエラー:', error);
@@ -2874,7 +2824,6 @@
         
         // 直ドロップ武器更新
         function updateDirectWeapon() {
-            console.log('updateDirectWeapon関数が呼び出されました');
             
             const weaponSelect = document.getElementById('directWeaponSelect');
             if (!weaponSelect) {
@@ -2884,17 +2833,13 @@
             }
             
             const selectedWeapon = weaponSelect.value;
-            console.log('選択された武器:', selectedWeapon);
-            console.log('プルダウンの全選択肢:', weaponSelect.options.length);
             
             // グローバル変数に選択状態を保存
             window.selectedDirectWeapon = selectedWeapon;
-            console.log('選択状態を保存:', window.selectedDirectWeapon);
             
             try {
                 // 直ドロップ武器の分配を再計算
                 const drops = getLayerDrops(4);
-                console.log('4層のドロップアイテム:', drops);
                 
                 const allocationResults = calculateAllocation(4, drops);
                 displayAllocationResults(4, allocationResults);
@@ -2902,7 +2847,6 @@
                 if (selectedWeapon) {
                     showSuccess(`${selectedWeapon}を選択しました`);
                 } else {
-                    console.log('武器選択がクリアされました');
                 }
             } catch (error) {
                 console.error('武器選択処理エラー:', error);
@@ -2938,7 +2882,6 @@
         // 分配選択更新
         function updateAllocationChoice(slot) {
             // 選択変更時の処理（必要に応じて実装）
-            console.log(`${slot}の分配選択が変更されました`);
         }
         
         // 分配確定
@@ -3110,7 +3053,6 @@
                                     if (existingAllocation) {
                                         existingAllocation.status = '断章交換・箱取得済';
                                         hasUpdates = true;
-                                        console.log(`${player.name}(${position})の${slot}ステータスを「断章交換・箱取得済」に更新`);
                                     }
                                 }
                             }
@@ -3121,7 +3063,6 @@
                 if (hasUpdates) {
                     // 更新があった場合は再保存
                     await saveDataToSupabase('allocations', window.appData.allocations[window.currentRaidTier.id]);
-                    console.log('断章交換ステータスの自動更新が完了しました');
                 }
                 
             } catch (error) {
@@ -3239,7 +3180,6 @@
             window.togglePolicyCell = togglePolicyCell;
             window.saveIntegratedMemberData = saveIntegratedMemberData;
 
-            console.log('✅ グローバル関数登録完了 (27関数 + データ変数)');
         }
 
         } catch (error) {
@@ -3248,7 +3188,6 @@
             alert("システムの初期化でエラーが発生しました: " + error.message);
         }
 
-        console.log("✅ メインスクリプト実行完了");
 
         // 自動Discord認証処理
         (async function autoDiscordAuth() {
@@ -3259,11 +3198,9 @@
                 const discordCode = urlParams.get('code');
                 const discordState = urlParams.get('state');
 
-                console.log('🔍 URL パラメータ確認:', { inviteToken, teamId, discordCode, discordState });
 
                 // Discord認証コールバック処理
                 if (discordCode && discordState) {
-                    console.log('🎯 Discord認証コールバック検出');
                     updateLoadingMessage('Discord認証を処理中...');
 
                     try {
@@ -3288,7 +3225,6 @@
 
                 // 招待URL経由の初回アクセス
                 if (inviteToken && teamId) {
-                    console.log('✅ 招待URL検出 - 自動Discord認証開始');
                     updateLoadingMessage('招待リンクを確認中...');
 
                     // 招待トークンの検証
@@ -3311,7 +3247,6 @@
                         throw new Error('招待リンクのチーム情報が一致しません。');
                     }
 
-                    console.log('✅ 招待トークン検証成功 - Discord認証へリダイレクト');
                     updateLoadingMessage('Discord認証画面に移動します...');
 
                     // Discord OAuth開始
@@ -3323,7 +3258,6 @@
                 // 招待トークンなし - localStorageに保存済みteam_idを確認
                 const savedTeamId = localStorage.getItem('ff14_team_id');
                 if (savedTeamId) {
-                    console.log('✅ 保存済みteam_id検出 - 自動ログイン実行');
                     updateLoadingMessage('ログイン情報を確認中...');
                     // tryAutoLoginを実行（既にinitializeMainFeaturesで呼ばれている）
                     hideLoadingScreen();
@@ -3331,7 +3265,6 @@
                 }
 
                 // 保存済みログイン情報もない - エラー表示
-                console.warn('⚠️ 招待トークンも保存済みログイン情報もありません');
                 hideLoadingScreen();
                 showError(
                     'このシステムは招待リンク経由でのみアクセスできます。\n\n' +
@@ -3366,7 +3299,6 @@
         // Discord認証コールバック処理
         async function handleDiscordCallback(code, inviteToken) {
             try {
-                console.log('🔐 Discord認証コールバック処理開始');
 
                 // バックエンドでDiscordトークン交換
                 const response = await fetch('https://your-backend-url/api/discord/callback', {
@@ -3391,7 +3323,6 @@
 
                 // 認証成功
                 window.isAuthenticated = true;
-                console.log('✅ Discord認証成功:', user.username);
 
                 // URLをクリーンアップ
                 window.history.replaceState({}, document.title, window.location.pathname);

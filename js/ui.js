@@ -28,13 +28,11 @@ function showMessage(message, type) {
 
         // DOM要素の存在確認
         if (!errorEl || !successEl) {
-            console.warn('メッセージ表示要素が見つかりません:', { errorEl, successEl });
 
             // フォールバック: コンソールにログ出力
             if (type === 'error') {
                 console.error('Error:', message);
             } else if (type === 'success') {
-                console.log('Success:', message);
             }
             return;
         }
@@ -66,7 +64,6 @@ function showMessage(message, type) {
         if (type === 'error') {
             console.error('Error:', message);
         } else if (type === 'success') {
-            console.log('Success:', message);
         }
     }
 }

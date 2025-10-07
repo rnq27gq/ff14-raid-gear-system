@@ -13,6 +13,12 @@ debug/
 *.log
 *.backup
 *.sql.bak
+refactoring-work/
+
+# ドキュメント（README.md以外）
+design.md
+renovation.md
+requirements.md
 
 # 旧バージョンファイル
 *_old.*
@@ -25,12 +31,15 @@ archive/
 Thumbs.db
 *.tmp
 
+# 日本語ファイル名
+*[ぁ-んァ-ヶ一-龠]*
+
 # エディタ設定
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# Node.js（将来の拡張用）
+# Node.js
 node_modules/
 package-lock.json

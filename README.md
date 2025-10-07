@@ -30,6 +30,16 @@
 
 ---
 
+## Discord Bot導入
+
+### Botをサーバーに追加
+
+まず、Discord Botをあなたのサーバーに招待してください。
+
+**注意:** 現在、Botは開発中のため招待リンクは準備中です。セルフホストで運用する場合は [discord-bot/README.md](discord-bot/README.md) を参照してください。
+
+---
+
 ## クイックスタート
 
 ### 1. Discordで専用URLを作成

@@ -2274,10 +2274,10 @@
                 <div class="navigation-top-left">
                     <button class="nav-button" onclick="showTierDashboard()">レイドダッシュボードに戻る</button>
                 </div>
-                
-                <h1>装備分配システム</h1>
+
+                <h1>分配計算</h1>
                 <h2>${window.currentRaidTier.name}</h2>
-                
+
                 <div class="section" id="allocationResults" style="display: none;">
                     <h3>分配結果</h3>
                     <div id="allocationContent"></div>

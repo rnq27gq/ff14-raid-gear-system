@@ -91,7 +91,6 @@ DiscordサーバーでDiscord Botの `/share` コマンドを実行します。
    ![分配結果画面](SS/result4.png)
    <p align="center"><i>統計情報画面</i></p>
 
----
 
 ### 断章交換システム
 

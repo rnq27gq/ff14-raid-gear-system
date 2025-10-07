@@ -52,9 +52,12 @@ export class ShareCommand {
 
             const inviteUrl = this.generateInviteUrl(inviteToken);
 
+            const readmeUrl = 'https://github.com/rnq27gq/ff14-raid-gear-system#readme';
+
             await interaction.editReply({
                 content: `FF14装備分配システムの専用URLを作成しました！\n\n` +
-                        `専用URL（クリックしてアクセス）\n${inviteUrl}`
+                        `専用URL（クリックしてアクセス）\n${inviteUrl}\n\n` +
+                        `使い方はこちら\n${readmeUrl}`
             });
 
         } catch (error) {

@@ -5,14 +5,14 @@ body {
     background-color: #ffffff;
     color: #333333;
     line-height: 1.4;
-    height: 100vh;
+    min-height: 100vh;
     overflow-x: auto;
 }
 .container {
     max-width: 1800px;
     margin: 0 auto;
-    height: 100vh;
-    overflow-y: hidden;
+    min-height: 100vh;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
 }

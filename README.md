@@ -34,9 +34,15 @@
 
 ### Botをサーバーに追加
 
-まず、Discord Botをあなたのサーバーに招待してください。
+以下のリンクをクリックして、あなたのDiscordサーバーにBotを招待してください。
 
-**注意:** 現在、Botは開発中のため招待リンクは準備中です。セルフホストで運用する場合は [discord-bot/README.md](discord-bot/README.md) を参照してください。
+[Botを招待する](https://discord.com/oauth2/authorize?client_id=1421136327843250286&permissions=2147485696&integration_type=0&scope=bot+applications.commands)
+
+必要な権限:
+- メッセージを送信
+- スラッシュコマンドを使用
+
+セルフホストで運用する場合は [discord-bot/README.md](discord-bot/README.md) を参照してください。
 
 ---
 

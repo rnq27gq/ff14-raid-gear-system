@@ -4,10 +4,12 @@
 export class LoadingScreen {
   private loadingScreen: HTMLElement | null;
   private loadingMessage: HTMLElement | null;
+  private mainContent: HTMLElement | null;
 
   constructor() {
     this.loadingScreen = document.getElementById('loadingScreen');
     this.loadingMessage = document.getElementById('loadingMessage');
+    this.mainContent = document.getElementById('mainContent');
   }
 
   /**
@@ -17,6 +19,10 @@ export class LoadingScreen {
     if (this.loadingScreen) {
       this.loadingScreen.style.display = 'block';
       this.loadingScreen.classList.add('show');
+    }
+
+    if (this.mainContent) {
+      this.mainContent.style.display = 'none';
     }
 
     if (message) {
@@ -31,6 +37,10 @@ export class LoadingScreen {
     if (this.loadingScreen) {
       this.loadingScreen.classList.remove('show');
       this.loadingScreen.style.display = 'none';
+    }
+
+    if (this.mainContent) {
+      this.mainContent.style.display = 'block';
     }
   }
 

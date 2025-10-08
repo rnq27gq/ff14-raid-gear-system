@@ -29,6 +29,7 @@ class Application {
     });
     this.teamAuth = new TeamAuth(this.stateManager, this.storageClient);
     this.uiManager = new UIManager(this.stateManager);
+    this.uiManager.setTeamAuth(this.teamAuth); // UIManagerにTeamAuthを設定
   }
 
   /**

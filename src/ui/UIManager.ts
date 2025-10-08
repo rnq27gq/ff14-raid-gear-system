@@ -1,15 +1,21 @@
 import type { StateManager } from '../core/state/StateManager';
+import type { TeamAuth } from '../core/auth/TeamAuth';
 import { MessageDisplay } from './MessageDisplay';
 import { LoadingScreen } from './LoadingScreen';
+import { AuthScreen } from './screens/AuthScreen';
+import { DashboardScreen } from './screens/DashboardScreen';
 
 /**
  * UI全体を管理するクラス
  */
 export class UIManager {
   private stateManager: StateManager;
+  private teamAuth: TeamAuth | null = null;
   private messageDisplay: MessageDisplay;
   private loadingScreen: LoadingScreen;
   private contentElement: HTMLElement | null;
+  private authScreen: AuthScreen | null = null;
+  private dashboardScreen: DashboardScreen | null = null;
 
   constructor(stateManager: StateManager) {
     this.stateManager = stateManager;
@@ -18,6 +24,13 @@ export class UIManager {
     this.contentElement = document.getElementById('content');
 
     this.initialize();
+  }
+
+  /**
+   * TeamAuthを設定（main.tsから呼ばれる）
+   */
+  setTeamAuth(teamAuth: TeamAuth): void {
+    this.teamAuth = teamAuth;
   }
 
   /**
@@ -36,7 +49,7 @@ export class UIManager {
   private onStateChange(state: any): void {
     // 認証状態に応じて画面を切り替え
     if (state.isAuthenticated && state.currentRaidTier) {
-      this.showAuthenticatedState();
+      this.showDashboard();
     } else if (state.isAuthenticated && !state.currentRaidTier) {
       this.showTierSelection();
     } else {
@@ -48,18 +61,14 @@ export class UIManager {
    * 認証画面を表示
    */
   private showAuthScreen(): void {
-    if (!this.contentElement) return;
+    if (!this.contentElement || !this.teamAuth) return;
 
-    this.contentElement.innerHTML = `
-      <div class="auth-screen">
-        <div class="auth-card">
-          <h2>FF14 零式装備分配システム</h2>
-          <div id="authContent">
-            <!-- 認証フォームがここに表示されます -->
-          </div>
-        </div>
-      </div>
-    `;
+    this.authScreen = new AuthScreen(
+      this.contentElement,
+      this.teamAuth,
+      this.messageDisplay
+    );
+    this.authScreen.render();
   }
 
   /**
@@ -71,26 +80,22 @@ export class UIManager {
     this.contentElement.innerHTML = `
       <div class="tier-selection">
         <h2>レイドティアを選択してください</h2>
-        <div id="tierList">
-          <!-- レイドティア一覧がここに表示されます -->
-        </div>
+        <p class="text-muted">現在、レイドティアが設定されていません。</p>
       </div>
     `;
   }
 
   /**
-   * 認証後のメイン画面を表示
+   * ダッシュボード画面を表示
    */
-  private showAuthenticatedState(): void {
+  private showDashboard(): void {
     if (!this.contentElement) return;
 
-    this.contentElement.innerHTML = `
-      <div class="dashboard">
-        <div id="dashboardContent">
-          <!-- ダッシュボードがここに表示されます -->
-        </div>
-      </div>
-    `;
+    this.dashboardScreen = new DashboardScreen(
+      this.contentElement,
+      this.stateManager
+    );
+    this.dashboardScreen.render();
   }
 
   /**

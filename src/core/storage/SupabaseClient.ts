@@ -79,14 +79,14 @@ export class SupabaseStorageClient {
         .select('data')
         .eq('team_id', teamId)
         .eq('data_type', 'settings')
-        .single();
+        .maybeSingle();
 
       const { data: priorityData, error: priorityError } = await this.client
         .from('team_data')
         .select('data')
         .eq('team_id', teamId)
         .eq('data_type', 'prioritySettings')
-        .single();
+        .maybeSingle();
 
       // プレイヤーデータを変換
       const players: AppData['players'] = {};
@@ -122,12 +122,20 @@ export class SupabaseStorageClient {
         });
       }
 
+      // エラーチェック（PGRST116以外のエラーの場合のみスロー）
+      if (settingsError && settingsError.code !== 'PGRST116') {
+        throw new Error(settingsError.message);
+      }
+      if (priorityError && priorityError.code !== 'PGRST116') {
+        throw new Error(priorityError.message);
+      }
+
       return {
         raidTiers: {},
         players,
         allocations,
-        settings: (settingsError?.code === 'PGRST116') ? {} : (settingsData?.data || {}),
-        prioritySettings: (priorityError?.code === 'PGRST116') ? {} : (priorityData?.data || {})
+        settings: settingsData?.data || {},
+        prioritySettings: priorityData?.data || {}
       };
     } catch (error) {
       console.error('チームデータ読み込みエラー:', error);

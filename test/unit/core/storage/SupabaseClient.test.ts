@@ -134,7 +134,7 @@ describe('SupabaseStorageClient', () => {
             select: vi.fn(() => ({
               eq: vi.fn(() => ({
                 eq: vi.fn(() => ({
-                  single: vi.fn().mockResolvedValue({
+                  maybeSingle: vi.fn().mockResolvedValue({
                     data: { data: {} },
                     error: null
                   })
@@ -173,9 +173,9 @@ describe('SupabaseStorageClient', () => {
             select: vi.fn(() => ({
               eq: vi.fn(() => ({
                 eq: vi.fn(() => ({
-                  single: vi.fn().mockResolvedValue({
+                  maybeSingle: vi.fn().mockResolvedValue({
                     data: null,
-                    error: { code: 'PGRST116' }
+                    error: null
                   })
                 }))
               }))

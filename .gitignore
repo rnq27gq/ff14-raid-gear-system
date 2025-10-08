@@ -1,5 +1,5 @@
 # 機密情報とセットアップファイル
-config/
+/config/
 envdoc/
 supabase_credentials.js
 *_credentials.js

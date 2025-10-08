@@ -5,6 +5,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    include: ['test/unit/**/*.test.ts'],
+    exclude: ['discord-bot/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -12,6 +14,7 @@ export default defineConfig({
         'node_modules/',
         'test/',
         'dist/',
+        'discord-bot/',
         '**/*.d.ts',
         '**/*.config.*',
         '**/index.ts'

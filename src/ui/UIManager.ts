@@ -1,9 +1,12 @@
 import type { StateManager } from '../core/state/StateManager';
 import type { TeamAuth } from '../core/auth/TeamAuth';
+import type { AllocationEngine } from '../features/allocation/AllocationEngine';
 import { MessageDisplay } from './MessageDisplay';
 import { LoadingScreen } from './LoadingScreen';
 import { AuthScreen } from './screens/AuthScreen';
 import { DashboardScreen } from './screens/DashboardScreen';
+import { AllocationScreen } from './screens/AllocationScreen';
+import { PlayerManagementScreen } from './screens/PlayerManagementScreen';
 
 /**
  * UI全体を管理するクラス
@@ -11,11 +14,14 @@ import { DashboardScreen } from './screens/DashboardScreen';
 export class UIManager {
   private stateManager: StateManager;
   private teamAuth: TeamAuth | null = null;
+  private allocationEngine: AllocationEngine | null = null;
   private messageDisplay: MessageDisplay;
   private loadingScreen: LoadingScreen;
   private contentElement: HTMLElement | null;
   private authScreen: AuthScreen | null = null;
   private dashboardScreen: DashboardScreen | null = null;
+  private allocationScreen: AllocationScreen | null = null;
+  private playerManagementScreen: PlayerManagementScreen | null = null;
 
   constructor(stateManager: StateManager) {
     this.stateManager = stateManager;
@@ -34,12 +40,35 @@ export class UIManager {
   }
 
   /**
+   * AllocationEngineを設定（main.tsから呼ばれる）
+   */
+  setAllocationEngine(allocationEngine: AllocationEngine): void {
+    this.allocationEngine = allocationEngine;
+  }
+
+  /**
    * 初期化
    */
   private initialize(): void {
     // 状態変更を監視
     this.stateManager.subscribe((state) => {
       this.onStateChange(state);
+    });
+
+    // カスタムイベントを監視
+    window.addEventListener('showDashboard', () => {
+      this.showDashboard();
+    });
+
+    window.addEventListener('showAllocation', ((e: CustomEvent) => {
+      const layer = e.detail?.layer;
+      if (layer) {
+        this.showAllocation(layer);
+      }
+    }) as EventListener);
+
+    window.addEventListener('showPlayerManagement', () => {
+      this.showPlayerManagement();
     });
   }
 
@@ -96,6 +125,35 @@ export class UIManager {
       this.stateManager
     );
     this.dashboardScreen.render();
+  }
+
+  /**
+   * 分配画面を表示
+   */
+  private async showAllocation(layer: number): Promise<void> {
+    if (!this.contentElement || !this.allocationEngine) return;
+
+    this.allocationScreen = new AllocationScreen(
+      this.contentElement,
+      this.stateManager,
+      this.messageDisplay,
+      this.allocationEngine
+    );
+    await this.allocationScreen.showLayer(layer);
+  }
+
+  /**
+   * プレイヤー管理画面を表示
+   */
+  private showPlayerManagement(): void {
+    if (!this.contentElement) return;
+
+    this.playerManagementScreen = new PlayerManagementScreen(
+      this.contentElement,
+      this.stateManager,
+      this.messageDisplay
+    );
+    this.playerManagementScreen.render();
   }
 
   /**

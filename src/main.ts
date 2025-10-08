@@ -2,6 +2,8 @@ import { StateManager } from './core/state/StateManager';
 import { SupabaseStorageClient } from './core/storage/SupabaseClient';
 import { TeamAuth } from './core/auth/TeamAuth';
 import { UIManager } from './ui/UIManager';
+import { AllocationEngine } from './features/allocation/AllocationEngine';
+import { PriorityCalculator } from './features/allocation/PriorityCalculator';
 
 /**
  * アプリケーションのメインクラス
@@ -11,6 +13,7 @@ class Application {
   private storageClient: SupabaseStorageClient;
   private teamAuth: TeamAuth;
   private uiManager: UIManager;
+  private allocationEngine: AllocationEngine;
 
   constructor() {
     // 環境変数からSupabase設定を取得
@@ -28,8 +31,15 @@ class Application {
       anonKey: supabaseAnonKey
     });
     this.teamAuth = new TeamAuth(this.stateManager, this.storageClient);
+
+    // 分配エンジンの初期化
+    const priorityCalculator = new PriorityCalculator(this.stateManager);
+    this.allocationEngine = new AllocationEngine(this.stateManager, priorityCalculator);
+
+    // UIManagerの初期化と依存性注入
     this.uiManager = new UIManager(this.stateManager);
-    this.uiManager.setTeamAuth(this.teamAuth); // UIManagerにTeamAuthを設定
+    this.uiManager.setTeamAuth(this.teamAuth);
+    this.uiManager.setAllocationEngine(this.allocationEngine);
   }
 
   /**
@@ -60,7 +70,8 @@ class Application {
           stateManager: this.stateManager,
           storageClient: this.storageClient,
           teamAuth: this.teamAuth,
-          uiManager: this.uiManager
+          uiManager: this.uiManager,
+          allocationEngine: this.allocationEngine
         };
       }
 

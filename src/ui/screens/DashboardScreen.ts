@@ -45,7 +45,12 @@ export class DashboardScreen {
         </div>
 
         <div class="section member-section">
-          <h3>メンバー設定</h3>
+          <div class="section-header">
+            <h3>メンバー設定</h3>
+            <button id="editPlayersBtn" class="btn btn-primary">
+              メンバー編集
+            </button>
+          </div>
           ${this.renderMemberTable(players)}
         </div>
       </div>
@@ -148,14 +153,19 @@ export class DashboardScreen {
     if (historyBtn) {
       historyBtn.addEventListener('click', () => this.handleHistoryClick());
     }
+
+    // メンバー編集ボタン
+    const editPlayersBtn = document.getElementById('editPlayersBtn');
+    if (editPlayersBtn) {
+      editPlayersBtn.addEventListener('click', () => this.handleEditPlayersClick());
+    }
   }
 
   /**
    * 層ボタンクリック
    */
   private handleLayerClick(layer: number): void {
-    console.log(`層 ${layer} が選択されました`);
-    // AllocationScreenに切り替え（今後実装）
+    window.dispatchEvent(new CustomEvent('showAllocation', { detail: { layer } }));
   }
 
   /**
@@ -180,6 +190,13 @@ export class DashboardScreen {
   private handleHistoryClick(): void {
     console.log('配布履歴が選択されました');
     // 今後実装
+  }
+
+  /**
+   * メンバー編集ボタンクリック
+   */
+  private handleEditPlayersClick(): void {
+    window.dispatchEvent(new CustomEvent('showPlayerManagement'));
   }
 
   /**

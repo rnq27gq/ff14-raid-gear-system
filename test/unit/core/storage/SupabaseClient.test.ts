@@ -106,43 +106,83 @@ describe('SupabaseStorageClient', () => {
 
   describe('loadTeamData', () => {
     it('チームデータを読み込める', async () => {
-      const mockFrom = vi.fn(() => ({
-        select: vi.fn(() => ({
-          eq: vi.fn((key: string, value: string) => ({
-            eq: vi.fn((key2: string, dataType: string) => ({
-              single: vi.fn().mockResolvedValue({
-                data: {
-                  data: dataType === 'players' ? { 'tier-1': {} } :
-                        dataType === 'allocations' ? { 'tier-1': [] } : {}
-                },
+      const mockFrom = vi.fn((table: string) => {
+        if (table === 'players') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => Promise.resolve({
+                data: [
+                  { position: 'MT', name: 'Player1', job: 'PLD', equipment_policy: {}, weapon_wishes: [], dynamic_priority: 0 }
+                ],
                 error: null
-              })
+              }))
             }))
-          }))
-        }))
-      }));
+          };
+        } else if (table === 'allocations') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => Promise.resolve({
+                data: [
+                  { position: 'MT', slot: '武器', status: 'allocated', layer: 1, week: 1, timestamp: '2025-01-01' }
+                ],
+                error: null
+              }))
+            }))
+          };
+        } else if (table === 'team_data') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                eq: vi.fn(() => ({
+                  single: vi.fn().mockResolvedValue({
+                    data: { data: {} },
+                    error: null
+                  })
+                }))
+              }))
+            }))
+          };
+        }
+      });
 
       mockSupabaseClient.from = mockFrom;
 
       const result = await client.loadTeamData('team-123');
 
-      expect(result.players).toEqual({ 'tier-1': {} });
-      expect(result.allocations).toEqual({ 'tier-1': [] });
+      expect(result.players).toEqual({
+        MT: { name: 'Player1', job: 'PLD', equipmentPolicy: {}, weaponWishes: [], dynamicPriority: 0 }
+      });
+      expect(result.allocations).toEqual({
+        'MT-武器': { position: 'MT', slot: '武器', status: 'allocated', layer: 1, week: 1, timestamp: '2025-01-01' }
+      });
     });
 
     it('データが存在しない場合は空のデータを返す', async () => {
-      const mockFrom = vi.fn(() => ({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              single: vi.fn().mockResolvedValue({
+      const mockFrom = vi.fn((table: string) => {
+        if (table === 'players' || table === 'allocations') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => Promise.resolve({
                 data: null,
-                error: { code: 'PGRST116' } // No rows returned
-              })
+                error: { code: 'PGRST116' }
+              }))
             }))
-          }))
-        }))
-      }));
+          };
+        } else if (table === 'team_data') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                eq: vi.fn(() => ({
+                  single: vi.fn().mockResolvedValue({
+                    data: null,
+                    error: { code: 'PGRST116' }
+                  })
+                }))
+              }))
+            }))
+          };
+        }
+      });
 
       mockSupabaseClient.from = mockFrom;
 
@@ -160,45 +200,73 @@ describe('SupabaseStorageClient', () => {
 
   describe('saveData', () => {
     it('データを保存できる', async () => {
-      const mockUpsert = vi.fn().mockResolvedValue({
+      const mockDelete = vi.fn(() => ({
+        eq: vi.fn().mockResolvedValue({ data: null, error: null })
+      }));
+
+      const mockInsert = vi.fn().mockResolvedValue({
         data: {},
         error: null
       });
 
-      const mockFrom = vi.fn(() => ({
-        upsert: mockUpsert
-      }));
+      const mockFrom = vi.fn((table: string) => {
+        if (table === 'players') {
+          return {
+            delete: mockDelete,
+            insert: mockInsert
+          };
+        }
+        return {
+          upsert: vi.fn().mockResolvedValue({ data: {}, error: null })
+        };
+      });
 
       mockSupabaseClient.from = mockFrom;
 
-      const testData = { test: 'data' };
+      const testData = { MT: { name: 'Player1', job: 'PLD', equipmentPolicy: {}, weaponWishes: [], dynamicPriority: 0 } };
       await client.saveData('team-123', 'players', testData);
 
-      expect(mockFrom).toHaveBeenCalledWith('team_data');
-      expect(mockUpsert).toHaveBeenCalledWith(
+      expect(mockFrom).toHaveBeenCalledWith('players');
+      expect(mockDelete).toHaveBeenCalled();
+      expect(mockInsert).toHaveBeenCalledWith([
         {
-          team_id: 'team-123',
-          data_type: 'players',
-          data: testData
-        },
-        { onConflict: 'team_id,data_type' }
-      );
+          raid_tier_id: 'team-123',
+          position: 'MT',
+          name: 'Player1',
+          job: 'PLD',
+          equipment_policy: {},
+          weapon_wishes: [],
+          dynamic_priority: 0
+        }
+      ]);
     });
 
     it('エラーが発生した場合は例外をスローする', async () => {
-      const mockUpsert = vi.fn().mockResolvedValue({
+      const mockDelete = vi.fn(() => ({
+        eq: vi.fn().mockResolvedValue({ data: null, error: null })
+      }));
+
+      const mockInsert = vi.fn().mockResolvedValue({
         data: null,
         error: { message: 'Save error' }
       });
 
-      const mockFrom = vi.fn(() => ({
-        upsert: mockUpsert
-      }));
+      const mockFrom = vi.fn((table: string) => {
+        if (table === 'players') {
+          return {
+            delete: mockDelete,
+            insert: mockInsert
+          };
+        }
+        return {
+          upsert: vi.fn().mockResolvedValue({ data: {}, error: null })
+        };
+      });
 
       mockSupabaseClient.from = mockFrom;
 
       await expect(
-        client.saveData('team-123', 'players', {})
+        client.saveData('team-123', 'players', { MT: { name: 'Test', job: 'PLD', equipmentPolicy: {}, weaponWishes: [], dynamicPriority: 0 } })
       ).rejects.toThrow('Save error');
     });
   });

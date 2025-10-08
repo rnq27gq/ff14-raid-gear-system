@@ -11,8 +11,8 @@ export interface RaidTier {
 // アプリケーションデータ
 export interface AppData {
   raidTiers: Record<string, RaidTier>;
-  players: Record<string, PlayerMap>;
-  allocations: Record<string, Allocation[]>;
+  players: PlayerMap;
+  allocations: Record<string, Allocation>;
   settings: Record<string, unknown>;
   prioritySettings: Record<string, string[]>;
 }

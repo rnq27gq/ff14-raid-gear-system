@@ -53,37 +53,78 @@ export class SupabaseStorageClient {
     };
 
     try {
-      // 各データタイプを読み込み
-      const dataTypes = ['players', 'allocations', 'settings', 'prioritySettings'];
-      const results = await Promise.all(
-        dataTypes.map(async (dataType) => {
-          const { data, error } = await this.client
-            .from('team_data')
-            .select('data')
-            .eq('team_id', teamId)
-            .eq('data_type', dataType)
-            .single();
+      // プレイヤーデータを読み込み
+      const { data: playersData, error: playersError } = await this.client
+        .from('players')
+        .select('*')
+        .eq('raid_tier_id', teamId);
 
-          // データが存在しない場合は空オブジェクト/配列を返す
-          if (error && error.code === 'PGRST116') {
-            return { dataType, data: {} };
-          }
+      if (playersError && playersError.code !== 'PGRST116') {
+        throw new Error(playersError.message);
+      }
 
-          if (error) {
-            throw new Error(error.message);
-          }
+      // 分配履歴を読み込み
+      const { data: allocationsData, error: allocationsError } = await this.client
+        .from('allocations')
+        .select('*')
+        .eq('raid_tier_id', teamId);
 
-          return { dataType, data: data?.data || {} };
-        })
-      );
+      if (allocationsError && allocationsError.code !== 'PGRST116') {
+        throw new Error(allocationsError.message);
+      }
 
-      // 結果をマージ
-      const loadedData: AppData = { ...defaultData };
-      results.forEach(({ dataType, data }) => {
-        (loadedData as any)[dataType] = data;
-      });
+      // 設定データを読み込み（team_dataから）
+      const { data: settingsData, error: settingsError } = await this.client
+        .from('team_data')
+        .select('data')
+        .eq('team_id', teamId)
+        .eq('data_type', 'settings')
+        .single();
 
-      return loadedData;
+      const { data: priorityData, error: priorityError } = await this.client
+        .from('team_data')
+        .select('data')
+        .eq('team_id', teamId)
+        .eq('data_type', 'prioritySettings')
+        .single();
+
+      // プレイヤーデータを変換
+      const players: AppData['players'] = {};
+      if (playersData) {
+        playersData.forEach((player: any) => {
+          players[player.position] = {
+            name: player.name,
+            job: player.job,
+            equipmentPolicy: player.equipment_policy || {},
+            weaponWishes: player.weapon_wishes || [],
+            dynamicPriority: player.dynamic_priority || 0
+          };
+        });
+      }
+
+      // 分配データを変換
+      const allocations: AppData['allocations'] = {};
+      if (allocationsData) {
+        allocationsData.forEach((alloc: any) => {
+          const key = `${alloc.position}-${alloc.slot}`;
+          allocations[key] = {
+            position: alloc.position,
+            slot: alloc.slot,
+            status: alloc.status,
+            layer: alloc.layer,
+            week: alloc.week,
+            timestamp: alloc.timestamp
+          };
+        });
+      }
+
+      return {
+        raidTiers: {},
+        players,
+        allocations,
+        settings: (settingsError?.code === 'PGRST116') ? {} : (settingsData?.data || {}),
+        prioritySettings: (priorityError?.code === 'PGRST116') ? {} : (priorityData?.data || {})
+      };
     } catch (error) {
       console.error('チームデータ読み込みエラー:', error);
       return defaultData;
@@ -94,19 +135,78 @@ export class SupabaseStorageClient {
    * データを保存
    */
   async saveData(teamId: string, dataType: string, content: unknown): Promise<void> {
-    const { error } = await this.client
-      .from('team_data')
-      .upsert(
-        {
-          team_id: teamId,
-          data_type: dataType,
-          data: content
-        },
-        { onConflict: 'team_id,data_type' }
-      );
+    if (dataType === 'players') {
+      // プレイヤーデータを正規化テーブルに保存
+      const players = content as AppData['players'];
+      const playerRecords = Object.entries(players).map(([position, player]) => ({
+        raid_tier_id: teamId,
+        position,
+        name: player.name,
+        job: player.job,
+        equipment_policy: player.equipmentPolicy,
+        weapon_wishes: player.weaponWishes,
+        dynamic_priority: player.dynamicPriority
+      }));
 
-    if (error) {
-      throw new Error(error.message);
+      // 既存データを削除して新規挿入
+      await this.client
+        .from('players')
+        .delete()
+        .eq('raid_tier_id', teamId);
+
+      if (playerRecords.length > 0) {
+        const { error } = await this.client
+          .from('players')
+          .insert(playerRecords);
+
+        if (error) {
+          throw new Error(error.message);
+        }
+      }
+    } else if (dataType === 'allocations') {
+      // 分配データを正規化テーブルに保存
+      const allocations = content as AppData['allocations'];
+      const allocationRecords = Object.values(allocations).map((alloc) => ({
+        raid_tier_id: teamId,
+        position: alloc.position,
+        slot: alloc.slot,
+        status: alloc.status,
+        layer: alloc.layer,
+        week: alloc.week,
+        timestamp: alloc.timestamp
+      }));
+
+      // 既存データを削除して新規挿入
+      await this.client
+        .from('allocations')
+        .delete()
+        .eq('raid_tier_id', teamId);
+
+      if (allocationRecords.length > 0) {
+        const { error } = await this.client
+          .from('allocations')
+          .insert(allocationRecords);
+
+        if (error) {
+          throw new Error(error.message);
+        }
+      }
+    } else {
+      // 設定データはteam_dataテーブルに保存
+      const { error } = await this.client
+        .from('team_data')
+        .upsert(
+          {
+            team_id: teamId,
+            data_type: dataType,
+            data: content
+          },
+          { onConflict: 'team_id,data_type' }
+        );
+
+      if (error) {
+        throw new Error(error.message);
+      }
     }
   }
 

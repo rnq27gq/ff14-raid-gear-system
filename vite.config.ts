@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import path from 'path';
 
 export default defineConfig({
+  base: '/ff14-raid-gear-system/',
   root: '.',
   build: {
     outDir: 'dist',

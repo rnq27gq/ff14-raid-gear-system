@@ -25,10 +25,20 @@ jobs:
     - name: Setup Pages
       uses: actions/configure-pages@v4
       
-    - name: Replace Supabase credentials
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Create .env file
       env:
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        DISCORD_CLIENT_ID: ${{ secrets.DISCORD_CLIENT_ID }}
       run: |
         # デバッグ: Secretsが設定されているか確認
         if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
@@ -36,29 +46,28 @@ jobs:
           echo "リポジトリ Settings → Secrets and variables → Actions で以下を設定してください:"
           echo "  - SUPABASE_URL"
           echo "  - SUPABASE_ANON_KEY"
+          echo "  - DISCORD_CLIENT_ID (optional)"
           exit 1
         fi
 
         echo "✅ GitHub Secrets が確認されました"
 
-        # js/config.js内のプレースホルダーを置換
-        sed -i "s|{{SUPABASE_URL}}|${SUPABASE_URL}|g" js/config.js
-        sed -i "s|{{SUPABASE_ANON_KEY}}|${SUPABASE_ANON_KEY}|g" js/config.js
+        # .envファイルを作成
+        cat > .env << EOF
+        VITE_SUPABASE_URL=${SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+        VITE_DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID:-1421136327843250286}
+        EOF
 
-        # 置換確認
-        if grep -q "https://.*\.supabase\.co" js/config.js && grep -q "eyJ" js/config.js; then
-          echo "✅ Supabase credentials replacement successful"
-        else
-          echo "❌ Supabase credentials replacement failed"
-          echo "置換後の内容:"
-          cat js/config.js
-          exit 1
-        fi
+        echo "✅ .env file created successfully"
+
+    - name: Build TypeScript project
+      run: npm run build
         
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        path: '.'
+        path: './dist'
 
   deploy:
     environment:

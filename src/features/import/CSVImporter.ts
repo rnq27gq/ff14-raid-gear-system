@@ -52,7 +52,7 @@ export class CSVImporter {
 
       const player: Player = {
         name,
-        job,
+        job: job as any, // CSVから読み込むため型アサーション
         position: position as Position,
         dynamicPriority: 0,
         weaponWish1: job, // デフォルトでジョブ武器を第一希望

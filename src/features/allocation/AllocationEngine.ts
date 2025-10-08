@@ -46,7 +46,7 @@ export class AllocationEngine {
       if (drop.type === 'direct_weapon') {
         return {
           ...drop,
-          weapon: selectedDirectWeapon || null
+          weapon: (selectedDirectWeapon as string) || null
         };
       }
       return drop;

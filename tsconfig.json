@@ -3,7 +3,7 @@
     "target": "ES2020",
     "module": "ESNext",
     "lib": ["ES2020", "DOM"],
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -11,8 +11,7 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
-    "outDir": "./dist",
-    "rootDir": "./src",
+    "noEmit": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
@@ -24,6 +23,6 @@
       "@utils/*": ["src/utils/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "src/vite-env.d.ts"],
   "exclude": ["node_modules", "test", "dist"]
 }

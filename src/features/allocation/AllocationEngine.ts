@@ -42,7 +42,7 @@ export class AllocationEngine {
     const drops = LAYER_DROPS[layer as keyof typeof LAYER_DROPS] || [];
 
     // 4層の直ドロップ武器の場合、選択された武器を設定
-    return drops.map(drop => {
+    return drops.map((drop: Drop) => {
       if (drop.type === 'direct_weapon') {
         return {
           ...drop,

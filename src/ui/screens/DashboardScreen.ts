@@ -83,7 +83,7 @@ export class DashboardScreen {
             </tr>
           </thead>
           <tbody>
-            ${POSITIONS.map(position => {
+            ${POSITIONS.map((position: Position) => {
               const player = players[position];
               if (!player) {
                 return `

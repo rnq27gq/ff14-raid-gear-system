@@ -110,12 +110,12 @@ ST,Player2,戦士`;
       importer.importPlayers(csvData);
 
       const state = stateManager.getState();
-      const players = state.appData.players['tier-1'];
+      const players = state.appData.players;
 
       expect(players).toHaveProperty('MT');
       expect(players).toHaveProperty('ST');
-      expect(players.MT.name).toBe('Player1');
-      expect(players.ST.name).toBe('Player2');
+      expect(players.MT?.name).toBe('Player1');
+      expect(players.ST?.name).toBe('Player2');
     });
 
     it('既存のプレイヤーデータを上書きする', () => {
@@ -147,10 +147,10 @@ MT,NewPlayer,ナイト`;
       importer.importPlayers(csvData);
 
       const state = stateManager.getState();
-      const players = state.appData.players['tier-1'];
+      const players = state.appData.players;
 
-      expect(players.MT.name).toBe('NewPlayer');
-      expect(players.MT.job).toBe('ナイト');
+      expect(players.MT?.name).toBe('NewPlayer');
+      expect(players.MT?.job).toBe('ナイト');
     });
 
     it('レイドティアが選択されていない場合はエラーをスローする', () => {

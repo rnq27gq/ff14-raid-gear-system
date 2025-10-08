@@ -150,7 +150,7 @@ describe('SupabaseStorageClient', () => {
       const result = await client.loadTeamData('team-123');
 
       expect(result.players).toEqual({
-        MT: { name: 'Player1', job: 'PLD', equipmentPolicy: {}, weaponWishes: [], dynamicPriority: 0 }
+        MT: { name: 'Player1', job: 'PLD', position: 'MT', policies: {}, weaponWish1: undefined, weaponWish2: undefined, dynamicPriority: 0 }
       });
       expect(result.allocations).toEqual({
         'MT-武器': { position: 'MT', slot: '武器', status: 'allocated', layer: 1, week: 1, timestamp: '2025-01-01' }
@@ -223,7 +223,7 @@ describe('SupabaseStorageClient', () => {
 
       mockSupabaseClient.from = mockFrom;
 
-      const testData = { MT: { name: 'Player1', job: 'PLD', equipmentPolicy: {}, weaponWishes: [], dynamicPriority: 0 } };
+      const testData = { MT: { name: 'Player1', job: 'PLD', position: 'MT', policies: {}, dynamicPriority: 0 } };
       await client.saveData('team-123', 'players', testData);
 
       expect(mockFrom).toHaveBeenCalledWith('players');
@@ -266,7 +266,7 @@ describe('SupabaseStorageClient', () => {
       mockSupabaseClient.from = mockFrom;
 
       await expect(
-        client.saveData('team-123', 'players', { MT: { name: 'Test', job: 'PLD', equipmentPolicy: {}, weaponWishes: [], dynamicPriority: 0 } })
+        client.saveData('team-123', 'players', { MT: { name: 'Test', job: 'PLD', position: 'MT', policies: {}, dynamicPriority: 0 } })
       ).rejects.toThrow('Save error');
     });
   });

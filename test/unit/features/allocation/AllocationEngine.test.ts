@@ -39,12 +39,8 @@ describe('AllocationEngine', () => {
         raidTiers: {
           'tier-1': { id: 'tier-1', name: 'Test Tier', createdAt: '2025-01-01' }
         },
-        players: {
-          'tier-1': {}
-        },
-        allocations: {
-          'tier-1': []
-        },
+        players: {},
+        allocations: {},
         settings: {},
         prioritySettings: {}
       }
@@ -332,7 +328,7 @@ describe('AllocationEngine', () => {
       engine.confirmAllocations(1, 1, results, selectedAllocations);
 
       const state = stateManager.getState();
-      const allocations = state.appData.allocations['tier-1'];
+      const allocations = Object.values(state.appData.allocations);
 
       expect(allocations).toHaveLength(1);
       expect(allocations[0].position).toBe('MT');
@@ -356,7 +352,7 @@ describe('AllocationEngine', () => {
       engine.confirmAllocations(1, 1, results, selectedAllocations);
 
       const state = stateManager.getState();
-      const allocations = state.appData.allocations['tier-1'];
+      const allocations = Object.values(state.appData.allocations);
 
       expect(allocations).toHaveLength(0);
     });
@@ -396,7 +392,7 @@ describe('AllocationEngine', () => {
       engine.confirmAllocations(2, 1, results, selectedAllocations);
 
       const state = stateManager.getState();
-      const allocations = state.appData.allocations['tier-1'];
+      const allocations = Object.values(state.appData.allocations);
 
       expect(allocations).toHaveLength(2);
       expect(allocations.find(a => a.slot === '頭')?.position).toBe('MT');

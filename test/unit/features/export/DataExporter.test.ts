@@ -39,22 +39,18 @@ describe('DataExporter', () => {
           'tier-1': { id: 'tier-1', name: 'Test Tier', createdAt: '2025-01-01' }
         },
         players: {
-          'tier-1': {
-            'MT': createTestPlayer({ position: 'MT', name: 'Player1' }),
-            'ST': createTestPlayer({ position: 'ST', name: 'Player2' })
-          }
+          'MT': createTestPlayer({ position: 'MT', name: 'Player1' }),
+          'ST': createTestPlayer({ position: 'ST', name: 'Player2' })
         },
         allocations: {
-          'tier-1': [
-            {
-              position: 'MT',
-              slot: '頭',
-              layer: 2,
-              week: 1,
-              timestamp: '2025-01-01T00:00:00.000Z',
-              status: '取得済'
-            }
-          ]
+          'MT-頭': {
+            position: 'MT',
+            slot: '頭',
+            layer: 2,
+            week: 1,
+            timestamp: '2025-01-01T00:00:00.000Z',
+            status: '取得済'
+          }
         },
         settings: {},
         prioritySettings: {}
@@ -186,7 +182,7 @@ describe('DataExporter', () => {
         currentRaidTier: { id: 'tier-1', name: 'Test Tier', createdAt: '2025-01-01' },
         appData: {
           ...stateManager.getState().appData,
-          players: { 'tier-1': {} }
+          players: {}
         }
       });
 

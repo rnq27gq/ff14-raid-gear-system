@@ -140,9 +140,9 @@ describe('StateManager', () => {
       expect(result?.job).toBe('戦士');
     });
 
-    it('異なるティアのプレイヤーを独立して管理できる', () => {
+    it('異なるポジションのプレイヤーを独立して管理できる', () => {
       const player1: Player = {
-        name: 'ティア1プレイヤー',
+        name: 'MTプレイヤー',
         job: 'ナイト',
         position: 'MT',
         dynamicPriority: 0,
@@ -154,9 +154,9 @@ describe('StateManager', () => {
       };
 
       const player2: Player = {
-        name: 'ティア2プレイヤー',
+        name: 'STプレイヤー',
         job: '戦士',
-        position: 'MT',
+        position: 'ST',
         dynamicPriority: 0,
         policies: {
           武器: '優先', 頭: '通常', 胴: '通常', 手: '通常',
@@ -166,34 +166,32 @@ describe('StateManager', () => {
       };
 
       stateManager.updatePlayer('tier-1', 'MT', player1);
-      stateManager.updatePlayer('tier-2', 'MT', player2);
+      stateManager.updatePlayer('tier-1', 'ST', player2);
 
-      expect(stateManager.getPlayer('tier-1', 'MT')?.name).toBe('ティア1プレイヤー');
-      expect(stateManager.getPlayer('tier-2', 'MT')?.name).toBe('ティア2プレイヤー');
+      expect(stateManager.getPlayer('tier-1', 'MT')?.name).toBe('MTプレイヤー');
+      expect(stateManager.getPlayer('tier-1', 'ST')?.name).toBe('STプレイヤー');
     });
   });
 
   describe('getAllocations', () => {
     it('指定されたティアの分配履歴を取得できる', () => {
-      const allocations: Allocation[] = [
-        {
-          position: 'MT',
-          slot: '武器',
-          layer: 4,
-          week: 1,
-          timestamp: new Date().toISOString()
-        }
-      ];
+      const allocation: Allocation = {
+        position: 'MT',
+        slot: '武器',
+        layer: 4,
+        week: 1,
+        timestamp: new Date().toISOString()
+      };
 
       stateManager.setState({
         appData: {
           ...stateManager.getState().appData,
-          allocations: { 'tier-1': allocations }
+          allocations: { 'MT-武器': allocation }
         }
       });
 
       const result = stateManager.getAllocations('tier-1');
-      expect(result).toEqual(allocations);
+      expect(result).toEqual([allocation]);
     });
 
     it('存在しないティアは空配列を返す', () => {

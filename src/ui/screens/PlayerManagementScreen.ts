@@ -45,7 +45,7 @@ export class PlayerManagementScreen {
         </div>
 
         <div class="player-forms">
-          ${POSITIONS.map(position => this.renderPlayerForm(position, players[position])).join('')}
+          ${POSITIONS.map((position: Position) => this.renderPlayerForm(position, players[position])).join('')}
         </div>
 
         <div class="form-actions">

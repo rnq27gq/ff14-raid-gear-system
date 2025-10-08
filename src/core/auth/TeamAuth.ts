@@ -1,6 +1,7 @@
 import { AuthService } from './AuthService';
 import type { StateManager } from '../state/StateManager';
 import type { SupabaseStorageClient } from '../storage/SupabaseClient';
+import type { RaidTier } from '../../types';
 
 /**
  * チーム認証の認証情報
@@ -93,10 +94,18 @@ export class TeamAuth extends AuthService {
       // チームデータを読み込み
       const appData = await this.storage.loadTeamData(savedTeamId);
 
+      // デフォルトのレイドティアを作成
+      const defaultTier: RaidTier = {
+        id: savedTeamId,
+        name: 'メインティア',
+        createdAt: new Date().toISOString()
+      };
+
       // 状態を更新
       this.stateManager.setState({
         isAuthenticated: true,
         currentTeamId: savedTeamId,
+        currentRaidTier: defaultTier,
         appData
       });
 

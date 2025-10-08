@@ -26,4 +26,6 @@ export interface Player {
 }
 
 // ポジション別プレイヤーマップ
-export type PlayerMap = Partial<Record<Position, Player>>;
+export type PlayerMap = {
+  [key: string]: Player | undefined;
+} & Partial<Record<Position, Player>>;

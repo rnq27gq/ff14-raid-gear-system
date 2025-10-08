@@ -26,7 +26,7 @@ export class DashboardScreen {
       return;
     }
 
-    const players = state.appData.players[currentRaidTier.id] || {};
+    const players = state.appData.players || {};
 
     this.container.innerHTML = `
       <div class="dashboard">

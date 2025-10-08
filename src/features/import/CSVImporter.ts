@@ -96,7 +96,9 @@ export class CSVImporter {
 
     // 各プレイヤーを個別に保存
     for (const [position, player] of Object.entries(players)) {
-      this.stateManager.updatePlayer(currentRaidTier.id, position as Position, player);
+      if (player) {
+        this.stateManager.updatePlayer(currentRaidTier.id, position as Position, player);
+      }
     }
   }
 

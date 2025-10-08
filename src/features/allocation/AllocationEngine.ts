@@ -1,6 +1,6 @@
 import type { StateManager } from '../../core/state/StateManager';
 import type { PriorityCalculator } from './PriorityCalculator';
-import type { Drop, AllocationResult, AllocationCandidate, Allocation } from '../../types';
+import type { Drop, AllocationResult, AllocationCandidate, Allocation, Position } from '../../types';
 import { LAYER_DROPS } from '../../config/constants';
 
 /**
@@ -61,20 +61,22 @@ export class AllocationEngine {
     const currentRaidTier = state.currentRaidTier;
     if (!currentRaidTier) return [];
 
-    const players = state.appData.players[currentRaidTier.id] || {};
-    const allocations = state.appData.allocations[currentRaidTier.id] || [];
+    const players = state.appData.players || {};
+    const allocations = Object.values(state.appData.allocations || {});
     const candidates: AllocationCandidate[] = [];
 
     for (const [position, player] of Object.entries(players)) {
+      if (!player) continue;
+
       const priority = this.priorityCalculator.calculatePriority(
         player,
-        position as any,
+        position as Position,
         drop,
         allocations
       );
 
       candidates.push({
-        position: position as any,
+        position: position as Position,
         player,
         priority: priority.score,
         reason: priority.reason,

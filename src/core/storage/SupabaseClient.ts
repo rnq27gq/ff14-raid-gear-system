@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient as SupabaseClientType } from '@supabase/supabase-js';
-import type { SupabaseConfig, AppData, Team } from '../../types';
+import type { SupabaseConfig, AppData, Team, Position } from '../../types';
 
 /**
  * Supabaseストレージクライアント
@@ -92,11 +92,15 @@ export class SupabaseStorageClient {
       const players: AppData['players'] = {};
       if (playersData) {
         playersData.forEach((player: any) => {
-          players[player.position] = {
+          const weaponWishes = player.weapon_wishes || [];
+          const position = player.position as Position;
+          players[position] = {
             name: player.name,
             job: player.job,
-            equipmentPolicy: player.equipment_policy || {},
-            weaponWishes: player.weapon_wishes || [],
+            position: player.position,
+            policies: player.equipment_policy || {},
+            weaponWish1: weaponWishes[0] || undefined,
+            weaponWish2: weaponWishes[1] || undefined,
             dynamicPriority: player.dynamic_priority || 0
           };
         });
@@ -138,15 +142,23 @@ export class SupabaseStorageClient {
     if (dataType === 'players') {
       // プレイヤーデータを正規化テーブルに保存
       const players = content as AppData['players'];
-      const playerRecords = Object.entries(players).map(([position, player]) => ({
-        raid_tier_id: teamId,
-        position,
-        name: player.name,
-        job: player.job,
-        equipment_policy: player.equipmentPolicy,
-        weapon_wishes: player.weaponWishes,
-        dynamic_priority: player.dynamicPriority
-      }));
+      const playerRecords = Object.entries(players)
+        .filter(([_, player]) => player !== undefined)
+        .map(([position, player]) => {
+          const weaponWishes: string[] = [];
+          if (player!.weaponWish1) weaponWishes.push(player!.weaponWish1);
+          if (player!.weaponWish2) weaponWishes.push(player!.weaponWish2);
+
+          return {
+            raid_tier_id: teamId,
+            position,
+            name: player!.name,
+            job: player!.job,
+            equipment_policy: player!.policies,
+            weapon_wishes: weaponWishes,
+            dynamic_priority: player!.dynamicPriority
+          };
+        });
 
       // 既存データを削除して新規挿入
       await this.client

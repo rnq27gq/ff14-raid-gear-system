@@ -41,8 +41,8 @@ export class AllocationScreen {
       return;
     }
 
-    const players = state.appData.players[currentRaidTier.id] || {};
-    const playerCount = Object.keys(players).length;
+    const players = state.appData.players || {};
+    const playerCount = Object.keys(players).filter(key => players[key]).length;
 
     if (playerCount === 0) {
       this.messageDisplay.showError('メンバー情報が登録されていません。まずメンバー管理から設定してください。');

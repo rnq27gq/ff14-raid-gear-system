@@ -37,8 +37,8 @@ export class DataExporter {
     const exportData: ExportData = {
       teamId: state.currentTeamId || null,
       tier: currentRaidTier,
-      players: state.appData.players[currentRaidTier.id] || {},
-      allocations: state.appData.allocations[currentRaidTier.id] || [],
+      players: state.appData.players || {},
+      allocations: Object.values(state.appData.allocations || {}),
       prioritySettings: state.appData.prioritySettings || {},
       exportDate: new Date().toISOString()
     };
@@ -89,10 +89,11 @@ export class DataExporter {
       throw new Error('レイドティアが選択されていません');
     }
 
-    const players = state.appData.players[currentRaidTier.id] || {};
+    const players = state.appData.players || {};
     const lines: string[] = ['Position,Name,Job'];
 
     for (const [position, player] of Object.entries(players)) {
+      if (!player) continue;
       lines.push(`${position},${player.name},${player.job}`);
     }
 

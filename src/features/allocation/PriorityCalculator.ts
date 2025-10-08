@@ -318,13 +318,13 @@ export class PriorityCalculator {
     const currentRaidTier = state.currentRaidTier;
     if (!currentRaidTier) return false;
 
-    const players = state.appData.players[currentRaidTier.id] || {};
+    const players = state.appData.players || {};
 
-    for (const [position, player] of Object.entries(players) as [Position, Player][]) {
-      if (position === excludePosition) continue;
+    for (const [position, player] of Object.entries(players)) {
+      if (!player || position === excludePosition) continue;
 
       const policy = player.policies[slot as keyof typeof player.policies];
-      const status = this.getPlayerEquipmentStatus(position, slot, allocations);
+      const status = this.getPlayerEquipmentStatus(position as Position, slot, allocations);
 
       if (policy === '優先' && status === '未取得') {
         return true;
@@ -345,13 +345,13 @@ export class PriorityCalculator {
     const currentRaidTier = state.currentRaidTier;
     if (!currentRaidTier) return false;
 
-    const players = state.appData.players[currentRaidTier.id] || {};
+    const players = state.appData.players || {};
 
-    for (const [position, player] of Object.entries(players) as [Position, Player][]) {
-      if (position === excludePosition) continue;
+    for (const [position, player] of Object.entries(players)) {
+      if (!player || position === excludePosition) continue;
 
       const weaponPolicy = player.policies['武器'];
-      const weaponBoxStatus = this.getPlayerEquipmentStatus(position, '武器箱', allocations);
+      const weaponBoxStatus = this.getPlayerEquipmentStatus(position as Position, '武器箱', allocations);
 
       if (weaponPolicy === '優先' && weaponBoxStatus === '未取得') {
         return true;

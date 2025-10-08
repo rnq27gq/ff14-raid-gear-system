@@ -57,9 +57,7 @@ export class StateManager {
    * 指定されたプレイヤーを取得
    */
   getPlayer(tierId: string, position: Position): Player | undefined {
-    const tierPlayers = this.state.appData.players[tierId];
-    if (!tierPlayers) return undefined;
-    return tierPlayers[position];
+    return this.state.appData.players[position];
   }
 
   /**
@@ -68,13 +66,8 @@ export class StateManager {
   updatePlayer(tierId: string, position: Position, player: Player): void {
     const currentData = this.state.appData;
 
-    // ティアが存在しない場合は初期化
-    if (!currentData.players[tierId]) {
-      currentData.players[tierId] = {};
-    }
-
     // プレイヤーを更新
-    currentData.players[tierId][position] = player;
+    currentData.players[position] = player;
 
     // 状態を更新
     this.setState({
@@ -86,7 +79,7 @@ export class StateManager {
    * 指定されたティアの分配履歴を取得
    */
   getAllocations(tierId: string): Allocation[] {
-    return this.state.appData.allocations[tierId] || [];
+    return Object.values(this.state.appData.allocations);
   }
 
   /**
@@ -94,17 +87,10 @@ export class StateManager {
    */
   addAllocation(tierId: string, allocation: Allocation): void {
     const currentData = this.state.appData;
-
-    // ティアが存在しない場合は初期化
-    if (!currentData.allocations[tierId]) {
-      currentData.allocations[tierId] = [];
-    }
+    const key = `${allocation.position}-${allocation.slot}`;
 
     // 分配履歴を追加
-    currentData.allocations[tierId] = [
-      ...currentData.allocations[tierId],
-      allocation
-    ];
+    currentData.allocations[key] = allocation;
 
     // 状態を更新
     this.setState({

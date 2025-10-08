@@ -33,7 +33,7 @@ export class PlayerManagementScreen {
       return;
     }
 
-    const players = state.appData.players[currentRaidTier.id] || {};
+    const players = state.appData.players || {};
 
     this.container.innerHTML = `
       <div class="player-management-screen">
@@ -204,10 +204,7 @@ export class PlayerManagementScreen {
       // 状態を更新
       const updatedAppData = {
         ...state.appData,
-        players: {
-          ...state.appData.players,
-          [currentRaidTier.id]: players
-        }
+        players: players
       };
 
       this.stateManager.setState({

@@ -1,3 +1,4 @@
+# Updated: 2025-10-10 - Force workflow trigger after module split
 name: Deploy to GitHub Pages
 
 on:

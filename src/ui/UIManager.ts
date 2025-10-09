@@ -122,7 +122,8 @@ export class UIManager {
 
     this.dashboardScreen = new DashboardScreen(
       this.contentElement,
-      this.stateManager
+      this.stateManager,
+      this.messageDisplay
     );
     this.dashboardScreen.render();
   }

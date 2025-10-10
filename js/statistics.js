@@ -521,18 +521,30 @@ function generateHistoryTable(allocations, players) {
         sortedAllocations.forEach((allocation, index) => {
             const player = players[allocation.position];
             const playerName = player ? player.name : allocation.position;
+            const playerJob = player ? player.job : '';
             const date = allocation.timestamp ?
                 new Date(allocation.timestamp).toLocaleString('ja-JP') : '不明';
 
             // 削除用のユニークID生成（position_layer_slot_timestamp）
             const allocationId = `${allocation.position}_${allocation.layer}_${allocation.slot}_${allocation.timestamp}`;
 
+            // 部位表示（武器箱と直ドロップ武器を区別）
+            let slotDisplay = allocation.slot;
+            if (allocation.slot === '武器箱') {
+                if (allocation.status === '直ドロ入手' || allocation.status === '直ドロ入手・箱取得済') {
+                    slotDisplay = '直ドロップ武器';
+                } else {
+                    slotDisplay = '武器箱';
+                }
+            }
+
             html += `
                 <div class="history-row" data-allocation-id="${allocationId}">
                     <div class="col-week">${allocation.week}週目</div>
                     <div class="col-layer">${allocation.layer}層</div>
-                    <div class="col-slot">${allocation.slot}</div>
+                    <div class="col-slot">${slotDisplay}</div>
                     <div class="col-player">
+                        <span class="player-job">${playerJob}</span>
                         <span class="player-name">${playerName}</span>
                         <span class="position-tag ${getPositionRoleClass(allocation.position)}">${allocation.position}</span>
                     </div>

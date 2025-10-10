@@ -226,6 +226,9 @@ async function saveIntegratedMemberData() {
 
         showSuccess(`${Object.keys(players).length}人のメンバー情報を保存しました`);
 
+        // テーブルを再描画して武器プルダウンを更新
+        showTierDashboard();
+
     } catch (error) {
         console.error('メンバーデータ保存エラー:', error);
         showError('メンバー情報の保存に失敗しました: ' + error.message);

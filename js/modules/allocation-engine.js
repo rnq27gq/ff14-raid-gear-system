@@ -185,10 +185,11 @@ function calculatePlayerPriority(player, drop, position) {
     } else if (drop.type === 'weapon_box') {
         // 武器箱の場合（装備方針は「武器」スロットを参照）
         const weaponBoxStatus = getPlayerEquipmentStatus(position, '武器箱');
+        const attackJobWeaponStatus = getPlayerEquipmentStatus(position, '攻略ジョブ武器<br>(直ドロ管理用)');
         const weaponPolicy = player.equipmentPolicy?.['武器'] || 'トームストーン';
 
         if (weaponBoxStatus === '断章交換') {
-            // 未取得者がいるかチェック（武器方針で判定）
+            // 武器箱を断章交換している場合の処理
             const hasUnacquiredRaidPlayer = hasUnacquiredWeaponBoxPlayers(position);
 
             if (hasUnacquiredRaidPlayer) {
@@ -203,12 +204,36 @@ function calculatePlayerPriority(player, drop, position) {
         } else if (weaponBoxStatus === '断章交換・箱取得済') {
             type = 'pass';
             reason = 'Pass (断章交換・箱取得済)';
+        } else if (attackJobWeaponStatus === '取得済') {
+            // 攻略ジョブ武器を既に取得済みの場合（直ドロップで取得済み）
+            const hasUnacquiredDirectWeapon = hasUnacquiredDirectWeaponPlayers(position);
+
+            if (hasUnacquiredDirectWeapon) {
+                // 攻略ジョブ武器未取得者がいる場合は後回し
+                type = 'pass';
+                reason = 'Pass (攻略ジョブ武器取得済 - 他に未取得者あり)';
+            } else {
+                // 全員が攻略ジョブ武器を取得済みの場合は復活
+                if (weaponPolicy === '零式') {
+                    canReceive = true;
+                    type = 'need';
+                    score = 2000 + getPositionPriority(position) - (player.dynamicPriority || 0);
+                    reason = 'Need (武器箱 - 復活)';
+                } else {
+                    canReceive = true;
+                    type = 'greed';
+                    score = 500 + getPositionPriority(position) - (player.dynamicPriority || 0);
+                    reason = 'Greed (武器箱 - トーム可・復活)';
+                }
+            }
         } else if (weaponPolicy === '零式' && weaponBoxStatus === '未取得') {
+            // 攻略ジョブ武器未取得かつ武器方針が零式
             canReceive = true;
             type = 'need';
             score = 2000 + getPositionPriority(position) - (player.dynamicPriority || 0);
             reason = 'Need (武器箱)';
         } else if (weaponBoxStatus === '未取得') {
+            // 攻略ジョブ武器未取得かつトーム方針
             canReceive = true;
             type = 'greed';
             score = 500 + getPositionPriority(position) - (player.dynamicPriority || 0);

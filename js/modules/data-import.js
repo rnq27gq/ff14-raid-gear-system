@@ -281,10 +281,41 @@ async function importConvertedData(convertedData) {
     await saveDataToSupabase('players', window.appData.players[window.currentRaidTier.id]);
 }
 
+// 攻略ジョブ武器カラムの旧データをクリーンアップ
+async function cleanupOldWeaponData() {
+    try {
+        const allocations = window.appData.allocations[window.currentRaidTier.id] || [];
+
+        // 「攻略ジョブ武器<br>(直ドロ管理用)」スロットのデータを削除
+        const cleanedAllocations = allocations.filter(alloc =>
+            alloc.slot !== '攻略ジョブ武器<br>(直ドロ管理用)'
+        );
+
+        const removedCount = allocations.length - cleanedAllocations.length;
+
+        if (removedCount > 0) {
+            // データを更新
+            window.appData.allocations[window.currentRaidTier.id] = cleanedAllocations;
+
+            // Supabaseに保存
+            await saveDataToSupabase('allocations', cleanedAllocations);
+
+            showSuccess(`旧武器データを${removedCount}件削除しました。`);
+        } else {
+            showSuccess('クリーンアップの必要なデータはありませんでした。');
+        }
+
+    } catch (error) {
+        console.error('データクリーンアップエラー:', error);
+        showError('データのクリーンアップに失敗しました: ' + error.message);
+    }
+}
+
 export {
     importFromJSON,
     importFromCSV,
     clearCSVData,
     resetAllPlayersData,
-    resetCurrentTierData
+    resetCurrentTierData,
+    cleanupOldWeaponData
 };

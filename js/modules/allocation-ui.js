@@ -436,45 +436,66 @@ async function updateWeaponStatistics(allocations) {
             alloc.slot === '武器箱' || alloc.itemType === 'weapon_box'
         );
 
-        if (weaponBoxAlloc) {
-            // 武器箱取得: 攻略ジョブ武器カラムにも記録
-            const attackJobWeaponAlloc = {
-                id: `${Date.now()}-attack-job-weapon-box`,
-                position: weaponBoxAlloc.position,
-                slot: '攻略ジョブ武器<br>(直ドロ管理用)',
-                status: '取得済',
-                layer: 4,
-                week: weaponBoxAlloc.week,
-                timestamp: weaponBoxAlloc.timestamp,
-                playerName: weaponBoxAlloc.playerName,
-                characterName: weaponBoxAlloc.characterName || '',
-                job: weaponBoxAlloc.job,
-                raidTier: weaponBoxAlloc.raidTier
-            };
-            currentAllocations.push(attackJobWeaponAlloc);
-        }
-
         // 直ドロップ武器の分配をチェック
         const directWeaponAlloc = allocations.find(alloc =>
             alloc.itemType === 'direct_weapon'
         );
 
+        if (weaponBoxAlloc) {
+            // 武器箱で取得した場合
+            // 既存の武器箱ステータスをチェック
+            const existingWeaponBox = currentAllocations.find(alloc =>
+                alloc.position === weaponBoxAlloc.position && alloc.slot === '武器箱'
+            );
+
+            if (existingWeaponBox) {
+                // 既に武器箱の記録がある場合、ステータスをチェック
+                if (existingWeaponBox.status === '直ドロ入手') {
+                    // 直ドロ入手済み → 直ドロ入手・箱取得済に更新
+                    existingWeaponBox.status = '直ドロ入手・箱取得済';
+                } else {
+                    // 未取得 → 取得済に更新
+                    existingWeaponBox.status = '取得済';
+                }
+            } else {
+                // 新規に武器箱アロケーションを追加（ステータスは「取得済」）
+                weaponBoxAlloc.status = '取得済';
+            }
+        }
+
         if (directWeaponAlloc) {
-            // 直ドロップ武器取得: 攻略ジョブ武器カラムのみに記録
-            const attackJobWeaponAlloc = {
-                id: `${Date.now()}-attack-job-weapon-direct`,
-                position: directWeaponAlloc.position,
-                slot: '攻略ジョブ武器<br>(直ドロ管理用)',
-                status: '取得済',
-                layer: 4,
-                week: directWeaponAlloc.week,
-                timestamp: directWeaponAlloc.timestamp,
-                playerName: directWeaponAlloc.playerName,
-                characterName: directWeaponAlloc.characterName || '',
-                job: directWeaponAlloc.job,
-                raidTier: directWeaponAlloc.raidTier
-            };
-            currentAllocations.push(attackJobWeaponAlloc);
+            // 直ドロップ武器で取得した場合
+            // 既存の武器箱ステータスをチェック
+            const existingWeaponBox = currentAllocations.find(alloc =>
+                alloc.position === directWeaponAlloc.position && alloc.slot === '武器箱'
+            );
+
+            if (existingWeaponBox) {
+                // 既に武器箱の記録がある場合
+                if (existingWeaponBox.status === '取得済') {
+                    // 武器箱取得済み → 直ドロ入手・箱取得済に更新
+                    existingWeaponBox.status = '直ドロ入手・箱取得済';
+                } else if (existingWeaponBox.status !== '直ドロ入手・箱取得済') {
+                    // 未取得 → 直ドロ入手に更新
+                    existingWeaponBox.status = '直ドロ入手';
+                }
+            } else {
+                // 新規に武器箱アロケーションを追加（ステータスは「直ドロ入手」）
+                const newWeaponBoxAlloc = {
+                    id: `${Date.now()}-weapon-box-direct`,
+                    position: directWeaponAlloc.position,
+                    slot: '武器箱',
+                    status: '直ドロ入手',
+                    layer: 4,
+                    week: directWeaponAlloc.week,
+                    timestamp: directWeaponAlloc.timestamp,
+                    playerName: directWeaponAlloc.playerName,
+                    characterName: directWeaponAlloc.characterName || '',
+                    job: directWeaponAlloc.job,
+                    raidTier: directWeaponAlloc.raidTier
+                };
+                currentAllocations.push(newWeaponBoxAlloc);
+            }
         }
 
     } catch (error) {

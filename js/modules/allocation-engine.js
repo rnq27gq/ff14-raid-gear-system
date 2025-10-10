@@ -185,7 +185,6 @@ function calculatePlayerPriority(player, drop, position) {
     } else if (drop.type === 'weapon_box') {
         // 武器箱の場合（装備方針は「武器」スロットを参照）
         const weaponBoxStatus = getPlayerEquipmentStatus(position, '武器箱');
-        const attackJobWeaponStatus = getPlayerEquipmentStatus(position, '攻略ジョブ武器<br>(直ドロ管理用)');
         const weaponPolicy = player.equipmentPolicy?.['武器'] || 'トームストーン';
 
         if (weaponBoxStatus === '断章交換') {
@@ -204,16 +203,16 @@ function calculatePlayerPriority(player, drop, position) {
         } else if (weaponBoxStatus === '断章交換・箱取得済') {
             type = 'pass';
             reason = 'Pass (断章交換・箱取得済)';
-        } else if (attackJobWeaponStatus === '取得済') {
-            // 攻略ジョブ武器を既に取得済みの場合（直ドロップで取得済み）
+        } else if (weaponBoxStatus === '直ドロ入手') {
+            // 直ドロップ武器で取得済みの場合
             const hasUnacquiredDirectWeapon = hasUnacquiredDirectWeaponPlayers(position);
 
             if (hasUnacquiredDirectWeapon) {
-                // 攻略ジョブ武器未取得者がいる場合は後回し
+                // 未取得者がいる場合は後回し
                 type = 'pass';
-                reason = 'Pass (攻略ジョブ武器取得済 - 他に未取得者あり)';
+                reason = 'Pass (直ドロ入手 - 他に未取得者あり)';
             } else {
-                // 全員が攻略ジョブ武器を取得済みの場合は復活
+                // 全員が武器を取得済みの場合は復活
                 if (weaponPolicy === '零式') {
                     canReceive = true;
                     type = 'need';
@@ -226,14 +225,15 @@ function calculatePlayerPriority(player, drop, position) {
                     reason = 'Greed (武器箱 - トーム可・復活)';
                 }
             }
+        } else if (weaponBoxStatus === '直ドロ入手・箱取得済') {
+            type = 'pass';
+            reason = 'Pass (直ドロ入手・箱取得済)';
         } else if (weaponPolicy === '零式' && weaponBoxStatus === '未取得') {
-            // 攻略ジョブ武器未取得かつ武器方針が零式
             canReceive = true;
             type = 'need';
             score = 2000 + getPositionPriority(position) - (player.dynamicPriority || 0);
             reason = 'Need (武器箱)';
         } else if (weaponBoxStatus === '未取得') {
-            // 攻略ジョブ武器未取得かつトーム方針
             canReceive = true;
             type = 'greed';
             score = 500 + getPositionPriority(position) - (player.dynamicPriority || 0);
@@ -245,18 +245,18 @@ function calculatePlayerPriority(player, drop, position) {
     } else if (drop.type === 'direct_weapon') {
         // 直ドロップ武器の場合（武器希望に基づく）
         const weaponWishes = player.weaponWishes || [];
-        const attackJobWeaponStatus = getPlayerEquipmentStatus(position, '攻略ジョブ武器<br>(直ドロ管理用)');
+        const weaponBoxStatus = getPlayerEquipmentStatus(position, '武器箱');
         const weaponType = drop.weapon; // 選択された武器種
 
-        // 攻略ジョブ武器を既に取得済みの場合の処理
-        if (attackJobWeaponStatus === '取得済') {
+        // 武器箱が取得済み系のステータスの場合の処理
+        if (weaponBoxStatus === '直ドロ入手' || weaponBoxStatus === '直ドロ入手・箱取得済') {
             // 未取得者がいるかチェック
             const hasUnacquiredDirectWeapon = hasUnacquiredDirectWeaponPlayers(position);
 
             if (hasUnacquiredDirectWeapon) {
                 // 未取得者がいる場合は分配対象外（一時除外）
                 type = 'pass';
-                reason = 'Pass (攻略ジョブ武器取得済 - 他に未取得者あり)';
+                reason = 'Pass (直ドロ入手 - 他に未取得者あり)';
             } else {
                 // 未取得者がいない場合は復活
                 if (weaponType && weaponWishes.includes(weaponType)) {
@@ -270,6 +270,14 @@ function calculatePlayerPriority(player, drop, position) {
                     reason = 'Pass (希望なし)';
                 }
             }
+        } else if (weaponBoxStatus === '取得済') {
+            // 武器箱で取得済みの場合は完全に除外
+            type = 'pass';
+            reason = 'Pass (武器箱取得済)';
+        } else if (weaponBoxStatus === '断章交換' || weaponBoxStatus === '断章交換・箱取得済') {
+            // 断章交換している場合も除外
+            type = 'pass';
+            reason = 'Pass (断章交換)';
         } else if (weaponType && weaponWishes.includes(weaponType)) {
             // 希望している武器で未取得の場合
             canReceive = true;
@@ -344,17 +352,17 @@ function hasUnacquiredWeaponBoxPlayers(excludePosition) {
     return false;
 }
 
-// 直ドロップ武器：攻略ジョブ武器未取得者がいるかチェック
+// 直ドロップ武器：武器箱が未取得のプレイヤーがいるかチェック
 function hasUnacquiredDirectWeaponPlayers(excludePosition) {
     const players = window.appData.players[window.currentRaidTier.id] || {};
 
     for (const [position, player] of Object.entries(players)) {
         if (position === excludePosition) continue;
 
-        const attackJobWeaponStatus = getPlayerEquipmentStatus(position, '攻略ジョブ武器<br>(直ドロ管理用)');
+        const weaponBoxStatus = getPlayerEquipmentStatus(position, '武器箱');
 
-        // 攻略ジョブ武器未取得のプレイヤーがいるか
-        if (attackJobWeaponStatus === '未取得') {
+        // 武器箱が未取得のプレイヤーがいるか
+        if (weaponBoxStatus === '未取得') {
             return true;
         }
     }
@@ -380,11 +388,12 @@ function isAllEligiblePlayersObtained(drop, candidates) {
         for (const [position, player] of Object.entries(players)) {
             const weaponWishes = player.weaponWishes || [];
 
-            // 攻略ジョブ武器の取得状況をチェック
-            const attackJobWeaponStatus = getPlayerEquipmentStatus(position, '攻略ジョブ武器<br>(直ドロ管理用)');
+            // 武器箱の取得状況をチェック
+            const weaponBoxStatus = getPlayerEquipmentStatus(position, '武器箱');
 
-            // 攻略ジョブ武器を既に取得済みの場合
-            if (attackJobWeaponStatus === '取得済') {
+            // 武器箱が取得済み系の場合
+            if (weaponBoxStatus === '直ドロ入手' || weaponBoxStatus === '直ドロ入手・箱取得済' ||
+                weaponBoxStatus === '取得済' || weaponBoxStatus === '断章交換' || weaponBoxStatus === '断章交換・箱取得済') {
                 // 未取得者がいるかチェック
                 const hasUnacquiredDirectWeapon = hasUnacquiredDirectWeaponPlayers(position);
 
@@ -395,7 +404,7 @@ function isAllEligiblePlayersObtained(drop, candidates) {
                 // 未取得者がいない場合は復活するため対象に含める
             }
 
-            // この武器を希望していて攻略ジョブ武器未取得、または復活対象のプレイヤーがいるかチェック
+            // この武器を希望していて武器未取得、または復活対象のプレイヤーがいるかチェック
             if (weaponWishes.includes(weaponType)) {
                 hasEligiblePlayer = true;
                 break;

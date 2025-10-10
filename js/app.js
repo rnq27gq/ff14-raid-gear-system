@@ -4,7 +4,7 @@
         import { initializeMainFeatures, initializeDefaultRaidTier, loadAllData, saveDataToSupabase } from './modules/data-loader.js';
         import { showTierDashboard, togglePolicyCell, saveIntegratedMemberData, getPositionRoleClass } from './modules/dashboard.js';
         import { showPlayerManagement, showPlayerSetup, showTabbedSetup, saveCurrentTab, saveCurrentTabAndContinue } from './modules/player-management.js';
-        import { importFromJSON, importFromCSV, clearCSVData, resetAllPlayersData, resetCurrentTierData } from './modules/data-import.js';
+        import { importFromJSON, importFromCSV, clearCSVData, resetAllPlayersData, resetCurrentTierData, cleanupOldWeaponData } from './modules/data-import.js';
         import { getLayerDrops, calculateAllocation, calculatePlayerPriority, getPlayerEquipmentStatus, hasUnacquiredRaidPlayers, hasUnacquiredWeaponBoxPlayers, isAllEligiblePlayersObtained, getPositionPriority, getMaterialPriority } from './modules/allocation-engine.js';
         import { displayAllocationResults, updateDirectWeapon, toggleJudgment, getItemTypeLabel, updateAllocationChoice, confirmAllocation, getCurrentWeek, getItemPriority, updateTomeExchangeStatus } from './modules/allocation-ui.js';
         import { tryAutoLogin, handleInviteTokenAccess, showInviteWelcomeScreen, startDiscordAuth, startDiscordAuthWithToken, handleDiscordCallback, joinTeamWithDiscordAuth, authenticateTeam, createNewTeam, showSignupForm, showLoginForm, showPasswordResetForm, showAuthenticatedState, logout, resetPasswordResetForm, getSecurityQuestion, verifySecurityAnswer, executePasswordReset, updateConnectionStatus } from './modules/auth-manager.js';
@@ -307,6 +307,7 @@
             window.clearCSVData = clearCSVData;
             window.resetAllPlayersData = resetAllPlayersData;
             window.resetCurrentTierData = resetCurrentTierData;
+            window.cleanupOldWeaponData = cleanupOldWeaponData;
 
             // UI関数（onclick用）
             window.authenticateTeam = authenticateTeam;

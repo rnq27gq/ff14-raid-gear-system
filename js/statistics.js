@@ -61,9 +61,9 @@ function generatePlayerStatistics(players, allocations) {
         // ポジション順序を固定化 (MT→ST→D1→D2→D3→D4→H1→H2)
         const positions = ['MT', 'ST', 'D1', 'D2', 'D3', 'D4', 'H1', 'H2'];
 
-        // 装備部位順序を固定化 (武器箱→マウント→頭→胴→手→脚→足→耳→首→腕→指)
-        const equipmentSlots = ['武器箱', 'マウント', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
-        const materialSlots = ['武器石', '硬化薬', '強化薬', '強化繊維'];
+        // 装備部位順序を固定化 (武器箱→頭→胴→手→脚→足→耳→首→腕→指)
+        const equipmentSlots = ['武器箱', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+        const materialSlots = ['武器石', '硬化薬', '強化薬', '強化繊維', 'マウント'];
 
         let html = '<div class="player-stats-table">';
 
@@ -118,11 +118,35 @@ function generatePlayerStatistics(players, allocations) {
                 html += `<div class="slot-col ${statusClass}">${statusText}</div>`;
             });
 
-            // 素材スロット
+            // 素材スロットとマウント
             materialSlots.forEach(slot => {
-                const allocationCount = allocations.filter(a => a.position === position && a.slot === slot).length;
-                const allocatedClass = allocationCount > 0 ? 'allocated' : '';
-                html += `<div class="slot-col ${allocatedClass}">${allocationCount > 0 ? allocationCount : ''}</div>`;
+                if (slot === 'マウント') {
+                    // マウントは装備扱いでステータス表示
+                    const allocation = allocations.find(a => a.position === position && a.slot === slot);
+                    let statusClass = '';
+                    let statusText = '';
+
+                    if (allocation) {
+                        const status = allocation.status || '取得済';
+                        if (status === '断章交換') {
+                            statusClass = 'tome-exchange';
+                            statusText = '断章交換';
+                        } else if (status === '断章交換・箱取得済') {
+                            statusClass = 'tome-exchange-completed';
+                            statusText = '断章交換・<br>箱取得済';
+                        } else {
+                            statusClass = 'allocated';
+                            statusText = '取得済';
+                        }
+                    }
+
+                    html += `<div class="slot-col ${statusClass}">${statusText}</div>`;
+                } else {
+                    // 素材はカウント表示
+                    const allocationCount = allocations.filter(a => a.position === position && a.slot === slot).length;
+                    const allocatedClass = allocationCount > 0 ? 'allocated' : '';
+                    html += `<div class="slot-col ${allocatedClass}">${allocationCount > 0 ? allocationCount : ''}</div>`;
+                }
             });
 
             html += '</div>';
@@ -192,8 +216,8 @@ function calculateStatistics(players, allocations) {
 function generateEditablePlayerStatistics(players, allocations) {
     try {
         const positions = ['MT', 'ST', 'D1', 'D2', 'D3', 'D4', 'H1', 'H2'];
-        const equipmentSlots = ['武器箱', 'マウント', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
-        const materialSlots = ['武器石', '硬化薬', '強化薬', '強化繊維'];
+        const equipmentSlots = ['武器箱', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+        const materialSlots = ['武器石', '硬化薬', '強化薬', '強化繊維', 'マウント'];
 
         let html = '<div class="player-stats-table editable">';
 
@@ -246,13 +270,28 @@ function generateEditablePlayerStatistics(players, allocations) {
                 }
             });
 
-            // 素材スロット（カウンター）
+            // 素材スロット（カウンター）とマウント（ステータス選択）
             materialSlots.forEach(slot => {
-                const count = allocations.filter(a => a.position === position && a.slot === slot).length;
-                html += `<div class="slot-col">
-                    <input type="number" min="0" max="99" value="${count}"
-                           data-position="${position}" data-slot="${slot}" style="width: 50px;">
-                </div>`;
+                if (slot === 'マウント') {
+                    // マウントは装備扱いでステータス選択
+                    const allocation = allocations.find(a => a.position === position && a.slot === slot);
+                    const status = allocation ? (allocation.status || '取得済') : '';
+                    html += `<div class="slot-col">
+                        <select data-position="${position}" data-slot="${slot}" class="status-select">
+                            <option value="">未取得</option>
+                            <option value="取得済" ${status === '取得済' ? 'selected' : ''}>取得済</option>
+                            <option value="断章交換" ${status === '断章交換' ? 'selected' : ''}>断章交換</option>
+                            <option value="断章交換・箱取得済" ${status === '断章交換・箱取得済' ? 'selected' : ''}>断章交換・箱取得済</option>
+                        </select>
+                    </div>`;
+                } else {
+                    // 素材はカウンター
+                    const count = allocations.filter(a => a.position === position && a.slot === slot).length;
+                    html += `<div class="slot-col">
+                        <input type="number" min="0" max="99" value="${count}"
+                               data-position="${position}" data-slot="${slot}" style="width: 50px;">
+                    </div>`;
+                }
             });
 
             html += '</div>';

@@ -667,7 +667,7 @@ input:focus, select:focus {
 /* 統計情報用スタイル */
 .player-stats-table {
     display: grid;
-    grid-template-columns: 150px repeat(15, 1fr);
+    grid-template-columns: 150px repeat(14, 1fr);
     gap: 1px;
     background-color: #ddd;
     border-radius: 8px;
@@ -733,6 +733,32 @@ input:focus, select:focus {
     font-size: 0.75rem;
     box-sizing: border-box;
     cursor: pointer;
+}
+
+/* プルダウン選択肢の背景色 */
+.slot-col select.status-select option[value="取得済"] {
+    background-color: #d4edda;
+    color: #28a745;
+}
+
+.slot-col select.status-select option[value="断章交換"] {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.slot-col select.status-select option[value="断章交換・箱取得済"] {
+    background-color: #cfe2ff;
+    color: #084298;
+}
+
+.slot-col select.status-select option[value="直ドロ入手"] {
+    background-color: #ffeaa7;
+    color: #856404;
+}
+
+.slot-col select.status-select option[value="直ドロ入手・箱取得済"] {
+    background-color: #d6eaf8;
+    color: #1a5490;
 }
 
 .slot-col.allocated {
@@ -881,6 +907,20 @@ input:focus, select:focus {
 .slot-col.tome-exchange-completed {
     background-color: #cfe2ff;
     color: #084298;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+.slot-col.direct-weapon {
+    background-color: #ffeaa7;
+    color: #856404;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+.slot-col.direct-weapon-completed {
+    background-color: #d6eaf8;
+    color: #1a5490;
     font-size: 0.7rem;
     font-weight: bold;
 }

@@ -325,6 +325,7 @@
             window.showTabbedSetup = showTabbedSetup;
             window.saveCurrentTab = saveCurrentTab;
             window.saveCurrentTabAndContinue = saveCurrentTabAndContinue;
+            window.showEquipmentAllocation = showEquipmentAllocation;
             window.showLayerAllocation = showLayerAllocation;
             window.confirmAllocation = confirmAllocation;
             window.toggleJudgment = toggleJudgment;

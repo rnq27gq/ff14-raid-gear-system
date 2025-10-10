@@ -184,16 +184,19 @@ async function saveIntegratedMemberData() {
                     equipmentPolicy[slot] = cell?.classList.contains('policy-raid') ? '零式' : 'トームストーン';
                 }
 
+                // 既存データがある場合は保持
+                const existingPlayer = window.appData.players[window.currentRaidTier.id]?.[position] || {};
+
+                // ジョブ変更を検出
+                const jobChanged = existingPlayer.job && existingPlayer.job !== job;
+
                 // 武器希望の収集
                 const weaponWishes = [
                     job, // 第一希望は必ずメインジョブ
-                    weapon2Select?.value || '',
-                    weapon3Select?.value || '',
+                    jobChanged ? '' : (weapon2Select?.value || ''),
+                    jobChanged ? '' : (weapon3Select?.value || ''),
                     '' // 第四希望は省略
                 ];
-
-                // 既存データがある場合は保持
-                const existingPlayer = window.appData.players[window.currentRaidTier.id]?.[position] || {};
 
                 players[position] = {
                     name,

@@ -220,15 +220,33 @@ function calculatePlayerPriority(player, drop, position) {
     } else if (drop.type === 'direct_weapon') {
         // 直ドロップ武器の場合（武器希望に基づく）
         const weaponWishes = player.weaponWishes || [];
-        const firstChoiceWeaponStatus = getPlayerEquipmentStatus(position, '直ドロップ武器');
+        const attackJobWeaponStatus = getPlayerEquipmentStatus(position, '攻略ジョブ武器<br>(直ドロ管理用)');
         const weaponType = drop.weapon; // 選択された武器種
 
-        // 第一希望武器を既に取得済みの場合はPass
-        if (firstChoiceWeaponStatus === '取得済み') {
-            type = 'pass';
-            reason = 'Pass (第一希望武器取得済み)';
+        // 攻略ジョブ武器を既に取得済みの場合の処理
+        if (attackJobWeaponStatus === '取得済') {
+            // 未取得者がいるかチェック
+            const hasUnacquiredDirectWeapon = hasUnacquiredDirectWeaponPlayers(position);
+
+            if (hasUnacquiredDirectWeapon) {
+                // 未取得者がいる場合は分配対象外（一時除外）
+                type = 'pass';
+                reason = 'Pass (攻略ジョブ武器取得済 - 他に未取得者あり)';
+            } else {
+                // 未取得者がいない場合は復活
+                if (weaponType && weaponWishes.includes(weaponType)) {
+                    canReceive = true;
+                    type = 'need';
+                    const wishIndex = weaponWishes.indexOf(weaponType);
+                    score = 3000 + getPositionPriority(position) - (wishIndex * 100) - (player.dynamicPriority || 0);
+                    reason = `Need (第${wishIndex + 1}希望 - 復活)`;
+                } else {
+                    type = 'pass';
+                    reason = 'Pass (希望なし)';
+                }
+            }
         } else if (weaponType && weaponWishes.includes(weaponType)) {
-            // 希望している武器の場合
+            // 希望している武器で未取得の場合
             canReceive = true;
             type = 'need';
             const wishIndex = weaponWishes.indexOf(weaponType);
@@ -301,6 +319,24 @@ function hasUnacquiredWeaponBoxPlayers(excludePosition) {
     return false;
 }
 
+// 直ドロップ武器：攻略ジョブ武器未取得者がいるかチェック
+function hasUnacquiredDirectWeaponPlayers(excludePosition) {
+    const players = window.appData.players[window.currentRaidTier.id] || {};
+
+    for (const [position, player] of Object.entries(players)) {
+        if (position === excludePosition) continue;
+
+        const attackJobWeaponStatus = getPlayerEquipmentStatus(position, '攻略ジョブ武器<br>(直ドロ管理用)');
+
+        // 攻略ジョブ武器未取得のプレイヤーがいるか
+        if (attackJobWeaponStatus === '未取得') {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // 分配対象の全員が取得済みまたは断章交換・箱取得済かを判定
 function isAllEligiblePlayersObtained(drop, candidates) {
     const players = window.appData.players[window.currentRaidTier.id] || {};
@@ -319,16 +355,22 @@ function isAllEligiblePlayersObtained(drop, candidates) {
         for (const [position, player] of Object.entries(players)) {
             const weaponWishes = player.weaponWishes || [];
 
-            // 第一希望武器の取得状況をチェック
-            const firstChoiceWeaponStatus = getPlayerEquipmentStatus(position, '直ドロップ武器');
-            const weaponBoxStatus = getPlayerEquipmentStatus(position, '武器箱');
+            // 攻略ジョブ武器の取得状況をチェック
+            const attackJobWeaponStatus = getPlayerEquipmentStatus(position, '攻略ジョブ武器<br>(直ドロ管理用)');
 
-            // 第一希望武器を既に取得済みの場合は対象外
-            if (firstChoiceWeaponStatus === '取得済み') {
-                continue;
+            // 攻略ジョブ武器を既に取得済みの場合
+            if (attackJobWeaponStatus === '取得済') {
+                // 未取得者がいるかチェック
+                const hasUnacquiredDirectWeapon = hasUnacquiredDirectWeaponPlayers(position);
+
+                if (hasUnacquiredDirectWeapon) {
+                    // 未取得者がいる場合は一時除外されるため対象外
+                    continue;
+                }
+                // 未取得者がいない場合は復活するため対象に含める
             }
 
-            // この武器を希望していて第一希望武器未取得のプレイヤーがいるかチェック
+            // この武器を希望していて攻略ジョブ武器未取得、または復活対象のプレイヤーがいるかチェック
             if (weaponWishes.includes(weaponType)) {
                 hasEligiblePlayer = true;
                 break;
@@ -382,6 +424,7 @@ export {
     getPlayerEquipmentStatus,
     hasUnacquiredRaidPlayers,
     hasUnacquiredWeaponBoxPlayers,
+    hasUnacquiredDirectWeaponPlayers,
     isAllEligiblePlayersObtained,
     getPositionPriority,
     getMaterialPriority

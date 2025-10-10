@@ -61,8 +61,8 @@ function generatePlayerStatistics(players, allocations) {
         // ポジション順序を固定化 (MT→ST→D1→D2→D3→D4→H1→H2)
         const positions = ['MT', 'ST', 'D1', 'D2', 'D3', 'D4', 'H1', 'H2'];
 
-        // 装備部位順序を固定化 (武器箱→第一希望武器→頭→胴→手→脚→足→耳→首→腕→指)
-        const equipmentSlots = ['武器箱', '第一希望武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+        // 装備部位順序を固定化 (武器箱→攻略ジョブ武器(直ドロ管理用)→頭→胴→手→脚→足→耳→首→腕→指)
+        const equipmentSlots = ['武器箱', '攻略ジョブ武器<br>(直ドロ管理用)', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
         const materialSlots = ['武器石', '硬化薬', '強化薬', '強化繊維'];
 
         let html = '<div class="player-stats-table">';
@@ -186,7 +186,7 @@ function calculateStatistics(players, allocations) {
 function generateEditablePlayerStatistics(players, allocations) {
     try {
         const positions = ['MT', 'ST', 'D1', 'D2', 'D3', 'D4', 'H1', 'H2'];
-        const equipmentSlots = ['武器箱', '第一希望武器', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+        const equipmentSlots = ['武器箱', '攻略ジョブ武器<br>(直ドロ管理用)', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
         const materialSlots = ['武器石', '硬化薬', '強化薬', '強化繊維'];
 
         let html = '<div class="player-stats-table editable">';
@@ -217,14 +217,27 @@ function generateEditablePlayerStatistics(players, allocations) {
             equipmentSlots.forEach(slot => {
                 const allocation = allocations.find(a => a.position === position && a.slot === slot);
                 const status = allocation ? (allocation.status || '取得済') : '';
-                html += `<div class="slot-col">
-                    <select data-position="${position}" data-slot="${slot}" class="status-select">
-                        <option value="">未取得</option>
-                        <option value="取得済" ${status === '取得済' ? 'selected' : ''}>取得済</option>
-                        <option value="断章交換" ${status === '断章交換' ? 'selected' : ''}>断章交換</option>
-                        <option value="断章交換・箱取得済" ${status === '断章交換・箱取得済' ? 'selected' : ''}>断章交換・箱取得済</option>
-                    </select>
-                </div>`;
+
+                // 武器箱と攻略ジョブ武器は「取得済」のみ選択可能
+                const isWeaponSlot = slot === '武器箱' || slot === '攻略ジョブ武器<br>(直ドロ管理用)';
+
+                if (isWeaponSlot) {
+                    html += `<div class="slot-col">
+                        <select data-position="${position}" data-slot="${slot}" class="status-select">
+                            <option value="">未取得</option>
+                            <option value="取得済" ${status === '取得済' ? 'selected' : ''}>取得済</option>
+                        </select>
+                    </div>`;
+                } else {
+                    html += `<div class="slot-col">
+                        <select data-position="${position}" data-slot="${slot}" class="status-select">
+                            <option value="">未取得</option>
+                            <option value="取得済" ${status === '取得済' ? 'selected' : ''}>取得済</option>
+                            <option value="断章交換" ${status === '断章交換' ? 'selected' : ''}>断章交換</option>
+                            <option value="断章交換・箱取得済" ${status === '断章交換・箱取得済' ? 'selected' : ''}>断章交換・箱取得済</option>
+                        </select>
+                    </div>`;
+                }
             });
 
             // 素材スロット（カウンター）

@@ -318,6 +318,11 @@ async function confirmAllocation(layer) {
         // 断章交換者の自動ステータス更新
         await updateTomeExchangeStatus(allocations);
 
+        // 4層の場合: 武器箱と直ドロップ武器の統計情報への反映
+        if (layer === 4) {
+            await updateWeaponStatistics(allocations);
+        }
+
         // Supabaseに保存
         await saveDataToSupabase('allocations', window.appData.allocations[window.currentRaidTier.id]);
         await saveDataToSupabase('players', window.appData.players[window.currentRaidTier.id]);
@@ -421,6 +426,63 @@ async function updateTomeExchangeStatus(allocations) {
     }
 }
 
+// 武器箱と直ドロップ武器の統計情報更新
+async function updateWeaponStatistics(allocations) {
+    try {
+        const currentAllocations = window.appData.allocations[window.currentRaidTier.id] || [];
+
+        // 武器箱の分配をチェック
+        const weaponBoxAlloc = allocations.find(alloc =>
+            alloc.slot === '武器箱' || alloc.itemType === 'weapon_box'
+        );
+
+        if (weaponBoxAlloc) {
+            // 武器箱取得: 攻略ジョブ武器カラムにも記録
+            const attackJobWeaponAlloc = {
+                id: `${Date.now()}-attack-job-weapon-box`,
+                position: weaponBoxAlloc.position,
+                slot: '攻略ジョブ武器<br>(直ドロ管理用)',
+                status: '取得済',
+                layer: 4,
+                week: weaponBoxAlloc.week,
+                timestamp: weaponBoxAlloc.timestamp,
+                playerName: weaponBoxAlloc.playerName,
+                characterName: weaponBoxAlloc.characterName || '',
+                job: weaponBoxAlloc.job,
+                raidTier: weaponBoxAlloc.raidTier
+            };
+            currentAllocations.push(attackJobWeaponAlloc);
+        }
+
+        // 直ドロップ武器の分配をチェック
+        const directWeaponAlloc = allocations.find(alloc =>
+            alloc.itemType === 'direct_weapon'
+        );
+
+        if (directWeaponAlloc) {
+            // 直ドロップ武器取得: 攻略ジョブ武器カラムのみに記録
+            const attackJobWeaponAlloc = {
+                id: `${Date.now()}-attack-job-weapon-direct`,
+                position: directWeaponAlloc.position,
+                slot: '攻略ジョブ武器<br>(直ドロ管理用)',
+                status: '取得済',
+                layer: 4,
+                week: directWeaponAlloc.week,
+                timestamp: directWeaponAlloc.timestamp,
+                playerName: directWeaponAlloc.playerName,
+                characterName: directWeaponAlloc.characterName || '',
+                job: directWeaponAlloc.job,
+                raidTier: directWeaponAlloc.raidTier
+            };
+            currentAllocations.push(attackJobWeaponAlloc);
+        }
+
+    } catch (error) {
+        console.error('武器統計更新エラー:', error);
+        // エラーが発生しても分配処理自体は続行
+    }
+}
+
 export {
     displayAllocationResults,
     updateDirectWeapon,
@@ -430,5 +492,6 @@ export {
     confirmAllocation,
     getCurrentWeek,
     getItemPriority,
-    updateTomeExchangeStatus
+    updateTomeExchangeStatus,
+    updateWeaponStatistics
 };

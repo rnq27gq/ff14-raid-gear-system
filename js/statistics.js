@@ -347,39 +347,88 @@ async function saveStatistics() {
             return;
         }
 
-        // 編集内容を収集
+        // 既存の分配履歴を取得
+        const existingAllocations = appData.allocations[currentRaidTier.id] || [];
         const newAllocations = [];
+
         const statusSelects = document.querySelectorAll('.player-stats-table.editable select.status-select');
         const numberInputs = document.querySelectorAll('.player-stats-table.editable input[type="number"]');
 
-        // セレクトボックス（装備）
+        // セレクトボックス（装備・マウント）の処理
         statusSelects.forEach(select => {
-            const status = select.value;
-            if (status) {
-                const slot = select.dataset.slot;
-                newAllocations.push({
-                    position: select.dataset.position,
-                    slot: slot,
-                    status: status,
-                    layer: getLayerFromSlot(slot), // 部位から層を判定
-                    week: 1,  // デフォルト値
-                    timestamp: new Date().toISOString()
-                });
+            const position = select.dataset.position;
+            const slot = select.dataset.slot;
+            const newStatus = select.value;
+
+            // 既存レコードを検索
+            const existingRecord = existingAllocations.find(
+                a => a.position === position && a.slot === slot
+            );
+
+            if (newStatus) {
+                // ステータスが設定されている場合
+                if (existingRecord) {
+                    // 既存レコードがある場合は日時・週を保持してステータスのみ更新
+                    newAllocations.push({
+                        position: position,
+                        slot: slot,
+                        status: newStatus,
+                        layer: existingRecord.layer || getLayerFromSlot(slot),
+                        week: existingRecord.week || 1,
+                        timestamp: existingRecord.timestamp || new Date().toISOString()
+                    });
+                } else {
+                    // 新規追加の場合は新しい日時で作成
+                    newAllocations.push({
+                        position: position,
+                        slot: slot,
+                        status: newStatus,
+                        layer: getLayerFromSlot(slot),
+                        week: 1,
+                        timestamp: new Date().toISOString()
+                    });
+                }
             }
+            // newStatusが空（未取得）の場合は何も追加しない = 削除
         });
 
-        // 数値入力（素材）
+        // 数値入力（素材）の処理
         numberInputs.forEach(input => {
-            const count = parseInt(input.value) || 0;
+            const position = input.dataset.position;
             const slot = input.dataset.slot;
-            for (let i = 0; i < count; i++) {
-                newAllocations.push({
-                    position: input.dataset.position,
-                    slot: slot,
-                    layer: getLayerFromSlot(slot), // 部位から層を判定
-                    week: 1,
-                    timestamp: new Date().toISOString()
-                });
+            const newCount = parseInt(input.value) || 0;
+
+            // 既存レコードを検索（同じposition・slotの全レコード）
+            const existingRecords = existingAllocations.filter(
+                a => a.position === position && a.slot === slot
+            );
+            const existingCount = existingRecords.length;
+
+            if (newCount === existingCount) {
+                // 個数が変わらない場合は既存レコードをそのまま保持
+                newAllocations.push(...existingRecords);
+            } else if (newCount > existingCount) {
+                // 個数が増えた場合
+                // 既存レコードを保持
+                newAllocations.push(...existingRecords);
+                // 差分だけ新しいレコードを追加
+                const diff = newCount - existingCount;
+                for (let i = 0; i < diff; i++) {
+                    newAllocations.push({
+                        position: position,
+                        slot: slot,
+                        layer: getLayerFromSlot(slot),
+                        week: 1,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            } else if (newCount < existingCount) {
+                // 個数が減った場合
+                // 日時順にソートして新しいものから保持（古いものから削除）
+                const sortedRecords = [...existingRecords].sort(
+                    (a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0)
+                );
+                newAllocations.push(...sortedRecords.slice(0, newCount));
             }
         });
 

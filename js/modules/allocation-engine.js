@@ -23,7 +23,7 @@ function getLayerDrops(layer) {
             { name: '強化繊維', slot: '強化繊維', type: 'material', itemLevel: '' }
         ],
         4: [
-            { name: '胴装備', slot: '胴', type: 'equipment', itemLevel: '' },
+            { name: 'マウント', slot: 'マウント', type: 'mount', itemLevel: '' },
             { name: '武器箱', slot: '武器箱', type: 'weapon_box', itemLevel: '' },
             { name: '直ドロップ武器', slot: '直ドロップ武器', type: 'direct_weapon', itemLevel: '', weapon: window.selectedDirectWeapon || null }
         ]
@@ -289,6 +289,45 @@ function calculatePlayerPriority(player, drop, position) {
             // 希望していない武器の場合はPass
             type = 'pass';
             reason = 'Pass (希望なし)';
+        }
+    } else if (drop.type === 'mount') {
+        // マウントの場合（通常装備と同じロジック）
+        const policy = player.equipmentPolicy?.[drop.slot] || 'トームストーン';
+        const mountStatus = getPlayerEquipmentStatus(position, drop.slot);
+
+        // 断章交換者の特別処理
+        if (mountStatus === '断章交換') {
+            // 未取得者がいるかチェック
+            const hasUnacquiredRaidPlayer = hasUnacquiredRaidPlayers(drop.slot, position);
+
+            if (hasUnacquiredRaidPlayer) {
+                // 未取得者がいる場合は分配対象外
+                type = 'pass';
+                reason = 'Pass (断章交換 - 他に未取得者あり)';
+            } else {
+                // 未取得者がいない場合は復活
+                canReceive = true;
+                type = 'need';
+                score = 1000 + getPositionPriority(position) - (player.dynamicPriority || 0);
+                reason = 'Need (断章交換 - 復活)';
+            }
+        } else if (mountStatus === '断章交換・箱取得済') {
+            // 断章交換・箱取得済は完全に分配対象外
+            type = 'pass';
+            reason = 'Pass (断章交換・箱取得済)';
+        } else if (policy === '零式' && mountStatus === '未取得') {
+            canReceive = true;
+            type = 'need';
+            score = 1000 + getPositionPriority(position) - (player.dynamicPriority || 0);
+            reason = 'Need (零式)';
+        } else if (mountStatus === '未取得') {
+            canReceive = true;
+            type = 'greed';
+            score = 500 + getPositionPriority(position) - (player.dynamicPriority || 0);
+            reason = 'Greed (トーム可)';
+        } else {
+            type = 'pass';
+            reason = 'Pass (所持済み)';
         }
     }
 

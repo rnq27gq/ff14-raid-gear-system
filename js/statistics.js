@@ -267,6 +267,30 @@ function generateEditablePlayerStatistics(players, allocations) {
 }
 
 /**
+ * 部位から層を判定
+ */
+function getLayerFromSlot(slot) {
+    const layerMapping = {
+        '耳': 1,
+        '首': 1,
+        '腕': 1,
+        '指': 1,
+        '頭': 2,
+        '手': 2,
+        '足': 2,
+        '武器石': 2,
+        '硬化薬': 2,
+        '胴': 3,  // 3層と4層で重複（3層を優先）
+        '脚': 3,
+        '強化薬': 3,
+        '強化繊維': 3,
+        '武器箱': 4,
+        '直ドロップ武器': 4
+    };
+    return layerMapping[slot] || 1;
+}
+
+/**
  * 統計情報を保存
  */
 async function saveStatistics() {
@@ -292,11 +316,12 @@ async function saveStatistics() {
         statusSelects.forEach(select => {
             const status = select.value;
             if (status) {
+                const slot = select.dataset.slot;
                 newAllocations.push({
                     position: select.dataset.position,
-                    slot: select.dataset.slot,
+                    slot: slot,
                     status: status,
-                    layer: 1, // デフォルト値
+                    layer: getLayerFromSlot(slot), // 部位から層を判定
                     week: 1,  // デフォルト値
                     timestamp: new Date().toISOString()
                 });
@@ -306,11 +331,12 @@ async function saveStatistics() {
         // 数値入力（素材）
         numberInputs.forEach(input => {
             const count = parseInt(input.value) || 0;
+            const slot = input.dataset.slot;
             for (let i = 0; i < count; i++) {
                 newAllocations.push({
                     position: input.dataset.position,
-                    slot: input.dataset.slot,
-                    layer: 1,
+                    slot: slot,
+                    layer: getLayerFromSlot(slot), // 部位から層を判定
                     week: 1,
                     timestamp: new Date().toISOString()
                 });
@@ -544,9 +570,8 @@ function generateHistoryTable(allocations, players) {
                     <div class="col-layer">${allocation.layer}層</div>
                     <div class="col-slot">${slotDisplay}</div>
                     <div class="col-player">
-                        <span class="player-job">${playerJob}</span>
-                        <span class="player-name">${playerName}</span>
                         <span class="position-tag ${getPositionRoleClass(allocation.position)}">${allocation.position}</span>
+                        <span class="player-name">${playerName}</span>
                     </div>
                     <div class="col-date">${date}</div>
                     <div class="col-action">

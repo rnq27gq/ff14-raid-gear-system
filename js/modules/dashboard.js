@@ -192,11 +192,18 @@ async function saveIntegratedMemberData() {
                     '' // 第四希望は省略
                 ];
 
+                // 既存データがある場合は保持
+                const existingPlayer = window.appData.players[window.currentRaidTier.id]?.[position] || {};
+
                 players[position] = {
                     name,
                     job,
+                    position,  // ポジション情報を追加
                     equipmentPolicy,
-                    weaponWishes
+                    weaponWishes,
+                    currentEquipment: existingPlayer.currentEquipment || {},
+                    dynamicPriority: existingPlayer.dynamicPriority || 0,
+                    allocationHistory: existingPlayer.allocationHistory || []
                 };
             }
         }

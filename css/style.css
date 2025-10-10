@@ -667,7 +667,7 @@ input:focus, select:focus {
 /* 統計情報用スタイル */
 .player-stats-table {
     display: grid;
-    grid-template-columns: 150px repeat(14, 1fr);
+    grid-template-columns: 150px repeat(15, 1fr);
     gap: 1px;
     background-color: #ddd;
     border-radius: 8px;

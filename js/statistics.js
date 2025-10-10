@@ -61,8 +61,8 @@ function generatePlayerStatistics(players, allocations) {
         // ポジション順序を固定化 (MT→ST→D1→D2→D3→D4→H1→H2)
         const positions = ['MT', 'ST', 'D1', 'D2', 'D3', 'D4', 'H1', 'H2'];
 
-        // 装備部位順序を固定化 (武器箱→頭→胴→手→脚→足→耳→首→腕→指)
-        const equipmentSlots = ['武器箱', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+        // 装備部位順序を固定化 (武器箱→マウント→頭→胴→手→脚→足→耳→首→腕→指)
+        const equipmentSlots = ['武器箱', 'マウント', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
         const materialSlots = ['武器石', '硬化薬', '強化薬', '強化繊維'];
 
         let html = '<div class="player-stats-table">';
@@ -192,7 +192,7 @@ function calculateStatistics(players, allocations) {
 function generateEditablePlayerStatistics(players, allocations) {
     try {
         const positions = ['MT', 'ST', 'D1', 'D2', 'D3', 'D4', 'H1', 'H2'];
-        const equipmentSlots = ['武器箱', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
+        const equipmentSlots = ['武器箱', 'マウント', '頭', '胴', '手', '脚', '足', '耳', '首', '腕', '指'];
         const materialSlots = ['武器石', '硬化薬', '強化薬', '強化繊維'];
 
         let html = '<div class="player-stats-table editable">';
@@ -478,6 +478,7 @@ function showAllocationHistory() {
                             <option value="">全て</option>
                             <option value="武器箱">武器箱</option>
                             <option value="直ドロップ武器">直ドロップ武器</option>
+                            <option value="マウント">マウント</option>
                             <option value="頭">頭</option>
                             <option value="胴">胴</option>
                             <option value="手">手</option>

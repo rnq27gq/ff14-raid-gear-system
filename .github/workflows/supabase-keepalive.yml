@@ -1,0 +1,41 @@
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    # 5日ごとに実行（7日で停止するので余裕を持たせる）
+    # 毎週月曜と金曜の午前9時（UTC）に実行
+    - cron: '0 9 * * 1,5'
+  workflow_dispatch: # 手動実行も可能
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase Database
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          echo "Supabase Keep-Alive実行中..."
+
+          # Supabase REST APIを使用して簡単なクエリを実行
+          # allocationsテーブルから1件だけ取得（存在チェック）
+          response=$(curl -s -w "\n%{http_code}" \
+            -X GET "${SUPABASE_URL}/rest/v1/allocations?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n-1)
+
+          echo "HTTPステータスコード: $http_code"
+          echo "レスポンス: $body"
+
+          if [ "$http_code" -eq 200 ] || [ "$http_code" -eq 206 ]; then
+            echo "✅ Supabaseへの接続成功"
+            echo "データベースがアクティブに保たれました"
+          else
+            echo "⚠️ 接続に問題が発生しました（ステータス: $http_code）"
+            echo "データベースは動作している可能性がありますが、確認が必要です"
+            exit 1
+          fi
